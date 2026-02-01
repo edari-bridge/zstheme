@@ -148,12 +148,12 @@ fi
 # 5. 테마 로드 및 렌더링
 # ============================================================
 THEME_DIR="$HOME/.claude/themes"
-THEME_NAME="${CLAUDE_THEME:-2-line}"
+THEME_NAME="${CLAUDE_THEME:-default}"
 THEME_FILE="$THEME_DIR/$THEME_NAME"
 
 # 테마 파일 존재 확인
 if [[ ! -f "$THEME_FILE" ]]; then
-    THEME_FILE="$THEME_DIR/2-line"
+    THEME_FILE="$THEME_DIR/default"
 fi
 
 # 테마가 없으면 기본 출력
