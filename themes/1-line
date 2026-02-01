@@ -20,7 +20,7 @@ C_RATE=$'\033[38;5;229m'
 # 컨텍스트 기반 색상 설정
 # ============================================================
 set_context_colors() {
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
         C_BRANCH=$'\033[1;93m'
         C_TREE=$'\033[1;92m'
         C_DIR=$'\033[1;96m'
