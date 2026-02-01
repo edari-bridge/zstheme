@@ -27,7 +27,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/zstheme.git
+git clone https://github.com/edari-bridge/zstheme.git
 cd zstheme
 
 # Install
@@ -42,7 +42,7 @@ zstheme
 ### Option 1: Clone & Install (Recommended)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/zstheme.git ~/.zstheme
+git clone https://github.com/edari-bridge/zstheme.git ~/.zstheme
 cd ~/.zstheme
 ./install.sh
 ```
@@ -51,7 +51,7 @@ cd ~/.zstheme
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/zstheme.git
+   git clone https://github.com/edari-bridge/zstheme.git
    ```
 
 2. Create symlinks:
