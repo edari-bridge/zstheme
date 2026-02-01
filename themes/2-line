@@ -25,7 +25,7 @@ C_TIME=$'\033[38;5;75m'           # 연한 파랑 (💬과 유사)
 # 컨텍스트 기반 색상 설정
 # ============================================================
 set_context_colors() {
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
         C_BRANCH=$'\033[1;93m'
         C_TREE=$'\033[1;92m'
         C_SAVE=$'\033[1;94m'
@@ -147,11 +147,11 @@ render() {
         line2_parts+=("${C_RATE}⏳ ${RATE_LIMIT_PCT}%${RST}")
     fi
 
-    # 번레이트
-    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_BURN}💰 ${BURN_RATE}${RST}")
-
     # 세션 시간
     line2_parts+=("${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}")
+
+    # 번레이트
+    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_BURN}💰 ${BURN_RATE}${RST}")
 
     # 현재 테마 (우측 끝)
     line2_parts+=("${C_RATE}🎨 ${THEME_NAME}${RST}")

@@ -1,70 +1,102 @@
 #!/bin/bash
-# Card Theme - 2줄 + 박스 드로잉 + 배경색
+# Card Theme - 박스 두 장 + 배터리 시각화
 
 # ============================================================
 # 색상 정의
 # ============================================================
 RST=$'\033[0m'
-
-# 박스/배경 색상
 C_BOX=$'\033[38;5;240m'
-C_BG=$'\033[48;5;235m'        # 카드 배경
-
-# Git 상태 색상
+C_BRANCH=$'\033[93m'
+C_TREE=$'\033[92m'
+C_DIR=$'\033[96m'
+C_MODEL=$'\033[95m'
+C_RATE=$'\033[38;5;229m'
+C_BURN=$'\033[38;5;216m'
+C_TIME=$'\033[38;5;75m'
 C_DIM_STATUS=$'\033[38;5;111m'
 C_BRIGHT_STATUS=$'\033[1;38;5;153m'
 C_DIM_SYNC=$'\033[38;5;141m'
 C_BRIGHT_SYNC=$'\033[1;38;5;183m'
 
-# Rate limit 색상
-C_RATE=$'\033[38;5;229m'
-C_BURN=$'\033[38;5;216m'
-C_TIME=$'\033[38;5;75m'
+# 배터리 배경색 (옅지만 구분 가능)
+C_BAT_EMPTY=$'\033[48;5;236m'     # 빈 부분 배경 (어두운 회색)
+C_BAT_GREEN=$'\033[48;5;23m'      # 옅은 초록 (0-50%)
+C_BAT_YELLOW=$'\033[48;5;94m'     # 옅은 주황 (50-80%)
+C_BAT_RED=$'\033[48;5;52m'        # 옅은 빨강 (80%+)
+
+# 컨텍스트 글자 색상 (2-line 스타일)
+C_CTX_NORMAL=$'\033[0m'           # 기본
+C_CTX_WARN=$'\033[1;38;5;208m'    # 주황 (50-80%)
+C_CTX_CRIT=$'\033[1;91m'          # 빨강 (80%+)
 
 # ============================================================
-# 컨텍스트 기반 색상 설정
+# 컨텍스트 기반 색상 (남은 배터리 기준)
 # ============================================================
 set_context_colors() {
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
-        C_BRANCH=$'\033[1;93m'
-        C_TREE=$'\033[1;92m'
-        C_DIR=$'\033[1;96m'
-        C_MODEL=$'\033[1;95m'
-        C_CTX=$'\033[1;91m'
-        CTX_ICON="🔥"
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
+        C_BAT_FILL="$C_BAT_RED"
+        C_CTX_TEXT="$C_CTX_CRIT"
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
-        C_BRANCH=$'\033[1;33m'
-        C_TREE=$'\033[1;32m'
-        C_DIR=$'\033[1;36m'
-        C_MODEL=$'\033[1;35m'
-        C_CTX=$'\033[1;38;5;208m'
-        CTX_ICON="🪫"
+        C_BAT_FILL="$C_BAT_YELLOW"
+        C_CTX_TEXT="$C_CTX_WARN"
     else
-        C_BRANCH=$'\033[93m'
-        C_TREE=$'\033[92m'
-        C_DIR=$'\033[96m'
-        C_MODEL=$'\033[95m'
-        C_CTX=$'\033[0m'
-        CTX_ICON="🔋"
+        C_BAT_FILL="$C_BAT_GREEN"
+        C_CTX_TEXT="$C_CTX_NORMAL"
     fi
 }
 
 # ============================================================
-# Git 상태 포맷팅
+# 패딩 함수
 # ============================================================
-format_git_status() {
-    local add mod del
-    [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}${RST}${C_BG}" || add="${C_DIM_STATUS}+0${RST}${C_BG}"
-    [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}${RST}${C_BG}" || mod="${C_DIM_STATUS}~0${RST}${C_BG}"
-    [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}${C_BG}" || del="${C_DIM_STATUS}-0${RST}${C_BG}"
-    echo "💾 ${add}  ${mod}  ${del}"
+pad_to() {
+    local text="$1"
+    local target_width="$2"
+    local plain=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    local emoji_count=$(echo "$plain" | grep -o '[🔱🌿📂💾🔮🔋🔥🪫🧠⏳💰💬🎨]' | wc -l | tr -d ' ')
+    local char_count=${#plain}
+    local actual_width=$((char_count + emoji_count))
+    local pad=$((target_width - actual_width))
+    [[ $pad -lt 0 ]] && pad=0
+    printf "%s%*s" "$text" "$pad" ""
 }
 
-format_git_sync() {
-    local ahead behind
-    [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}${C_BG}" || ahead="${C_DIM_SYNC}↑ 0${RST}${C_BG}"
-    [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}${C_BG}" || behind="${C_DIM_SYNC}↓ 0${RST}${C_BG}"
-    echo "🔮 ${ahead}  ${behind}"
+# ============================================================
+# 배터리 줄 생성 (남은 배터리 = 100 - 컨텍스트%)
+# ============================================================
+battery_line() {
+    local row="$1"
+    local pct="$CONTEXT_PCT"
+    local remaining=$((100 - pct))  # 남은 배터리
+
+    # 4줄 채움 (row 1,2,4,5), 아래에서부터 채워짐
+    # row 5 (맨아래): remaining > 0
+    # row 4: remaining > 25
+    # row 2: remaining > 50
+    # row 1 (맨위): remaining > 75
+
+    if [[ $row -eq 3 ]]; then
+        # 중간 줄: 퍼센트 숫자 (가운데 정렬)
+        local str=$(printf "%d%%" "$pct")
+        local len=${#str}
+        local left=$(( (5 - len) / 2 ))
+        local right=$(( 5 - len - left ))
+        printf "%*s${C_CTX_TEXT}%s${RST}%*s" "$left" "" "$str" "$right" ""
+    else
+        # 아래에서부터 채움
+        local threshold
+        case $row in
+            1) threshold=75 ;;
+            2) threshold=50 ;;
+            4) threshold=25 ;;
+            5) threshold=0 ;;
+        esac
+
+        if [[ $remaining -gt $threshold ]]; then
+            printf "${C_BAT_FILL}     ${RST}"
+        else
+            printf "${C_BAT_EMPTY}     ${RST}"
+        fi
+    fi
 }
 
 # ============================================================
@@ -73,57 +105,47 @@ format_git_sync() {
 render() {
     set_context_colors
 
-    # 박스 문자
-    local TL="${C_BOX}╭${RST}"
-    local TR="${C_BOX}╮${RST}"
-    local BL="${C_BOX}╰${RST}"
-    local BR="${C_BOX}╯${RST}"
     local V="${C_BOX}│${RST}"
+    local W=20  # 카드 내부 너비
 
-    # Line 1 내용 조립
-    local line1_content="${C_BG}"
-    if [[ -n "$BRANCH" ]]; then
-        line1_content="${line1_content}${C_BRANCH}🔱 ${BRANCH}${RST}${C_BG}"
-    else
-        line1_content="${line1_content}${C_BRANCH}🔱 branch${RST}${C_BG}"
-    fi
-    line1_content="${line1_content}    "
-    if [[ -n "$WORKTREE" ]]; then
-        line1_content="${line1_content}${C_TREE}🌿 ${WORKTREE}${RST}${C_BG}"
-    else
-        line1_content="${line1_content}${C_TREE}🌿 worktree${RST}${C_BG}"
-    fi
-    line1_content="${line1_content}    ${C_DIR}📂 ${DIR_NAME}${RST}${C_BG}    "
-    if [[ "$IS_GIT_REPO" == "true" ]]; then
-        line1_content="${line1_content}$(format_git_status)    $(format_git_sync)"
-    else
-        line1_content="${line1_content}${C_DIM_STATUS}💾 status${RST}${C_BG}    ${C_DIM_SYNC}🔮 sync${RST}${C_BG}"
-    fi
-    line1_content="${line1_content}    ${C_CTX}${CTX_ICON} ${CONTEXT_PCT}%${RST}"
+    # Git 상태 포맷팅
+    local add mod del
+    [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}${RST}" || add="${C_DIM_STATUS}+0${RST}"
+    [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}${RST}" || mod="${C_DIM_STATUS}~0${RST}"
+    [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
 
-    # Line 2 내용 조립
-    local line2_content="${C_BG}${C_MODEL}🧠 ${MODEL}${RST}${C_BG}"
+    # Push/Pull 포맷팅
+    local ahead behind
+    [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}" || ahead="${C_DIM_SYNC}↑ 0${RST}"
+    [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
 
-    # Rate limit
-    if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        local rate_color
-        if [[ "$RATE_LIMIT_PCT" -ge 80 ]]; then
-            rate_color=$'\033[1;91m'
-        elif [[ "$RATE_LIMIT_PCT" -ge 50 ]]; then
-            rate_color=$'\033[1;38;5;208m'
-        else
-            rate_color=$'\033[38;5;229m'
-        fi
-        line2_content="${line2_content}     ${C_RATE}⏳ ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}${C_BG}"
-    fi
+    # 왼쪽 카드 내용
+    local L1="${C_BRANCH}🔱 ${BRANCH:-branch}${RST}"
+    local L2="${C_TREE}🌿 ${WORKTREE:-worktree}${RST}"
+    local L3="${C_DIR}📂 ${DIR_NAME}${RST}"
+    local L4="💾 ${add}  ${mod}  ${del}"
+    local L5="🔮 ${ahead}  ${behind}"
 
-    # 번레이트
-    [[ -n "$BURN_RATE" ]] && line2_content="${line2_content}     ${C_BURN}💰 ${BURN_RATE}${RST}${C_BG}"
+    # 오른쪽 카드 내용
+    local R1="${C_MODEL}🧠 ${MODEL}${RST}"
+    local R2="${C_RATE}⏳ ${RATE_TIME_LEFT:-0m} · ${RATE_RESET_TIME:-00:00}${RST}"
+    local R3="${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}"
+    local R4="${C_BURN}💰 ${BURN_RATE:-\$0/h}${RST}"
+    local R5="${C_RATE}🎨 ${THEME_NAME}${RST}"
 
-    # 세션 시간
-    line2_content="${line2_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}${C_BG}     ${C_RATE}🎨 ${THEME_NAME}${RST}"
+    # 테두리
+    local TOP1="${C_BOX}╭──────────────────────╮${RST}"
+    local BOT1="${C_BOX}╰──────────────────────╯${RST}"
+    local BTOP="${C_BOX}╭─────╮${RST}"
+    local BBOT="${C_BOX}╰─────╯${RST}"
+    local BV="${C_BOX}│${RST}"
 
-    # 출력 (둥근 모서리 카드)
-    echo "${TL}${C_BG} ${line1_content} ${RST}${TR}"
-    echo "${BL}${C_BG} ${line2_content} ${RST}${BR}"
+    # 출력
+    echo "${TOP1}  ${TOP1}  ${BTOP}"
+    echo "${V} $(pad_to "$L1" $W) ${V}  ${V} $(pad_to "$R1" $W) ${V}  ${BV}$(battery_line 1)${BV}"
+    echo "${V} $(pad_to "$L2" $W) ${V}  ${V} $(pad_to "$R2" $W) ${V}  ${BV}$(battery_line 2)${BV}"
+    echo "${V} $(pad_to "$L3" $W) ${V}  ${V} $(pad_to "$R3" $W) ${V}  ${BV}$(battery_line 3)${BV}"
+    echo "${V} $(pad_to "$L4" $W) ${V}  ${V} $(pad_to "$R4" $W) ${V}  ${BV}$(battery_line 4)${BV}"
+    echo "${V} $(pad_to "$L5" $W) ${V}  ${V} $(pad_to "$R5" $W) ${V}  ${BV}$(battery_line 5)${BV}"
+    echo "${BOT1}  ${BOT1}  ${BBOT}"
 }

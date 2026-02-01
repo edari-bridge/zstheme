@@ -29,7 +29,7 @@ C_TIME=$'\033[38;5;75m'
 # 컨텍스트 기반 색상 설정
 # ============================================================
 set_context_colors() {
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
         C_BRANCH=$'\033[1;93m'
         C_TREE=$'\033[1;92m'
         C_DIR=$'\033[1;96m'
@@ -127,11 +127,11 @@ render() {
         ses_content="${ses_content}     ${C_RATE}⏳ ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}${C_BG_SES}"
     fi
 
-    # 번레이트
-    [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_BURN}💰 ${BURN_RATE}${RST}${C_BG_SES}"
-
     # 세션 시간
-    ses_content="${ses_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}"
+    ses_content="${ses_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}${C_BG_SES}"
+
+    # 번레이트
+    [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_BURN}💰 ${BURN_RATE}${RST}"
 
     local line2="$(make_chip "$C_BG_SES" "$ses_content")     ${C_RATE}🎨 ${THEME_NAME}${RST}"
 

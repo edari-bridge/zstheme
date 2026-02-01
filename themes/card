@@ -25,7 +25,7 @@ C_TIME=$'\033[38;5;75m'
 # 컨텍스트 기반 색상 설정
 # ============================================================
 set_context_colors() {
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
         C_BRANCH=$'\033[1;93m'
         C_TREE=$'\033[1;92m'
         C_DIR=$'\033[1;96m'
@@ -117,11 +117,14 @@ render() {
         line2_content="${line2_content}     ${C_RATE}⏳ ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}${C_BG}"
     fi
 
+    # 세션 시간
+    line2_content="${line2_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}${C_BG}"
+
     # 번레이트
     [[ -n "$BURN_RATE" ]] && line2_content="${line2_content}     ${C_BURN}💰 ${BURN_RATE}${RST}${C_BG}"
 
-    # 세션 시간
-    line2_content="${line2_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}${C_BG}     ${C_RATE}🎨 ${THEME_NAME}${RST}"
+    # 테마
+    line2_content="${line2_content}     ${C_RATE}🎨 ${THEME_NAME}${RST}"
 
     # 출력 (둥근 모서리 카드)
     echo "${TL}${C_BG} ${line1_content} ${RST}${TR}"

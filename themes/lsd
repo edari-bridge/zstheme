@@ -90,7 +90,7 @@ render() {
 
     # 컨텍스트
     c=$(get_rainbow_color 8)
-    if [[ "$CONTEXT_PCT" -ge 80 ]]; then
+    if [[ "$CONTEXT_PCT" -ge 70 ]]; then
         line1_parts+=("${c}🔥 ${CONTEXT_PCT}%${RST}")
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         line1_parts+=("${c}🪫 ${CONTEXT_PCT}%${RST}")
@@ -118,11 +118,11 @@ render() {
         line2_parts+=("${C_RATE}⏳ ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
     fi
 
-    # 번레이트
-    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_BURN}💰 ${BURN_RATE}${RST}")
-
     # 세션 시간
     line2_parts+=("${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}")
+
+    # 번레이트
+    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_BURN}💰 ${BURN_RATE}${RST}")
 
     # 테마
     c=$(get_rainbow_color 0)
