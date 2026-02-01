@@ -45,11 +45,12 @@ get_themes() {
 }
 
 get_current_theme() {
-    echo "${CLAUDE_THEME:-2-line}"
+    echo "${CLAUDE_THEME:-default}"
 }
 
 theme_description() {
     case "$1" in
+        default)    echo "Default theme (card style)" ;;
         2-line)     echo "2-line layout with Git info & rate limits" ;;
         1-line)     echo "Compact single line layout" ;;
         card)       echo "Rounded box with background" ;;
