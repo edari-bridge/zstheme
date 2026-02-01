@@ -1,0 +1,290 @@
+#!/bin/bash
+# zstheme - Claude Code Statusline Theme Manager
+# https://github.com/YOUR_USERNAME/zstheme
+
+set -e
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+THEME_DIR="$SCRIPT_DIR/themes"
+CLAUDE_DIR="$HOME/.claude"
+
+# Colors
+RST=$'\033[0m'
+BOLD=$'\033[1m'
+DIM=$'\033[2m'
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+BLUE=$'\033[34m'
+MAGENTA=$'\033[35m'
+CYAN=$'\033[36m'
+
+# ============================================================
+# Helper Functions
+# ============================================================
+
+print_header() {
+    echo ""
+    echo "${MAGENTA}${BOLD}  ╭──────────────────────────────────────╮${RST}"
+    echo "${MAGENTA}${BOLD}  │${RST}  ${CYAN}zstheme${RST} - Claude Code Statusline   ${MAGENTA}${BOLD}│${RST}"
+    echo "${MAGENTA}${BOLD}  ╰──────────────────────────────────────╯${RST}"
+    echo ""
+}
+
+get_themes() {
+    ls -1 "$THEME_DIR" 2>/dev/null | sort
+}
+
+get_current_theme() {
+    echo "${CLAUDE_THEME:-default}"
+}
+
+theme_description() {
+    case "$1" in
+        default)    echo "2-line layout with Git info & rate limits" ;;
+        1line)      echo "Compact single line layout" ;;
+        card)       echo "Rounded box with background" ;;
+        chips)      echo "Grouped chips with backgrounds" ;;
+        lsd)        echo "Rainbow colors, psychedelic vibes" ;;
+        lsd-chips)  echo "Rainbow chips, maximum party" ;;
+        *)          echo "Custom theme" ;;
+    esac
+}
+
+# ============================================================
+# Commands
+# ============================================================
+
+cmd_list() {
+    local current=$(get_current_theme)
+    echo ""
+    echo "${BOLD}Available themes:${RST}"
+    echo ""
+
+    for theme in $(get_themes); do
+        local desc=$(theme_description "$theme")
+        if [[ "$theme" == "$current" ]]; then
+            echo "  ${GREEN}* ${BOLD}$theme${RST}  ${DIM}- $desc${RST}"
+        else
+            echo "    ${CYAN}$theme${RST}  ${DIM}- $desc${RST}"
+        fi
+    done
+
+    echo ""
+    echo "${DIM}Current: ${GREEN}$current${RST}"
+    echo "${DIM}Set theme: ${CYAN}export CLAUDE_THEME=<name>${RST}"
+    echo ""
+}
+
+cmd_preview() {
+    echo ""
+    echo "${BOLD}Theme Previews:${RST}"
+    echo ""
+
+    # Mock data for preview
+    export MODEL="Claude Opus 4.5"
+    export DIR_NAME="my-project"
+    export CONTEXT_PCT=35
+    export SESSION_DURATION_MIN=42
+    export IS_GIT_REPO=true
+    export BRANCH="main"
+    export WORKTREE="my-project"
+    export GIT_ADDED=3
+    export GIT_MODIFIED=2
+    export GIT_DELETED=0
+    export GIT_AHEAD=1
+    export GIT_BEHIND=0
+    export RATE_TIME_LEFT="2h 30m"
+    export RATE_RESET_TIME="04:00"
+    export RATE_LIMIT_PCT=42
+    export BURN_RATE='$4.76/h'
+
+    for theme in $(get_themes); do
+        export THEME_NAME="$theme"
+        echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
+        source "$THEME_DIR/$theme"
+        render
+        echo ""
+    done
+}
+
+cmd_apply() {
+    local theme="$1"
+
+    if [[ ! -f "$THEME_DIR/$theme" ]]; then
+        echo "${BOLD}Error:${RST} Theme '$theme' not found."
+        echo ""
+        echo "Available themes:"
+        for t in $(get_themes); do
+            echo "  - $t"
+        done
+        exit 1
+    fi
+
+    echo ""
+    echo "${GREEN}Theme '${BOLD}$theme${RST}${GREEN}' selected!${RST}"
+    echo ""
+    echo "To apply, add this to your shell config (~/.zshrc or ~/.bashrc):"
+    echo ""
+    echo "  ${CYAN}export CLAUDE_THEME=\"$theme\"${RST}"
+    echo ""
+    echo "Then restart your terminal or run:"
+    echo ""
+    echo "  ${CYAN}source ~/.zshrc${RST}"
+    echo ""
+
+    # Also show quick apply option
+    echo "${DIM}Quick apply (current session only):${RST}"
+    echo "  ${CYAN}export CLAUDE_THEME=\"$theme\"${RST}"
+    echo ""
+}
+
+cmd_interactive() {
+    print_header
+
+    local themes=($(get_themes))
+    local current=$(get_current_theme)
+    local selected=0
+
+    # Find current theme index
+    for i in "${!themes[@]}"; do
+        if [[ "${themes[$i]}" == "$current" ]]; then
+            selected=$i
+            break
+        fi
+    done
+
+    # Mock data for preview
+    export MODEL="Claude Opus 4.5"
+    export DIR_NAME="my-project"
+    export CONTEXT_PCT=35
+    export SESSION_DURATION_MIN=42
+    export IS_GIT_REPO=true
+    export BRANCH="main"
+    export WORKTREE="my-project"
+    export GIT_ADDED=3
+    export GIT_MODIFIED=2
+    export GIT_DELETED=0
+    export GIT_AHEAD=1
+    export GIT_BEHIND=0
+    export RATE_TIME_LEFT="2h 30m"
+    export RATE_RESET_TIME="04:00"
+    export RATE_LIMIT_PCT=42
+    export BURN_RATE='$4.76/h'
+
+    # Hide cursor
+    tput civis 2>/dev/null || true
+    trap 'tput cnorm 2>/dev/null || true; exit' INT TERM EXIT
+
+    while true; do
+        # Clear screen and move to top
+        tput clear 2>/dev/null || clear
+        print_header
+
+        echo "${BOLD}Select a theme:${RST} ${DIM}(↑↓ to navigate, Enter to apply, q to quit)${RST}"
+        echo ""
+
+        # Show theme list
+        for i in "${!themes[@]}"; do
+            local theme="${themes[$i]}"
+            local desc=$(theme_description "$theme")
+            if [[ $i -eq $selected ]]; then
+                echo "  ${GREEN}▸ ${BOLD}$theme${RST}  ${DIM}- $desc${RST}"
+            else
+                echo "    ${CYAN}$theme${RST}  ${DIM}- $desc${RST}"
+            fi
+        done
+
+        echo ""
+        echo "${YELLOW}━━━ Preview ━━━${RST}"
+        echo ""
+
+        # Show preview of selected theme
+        export THEME_NAME="${themes[$selected]}"
+        source "$THEME_DIR/${themes[$selected]}"
+        render
+
+        echo ""
+
+        # Read key
+        read -rsn1 key
+
+        case "$key" in
+            q|Q)
+                tput cnorm 2>/dev/null || true
+                echo "Cancelled."
+                exit 0
+                ;;
+            $'\x1b')  # Escape sequence
+                read -rsn2 -t 0.1 key2
+                case "$key2" in
+                    '[A')  # Up arrow
+                        ((selected--))
+                        [[ $selected -lt 0 ]] && selected=$((${#themes[@]} - 1))
+                        ;;
+                    '[B')  # Down arrow
+                        ((selected++))
+                        [[ $selected -ge ${#themes[@]} ]] && selected=0
+                        ;;
+                esac
+                ;;
+            '')  # Enter
+                tput cnorm 2>/dev/null || true
+                cmd_apply "${themes[$selected]}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+cmd_help() {
+    echo ""
+    echo "${BOLD}zstheme${RST} - Claude Code Statusline Theme Manager"
+    echo ""
+    echo "${BOLD}Usage:${RST}"
+    echo "  zstheme              Interactive theme selector"
+    echo "  zstheme <theme>      Apply a specific theme"
+    echo "  zstheme --list       List available themes"
+    echo "  zstheme --preview    Preview all themes"
+    echo "  zstheme --help       Show this help"
+    echo "  zstheme --version    Show version"
+    echo ""
+    echo "${BOLD}Examples:${RST}"
+    echo "  zstheme              # Open interactive selector"
+    echo "  zstheme 1line        # Apply 1line theme"
+    echo "  zstheme lsd          # Apply rainbow theme"
+    echo ""
+    echo "${BOLD}Configuration:${RST}"
+    echo "  Add to ~/.zshrc or ~/.bashrc:"
+    echo "    export CLAUDE_THEME=\"<theme-name>\""
+    echo ""
+}
+
+cmd_version() {
+    echo "zstheme version $VERSION"
+}
+
+# ============================================================
+# Main
+# ============================================================
+
+case "${1:-}" in
+    --list|-l)
+        cmd_list
+        ;;
+    --preview|-p)
+        cmd_preview
+        ;;
+    --help|-h)
+        cmd_help
+        ;;
+    --version|-v)
+        cmd_version
+        ;;
+    "")
+        cmd_interactive
+        ;;
+    *)
+        cmd_apply "$1"
+        ;;
+esac
