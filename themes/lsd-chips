@@ -1,0 +1,138 @@
+#!/bin/bash
+# LSD-Chips Theme - 2줄 + 칩스 + 빤짝빤짝 레인보우 + 배경색
+
+# ============================================================
+# 색상 정의 - 레인보우 팔레트
+# ============================================================
+RST=$'\033[0m'
+RAINBOW_COLORS=(196 208 226 46 51 21 93 201 199 213)
+
+# 현재 시간 기반 오프셋 (색상 순환)
+COLOR_OFFSET=$(($(date +%s) % ${#RAINBOW_COLORS[@]}))
+
+# 칩 배경색
+C_BG_LOC=$'\033[48;5;236m'
+C_BG_GIT=$'\033[48;5;238m'
+C_BG_SES=$'\033[48;5;234m'
+
+# 칩 테두리
+C_CHIP=$'\033[38;5;245m'
+
+# Rate limit 색상
+C_RATE=$'\033[38;5;229m'
+C_BURN=$'\033[38;5;216m'
+C_TIME=$'\033[38;5;75m'
+
+# ============================================================
+# 레인보우 색상 가져오기
+# ============================================================
+get_rainbow_color() {
+    local idx=$(( ($1 + COLOR_OFFSET) % ${#RAINBOW_COLORS[@]} ))
+    echo "\033[1;38;5;${RAINBOW_COLORS[$idx]}m"
+}
+
+# ============================================================
+# Git 상태 포맷팅 (레인보우)
+# ============================================================
+format_git_status() {
+    local c1=$(get_rainbow_color 3)
+    local c2=$(get_rainbow_color 4)
+    local c3=$(get_rainbow_color 5)
+
+    local add mod del
+    [[ "$GIT_ADDED" -gt 0 ]] && add="${c1}+${GIT_ADDED}${RST}${C_BG_GIT}" || add="${c1}+0${RST}${C_BG_GIT}"
+    [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${c2}~${GIT_MODIFIED}${RST}${C_BG_GIT}" || mod="${c2}~0${RST}${C_BG_GIT}"
+    [[ "$GIT_DELETED" -gt 0 ]] && del="${c3}-${GIT_DELETED}${RST}${C_BG_GIT}" || del="${c3}-0${RST}${C_BG_GIT}"
+
+    echo "💾 ${add}  ${mod}  ${del}"
+}
+
+format_git_sync() {
+    local c1=$(get_rainbow_color 6)
+    local c2=$(get_rainbow_color 7)
+
+    local ahead behind
+    [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${c1}↑ ${GIT_AHEAD}${RST}${C_BG_GIT}" || ahead="${c1}↑ 0${RST}${C_BG_GIT}"
+    [[ "$GIT_BEHIND" -gt 0 ]] && behind="${c2}↓ ${GIT_BEHIND}${RST}${C_BG_GIT}" || behind="${c2}↓ 0${RST}${C_BG_GIT}"
+
+    echo "🔮 ${ahead}  ${behind}"
+}
+
+# ============================================================
+# 칩 생성 함수
+# ============================================================
+make_chip() {
+    local bg="$1"
+    shift
+    local content="$*"
+    echo "${C_CHIP}[${RST}${bg}${content}${RST}${C_CHIP}]${RST}"
+}
+
+# ============================================================
+# 렌더링 함수
+# ============================================================
+render() {
+    # Line 1: 위치 칩 + Git 칩 + 컨텍스트
+    local c0=$(get_rainbow_color 0)
+    local c1=$(get_rainbow_color 1)
+    local c2=$(get_rainbow_color 2)
+
+    local loc_content="${C_BG_LOC}"
+    if [[ -n "$BRANCH" ]]; then
+        loc_content="${loc_content}${c0}🔱 ${BRANCH}${RST}${C_BG_LOC}"
+    else
+        loc_content="${loc_content}${c0}🔱 branch${RST}${C_BG_LOC}"
+    fi
+    loc_content="${loc_content}  "
+    if [[ -n "$WORKTREE" ]]; then
+        loc_content="${loc_content}${c1}🌿 ${WORKTREE}${RST}${C_BG_LOC}"
+    else
+        loc_content="${loc_content}${c1}🌿 worktree${RST}${C_BG_LOC}"
+    fi
+    loc_content="${loc_content}  ${c2}📂 ${DIR_NAME}${RST}"
+
+    local git_content="${C_BG_GIT}"
+    if [[ "$IS_GIT_REPO" == "true" ]]; then
+        git_content="${git_content}$(format_git_status)    $(format_git_sync)"
+    else
+        local c3=$(get_rainbow_color 3)
+        local c6=$(get_rainbow_color 6)
+        git_content="${git_content}${c3}💾 status${RST}${C_BG_GIT}    ${c6}🔮 sync${RST}"
+    fi
+
+    local c8=$(get_rainbow_color 8)
+    local ctx_icon="🔋"
+    [[ "$CONTEXT_PCT" -ge 80 ]] && ctx_icon="🔥"
+    [[ "$CONTEXT_PCT" -ge 50 && "$CONTEXT_PCT" -lt 80 ]] && ctx_icon="🪫"
+
+    local line1="$(make_chip "$C_BG_LOC" "$loc_content")  $(make_chip "$C_BG_GIT" "$git_content")    ${c8}${ctx_icon} ${CONTEXT_PCT}%${RST}"
+
+    # Line 2: 세션 칩 + 테마
+    local c9=$(get_rainbow_color 9)
+    local ses_content="${C_BG_SES}${c9}🧠 ${MODEL}${RST}${C_BG_SES}"
+
+    # Rate limit
+    if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+        local rate_color
+        if [[ "$RATE_LIMIT_PCT" -ge 80 ]]; then
+            rate_color=$'\033[1;91m'
+        elif [[ "$RATE_LIMIT_PCT" -ge 50 ]]; then
+            rate_color=$'\033[1;38;5;208m'
+        else
+            rate_color=$'\033[38;5;229m'
+        fi
+        ses_content="${ses_content}     ${C_RATE}⏳ ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}${C_BG_SES}"
+    fi
+
+    # 번레이트
+    [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_BURN}💰 ${BURN_RATE}${RST}${C_BG_SES}"
+
+    # 세션 시간
+    ses_content="${ses_content}     ${C_TIME}💬 ${SESSION_DURATION_MIN}m${RST}"
+
+    local c0=$(get_rainbow_color 0)
+    local line2="$(make_chip "$C_BG_SES" "$ses_content")     ${c0}🎨 ${THEME_NAME}${RST}"
+
+    echo -e "$line1"
+    echo -e "$line2"
+}
