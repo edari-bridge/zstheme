@@ -1,6 +1,6 @@
 #!/bin/bash
 # Dynamic Theme Loader - 테마명 파싱 및 모듈 조합
-# 테마명 규칙: [mono-][lsd-]{layout}[-nerd]
+# 테마명 규칙: [mono-][lsd-][tinted-]{layout}[-nerd]
 
 # ============================================================
 # 모듈 디렉토리 위치
@@ -25,6 +25,7 @@ parse_theme_name() {
     # 기본값
     COLOR_MODE="default"
     ANIMATION_MODE="static"
+    TINTED_MODE="false"
     LAYOUT_MODE="2-line"
     ICON_MODE="emoji"
 
@@ -40,13 +41,19 @@ parse_theme_name() {
         theme_name="${theme_name#lsd-}"
     fi
 
-    # 3. -nerd 접미사 확인
+    # 3. tinted- 접두사 확인
+    if [[ "$theme_name" == tinted-* ]]; then
+        TINTED_MODE="true"
+        theme_name="${theme_name#tinted-}"
+    fi
+
+    # 4. -nerd 접미사 확인
     if [[ "$theme_name" == *-nerd ]]; then
         ICON_MODE="nerd"
         theme_name="${theme_name%-nerd}"
     fi
 
-    # 4. 레이아웃 결정
+    # 5. 레이아웃 결정
     case "$theme_name" in
         1-line|1line)
             LAYOUT_MODE="1-line"
@@ -110,13 +117,16 @@ list_all_themes() {
     local layouts=("1-line" "2-line" "card" "chips")
     local colors=("" "mono-")
     local anims=("" "lsd-")
+    local tints=("" "tinted-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do
         for anim in "${anims[@]}"; do
-            for layout in "${layouts[@]}"; do
-                for icon in "${icons[@]}"; do
-                    echo "${color}${anim}${layout}${icon}"
+            for tint in "${tints[@]}"; do
+                for layout in "${layouts[@]}"; do
+                    for icon in "${icons[@]}"; do
+                        echo "${color}${anim}${tint}${layout}${icon}"
+                    done
                 done
             done
         done

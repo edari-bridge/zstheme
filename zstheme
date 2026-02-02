@@ -45,18 +45,21 @@ get_themes() {
     ls -1 "$THEME_DIR" 2>/dev/null | grep -v "^_" | sort
 }
 
-# 모듈식 테마 목록 생성 (32개 조합)
+# 모듈식 테마 목록 생성 (64개 조합)
 get_modular_themes() {
     local layouts=("1-line" "2-line" "card" "chips")
     local colors=("" "mono-")
     local anims=("" "lsd-")
+    local tints=("" "tinted-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do
         for anim in "${anims[@]}"; do
-            for layout in "${layouts[@]}"; do
-                for icon in "${icons[@]}"; do
-                    echo "${color}${anim}${layout}${icon}"
+            for tint in "${tints[@]}"; do
+                for layout in "${layouts[@]}"; do
+                    for icon in "${icons[@]}"; do
+                        echo "${color}${anim}${tint}${layout}${icon}"
+                    done
                 done
             done
         done
@@ -66,7 +69,7 @@ get_modular_themes() {
 # 테마가 모듈식인지 확인
 is_modular_theme() {
     local theme="$1"
-    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(mono-)?(lsd-)?(tinted-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
 }
 
 get_current_theme() {
@@ -148,8 +151,8 @@ cmd_list() {
     done
 
     echo ""
-    echo "${YELLOW}Modular Themes (32 combinations):${RST}"
-    echo "${DIM}  Format: [mono-][lsd-]{layout}[-nerd]${RST}"
+    echo "${YELLOW}Modular Themes (64 combinations):${RST}"
+    echo "${DIM}  Format: [mono-][lsd-][tinted-]{layout}[-nerd]${RST}"
     echo ""
 
     # 레이아웃별로 그룹핑하여 표시
@@ -221,7 +224,7 @@ cmd_preview() {
 
 cmd_preview_all() {
     echo ""
-    echo "${BOLD}All 32 Modular Theme Previews:${RST}"
+    echo "${BOLD}All 64 Modular Theme Previews:${RST}"
     echo ""
 
     # Mock data for preview
@@ -263,9 +266,9 @@ cmd_apply() {
             echo "  - $t"
         done
         echo ""
-        echo "Modular theme format: [mono-][lsd-]{layout}[-nerd]"
+        echo "Modular theme format: [mono-][lsd-][tinted-]{layout}[-nerd]"
         echo "  Layouts: 1-line, 2-line, card, chips"
-        echo "  Examples: lsd-chips, mono-card-nerd, lsd-1-line"
+        echo "  Examples: lsd-chips, mono-card-nerd, tinted-2-line"
         exit 1
     fi
 
@@ -404,16 +407,17 @@ cmd_help() {
     echo "  zstheme <theme>      Apply a specific theme"
     echo "  zstheme --list       List available themes"
     echo "  zstheme --preview    Preview sample themes"
-    echo "  zstheme --preview-all Preview all 32 modular themes"
+    echo "  zstheme --preview-all Preview all 64 modular themes"
     echo "  zstheme --help       Show this help"
     echo "  zstheme --version    Show version"
     echo ""
     echo "${BOLD}Modular Theme Format:${RST}"
-    echo "  [mono-][lsd-]{layout}[-nerd]"
+    echo "  [mono-][lsd-][tinted-]{layout}[-nerd]"
     echo ""
     echo "  ${CYAN}Layouts:${RST}    1-line, 2-line, card, chips"
     echo "  ${CYAN}Colors:${RST}     (default) or mono-"
     echo "  ${CYAN}Animation:${RST}  (static) or lsd-"
+    echo "  ${CYAN}Tint:${RST}       (none) or tinted-"
     echo "  ${CYAN}Icons:${RST}      (emoji) or -nerd"
     echo ""
     echo "${BOLD}Examples:${RST}"
