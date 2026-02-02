@@ -151,17 +151,6 @@ THEME_DIR="$HOME/.claude/themes"
 THEME_NAME="${CLAUDE_THEME:-default}"
 THEME_FILE="$THEME_DIR/$THEME_NAME"
 
-# 테마 파일 존재 확인
-if [[ ! -f "$THEME_FILE" ]]; then
-    THEME_FILE="$THEME_DIR/default"
-fi
-
-# 테마가 없으면 기본 출력
-if [[ ! -f "$THEME_FILE" ]]; then
-    echo "🧠 $MODEL  🔋 ${CONTEXT_PCT}%"
-    exit 0
-fi
-
 # 데이터를 export하여 테마에서 사용 가능하게
 export MODEL DIR DIR_NAME CONTEXT_PCT
 export SESSION_DURATION_MS SESSION_DURATION_MIN LINES_ADDED LINES_REMOVED
@@ -170,6 +159,28 @@ export GIT_ADDED GIT_MODIFIED GIT_DELETED GIT_AHEAD GIT_BEHIND
 export RATE_LIMIT_PCT RATE_RESET_TIME RATE_TIME_LEFT BURN_RATE
 export THEME_NAME
 
-# 테마 source 및 render 함수 호출
-source "$THEME_FILE"
-render
+# 모듈식 테마 지원: 테마명에 따라 로더 사용
+is_modular_theme() {
+    local theme="$1"
+    # 모듈식 테마 패턴: [mono-][lsd-]{layout}[-nerd]
+    # 레이아웃: 1-line, 2-line, card, chips
+    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
+}
+
+# 테마 로드 결정
+if [[ -f "$THEME_FILE" ]]; then
+    # 기존 테마 파일이 있으면 사용
+    source "$THEME_FILE"
+    render
+elif is_modular_theme "$THEME_NAME"; then
+    # 모듈식 테마 패턴이면 동적 로드
+    source "$THEME_DIR/_modular"
+    render
+elif [[ -f "$THEME_DIR/default" ]]; then
+    # 기본 테마로 폴백
+    source "$THEME_DIR/default"
+    render
+else
+    # 최후 수단: 간단한 출력
+    echo "🧠 $MODEL  🔋 ${CONTEXT_PCT}%"
+fi
