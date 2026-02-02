@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="1.0.0"
+VERSION="2.0.0"
 
 # Resolve symlinks to find actual script location
 SOURCE="${BASH_SOURCE[0]}"
@@ -41,7 +41,32 @@ print_header() {
 }
 
 get_themes() {
-    ls -1 "$THEME_DIR" 2>/dev/null | sort
+    # 기존 테마 파일 목록 (레거시 호환)
+    ls -1 "$THEME_DIR" 2>/dev/null | grep -v "^_" | sort
+}
+
+# 모듈식 테마 목록 생성 (32개 조합)
+get_modular_themes() {
+    local layouts=("1-line" "2-line" "card" "chips")
+    local colors=("" "mono-")
+    local anims=("" "lsd-")
+    local icons=("" "-nerd")
+
+    for color in "${colors[@]}"; do
+        for anim in "${anims[@]}"; do
+            for layout in "${layouts[@]}"; do
+                for icon in "${icons[@]}"; do
+                    echo "${color}${anim}${layout}${icon}"
+                done
+            done
+        done
+    done
+}
+
+# 테마가 모듈식인지 확인
+is_modular_theme() {
+    local theme="$1"
+    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
 }
 
 get_current_theme() {
@@ -49,16 +74,57 @@ get_current_theme() {
 }
 
 theme_description() {
-    case "$1" in
+    local theme="$1"
+
+    # 레거시 테마
+    case "$theme" in
         default)    echo "Default theme (2-line style)" ;;
-        2-line)     echo "2-line layout with Git info & rate limits" ;;
-        1-line)     echo "Compact single line layout" ;;
-        card)       echo "Rounded box with background" ;;
-        chips)      echo "Grouped chips with backgrounds" ;;
-        lsd)        echo "Rainbow colors, psychedelic vibes" ;;
-        lsd-chips)  echo "Rainbow chips, maximum party" ;;
-        *)          echo "Custom theme" ;;
+        lsd)        echo "Rainbow 2-line (legacy)" ;;
+        lsd-chips)  echo "Rainbow chips (legacy)" ;;
     esac
+
+    # 모듈식 테마 설명 생성
+    if is_modular_theme "$theme"; then
+        local desc=""
+        local layout=""
+
+        # 레이아웃
+        if [[ "$theme" == *"1-line"* ]]; then
+            layout="1-line"
+            desc="Compact"
+        elif [[ "$theme" == *"2-line"* ]]; then
+            layout="2-line"
+            desc="Classic"
+        elif [[ "$theme" == *"card"* ]]; then
+            layout="card"
+            desc="Boxed"
+        elif [[ "$theme" == *"chips"* ]]; then
+            layout="chips"
+            desc="Chips"
+        fi
+
+        # 색조
+        if [[ "$theme" == mono-* ]]; then
+            desc="$desc mono"
+        else
+            desc="$desc color"
+        fi
+
+        # 애니메이션
+        if [[ "$theme" == *lsd-* ]]; then
+            desc="$desc rainbow"
+        fi
+
+        # 아이콘
+        if [[ "$theme" == *-nerd ]]; then
+            desc="$desc (Nerd Font)"
+        fi
+
+        echo "$desc"
+        return
+    fi
+
+    echo "Custom theme"
 }
 
 # ============================================================
@@ -71,13 +137,33 @@ cmd_list() {
     echo "${BOLD}Available themes:${RST}"
     echo ""
 
+    # 레거시 테마 (기존 파일 기반)
+    echo "${YELLOW}Legacy Themes:${RST}"
     for theme in $(get_themes); do
-        local desc=$(theme_description "$theme")
         if [[ "$theme" == "$current" ]]; then
-            echo "  ${GREEN}* ${BOLD}$theme${RST}  ${DIM}- $desc${RST}"
+            echo "  ${GREEN}* ${BOLD}$theme${RST}"
         else
-            echo "    ${CYAN}$theme${RST}  ${DIM}- $desc${RST}"
+            echo "    ${CYAN}$theme${RST}"
         fi
+    done
+
+    echo ""
+    echo "${YELLOW}Modular Themes (32 combinations):${RST}"
+    echo "${DIM}  Format: [mono-][lsd-]{layout}[-nerd]${RST}"
+    echo ""
+
+    # 레이아웃별로 그룹핑하여 표시
+    local layouts=("1-line" "2-line" "card" "chips")
+    for layout in "${layouts[@]}"; do
+        echo "  ${MAGENTA}${layout}:${RST}"
+        # 각 레이아웃에 해당하는 8개 조합
+        for theme in $(get_modular_themes | grep "${layout}"); do
+            if [[ "$theme" == "$current" ]]; then
+                echo "    ${GREEN}* ${BOLD}$theme${RST}"
+            else
+                echo "      ${CYAN}$theme${RST}"
+            fi
+        done
     done
 
     echo ""
@@ -109,10 +195,57 @@ cmd_preview() {
     export RATE_LIMIT_PCT=42
     export BURN_RATE='$4.76/h'
 
+    # 레거시 테마
+    echo "${MAGENTA}━━━ Legacy Themes ━━━${RST}"
+    echo ""
     for theme in $(get_themes); do
         export THEME_NAME="$theme"
         echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
         source "$THEME_DIR/$theme"
+        render
+        echo ""
+    done
+
+    # 모듈식 테마 (각 레이아웃별 기본 + lsd 하나씩)
+    echo "${MAGENTA}━━━ Modular Themes (samples) ━━━${RST}"
+    echo ""
+    local samples=("1-line" "lsd-1-line" "2-line" "lsd-2-line" "card" "lsd-card" "chips" "lsd-chips" "mono-2-line" "mono-lsd-chips")
+    for theme in "${samples[@]}"; do
+        export THEME_NAME="$theme"
+        echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
+        source "$THEME_DIR/_modular"
+        render
+        echo ""
+    done
+}
+
+cmd_preview_all() {
+    echo ""
+    echo "${BOLD}All 32 Modular Theme Previews:${RST}"
+    echo ""
+
+    # Mock data for preview
+    export MODEL="Claude Opus 4.5"
+    export DIR_NAME="my-project"
+    export CONTEXT_PCT=35
+    export SESSION_DURATION_MIN=42
+    export IS_GIT_REPO=true
+    export BRANCH="main"
+    export WORKTREE="my-project"
+    export GIT_ADDED=3
+    export GIT_MODIFIED=2
+    export GIT_DELETED=0
+    export GIT_AHEAD=1
+    export GIT_BEHIND=0
+    export RATE_TIME_LEFT="2h 30m"
+    export RATE_RESET_TIME="04:00"
+    export RATE_LIMIT_PCT=42
+    export BURN_RATE='$4.76/h'
+
+    for theme in $(get_modular_themes); do
+        export THEME_NAME="$theme"
+        echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
+        source "$THEME_DIR/_modular"
         render
         echo ""
     done
@@ -121,13 +254,18 @@ cmd_preview() {
 cmd_apply() {
     local theme="$1"
 
-    if [[ ! -f "$THEME_DIR/$theme" ]]; then
+    # 레거시 테마 또는 모듈식 테마 확인
+    if [[ ! -f "$THEME_DIR/$theme" ]] && ! is_modular_theme "$theme"; then
         echo "${BOLD}Error:${RST} Theme '$theme' not found."
         echo ""
-        echo "Available themes:"
+        echo "Available legacy themes:"
         for t in $(get_themes); do
             echo "  - $t"
         done
+        echo ""
+        echo "Modular theme format: [mono-][lsd-]{layout}[-nerd]"
+        echo "  Layouts: 1-line, 2-line, card, chips"
+        echo "  Examples: lsd-chips, mono-card-nerd, lsd-1-line"
         exit 1
     fi
 
@@ -152,7 +290,10 @@ cmd_apply() {
 cmd_interactive() {
     print_header
 
-    local themes=($(get_themes))
+    # 레거시 + 모듈식 테마 합치기
+    local legacy_themes=($(get_themes))
+    local modular_themes=($(get_modular_themes))
+    local themes=("${legacy_themes[@]}" "${modular_themes[@]}")
     local current=$(get_current_theme)
     local selected=0
 
@@ -211,7 +352,14 @@ cmd_interactive() {
 
         # Show preview of selected theme
         export THEME_NAME="${themes[$selected]}"
-        source "$THEME_DIR/${themes[$selected]}"
+        local theme_file="$THEME_DIR/${themes[$selected]}"
+        if [[ -f "$theme_file" ]]; then
+            source "$theme_file"
+        elif is_modular_theme "${themes[$selected]}"; then
+            source "$THEME_DIR/_modular"
+        else
+            source "$THEME_DIR/default"
+        fi
         render
 
         echo ""
@@ -249,20 +397,30 @@ cmd_interactive() {
 
 cmd_help() {
     echo ""
-    echo "${BOLD}zstheme${RST} - Claude Code Statusline Theme Manager"
+    echo "${BOLD}zstheme${RST} - Claude Code Statusline Theme Manager (v$VERSION)"
     echo ""
     echo "${BOLD}Usage:${RST}"
     echo "  zstheme              Interactive theme selector"
     echo "  zstheme <theme>      Apply a specific theme"
     echo "  zstheme --list       List available themes"
-    echo "  zstheme --preview    Preview all themes"
+    echo "  zstheme --preview    Preview sample themes"
+    echo "  zstheme --preview-all Preview all 32 modular themes"
     echo "  zstheme --help       Show this help"
     echo "  zstheme --version    Show version"
     echo ""
+    echo "${BOLD}Modular Theme Format:${RST}"
+    echo "  [mono-][lsd-]{layout}[-nerd]"
+    echo ""
+    echo "  ${CYAN}Layouts:${RST}    1-line, 2-line, card, chips"
+    echo "  ${CYAN}Colors:${RST}     (default) or mono-"
+    echo "  ${CYAN}Animation:${RST}  (static) or lsd-"
+    echo "  ${CYAN}Icons:${RST}      (emoji) or -nerd"
+    echo ""
     echo "${BOLD}Examples:${RST}"
-    echo "  zstheme              # Open interactive selector"
-    echo "  zstheme 1line        # Apply 1line theme"
-    echo "  zstheme lsd          # Apply rainbow theme"
+    echo "  zstheme 2-line           # Classic 2-line layout"
+    echo "  zstheme lsd-chips        # Rainbow chips"
+    echo "  zstheme mono-card        # Monochrome card"
+    echo "  zstheme lsd-1-line-nerd  # Rainbow 1-line with Nerd Font"
     echo ""
     echo "${BOLD}Configuration:${RST}"
     echo "  Add to ~/.zshrc or ~/.bashrc:"
@@ -284,6 +442,9 @@ case "${1:-}" in
         ;;
     --preview|-p)
         cmd_preview
+        ;;
+    --preview-all|-P)
+        cmd_preview_all
         ;;
     --help|-h)
         cmd_help

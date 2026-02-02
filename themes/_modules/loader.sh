@@ -1,0 +1,135 @@
+#!/bin/bash
+# Dynamic Theme Loader - 테마명 파싱 및 모듈 조합
+# 테마명 규칙: [mono-][lsd-]{layout}[-nerd]
+
+# ============================================================
+# 모듈 디렉토리 위치
+# ============================================================
+
+# 이 파일의 실제 위치 찾기
+_LOADER_SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$_LOADER_SOURCE" ]]; do
+    _LOADER_DIR="$(cd -P "$(dirname "$_LOADER_SOURCE")" && pwd)"
+    _LOADER_SOURCE="$(readlink "$_LOADER_SOURCE")"
+    [[ "$_LOADER_SOURCE" != /* ]] && _LOADER_SOURCE="$_LOADER_DIR/$_LOADER_SOURCE"
+done
+MODULES_DIR="$(cd -P "$(dirname "$_LOADER_SOURCE")" && pwd)"
+
+# ============================================================
+# 테마명 파싱
+# ============================================================
+
+parse_theme_name() {
+    local theme_name="$1"
+
+    # 기본값
+    COLOR_MODE="default"
+    ANIMATION_MODE="static"
+    LAYOUT_MODE="2-line"
+    ICON_MODE="emoji"
+
+    # 1. mono- 접두사 확인
+    if [[ "$theme_name" == mono-* ]]; then
+        COLOR_MODE="mono"
+        theme_name="${theme_name#mono-}"
+    fi
+
+    # 2. lsd- 접두사 확인
+    if [[ "$theme_name" == lsd-* ]]; then
+        ANIMATION_MODE="lsd"
+        theme_name="${theme_name#lsd-}"
+    fi
+
+    # 3. -nerd 접미사 확인
+    if [[ "$theme_name" == *-nerd ]]; then
+        ICON_MODE="nerd"
+        theme_name="${theme_name%-nerd}"
+    fi
+
+    # 4. 레이아웃 결정
+    case "$theme_name" in
+        1-line|1line)
+            LAYOUT_MODE="1-line"
+            ;;
+        2-line|2line|"")
+            LAYOUT_MODE="2-line"
+            ;;
+        card)
+            LAYOUT_MODE="card"
+            ;;
+        chips)
+            LAYOUT_MODE="chips"
+            ;;
+        *)
+            # 알 수 없는 레이아웃 → 2-line 기본
+            LAYOUT_MODE="2-line"
+            ;;
+    esac
+}
+
+# ============================================================
+# 모듈 로드
+# ============================================================
+
+load_modules() {
+    # 1. 아이콘 로드 (먼저, 다른 모듈에서 사용)
+    source "$MODULES_DIR/icons/${ICON_MODE}.sh"
+
+    # 2. 색상 모듈 로드
+    source "$MODULES_DIR/colors/${COLOR_MODE}.sh"
+
+    # 3. 애니메이션 모듈 로드
+    source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
+
+    # 4. 레이아웃 모듈 로드 (render 함수 포함)
+    source "$MODULES_DIR/layouts/${LAYOUT_MODE}.sh"
+}
+
+# ============================================================
+# 메인 로드 함수
+# ============================================================
+
+load_theme() {
+    local theme_name="${1:-2-line}"
+
+    # 테마명 파싱
+    parse_theme_name "$theme_name"
+
+    # 모듈 로드
+    load_modules
+
+    # 디버그 정보 (필요시)
+    # echo "DEBUG: color=$COLOR_MODE anim=$ANIMATION_MODE layout=$LAYOUT_MODE icon=$ICON_MODE" >&2
+}
+
+# ============================================================
+# 유효한 테마 목록 생성
+# ============================================================
+
+list_all_themes() {
+    local layouts=("1-line" "2-line" "card" "chips")
+    local colors=("" "mono-")
+    local anims=("" "lsd-")
+    local icons=("" "-nerd")
+
+    for color in "${colors[@]}"; do
+        for anim in "${anims[@]}"; do
+            for layout in "${layouts[@]}"; do
+                for icon in "${icons[@]}"; do
+                    echo "${color}${anim}${layout}${icon}"
+                done
+            done
+        done
+    done
+}
+
+# 테마 유효성 검사
+is_valid_theme() {
+    local theme="$1"
+    local all_themes=$(list_all_themes)
+
+    for t in $all_themes; do
+        [[ "$t" == "$theme" ]] && return 0
+    done
+    return 1
+}
