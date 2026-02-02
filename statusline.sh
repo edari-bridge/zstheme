@@ -148,7 +148,7 @@ fi
 # 5. 테마 로드 및 렌더링
 # ============================================================
 THEME_DIR="$HOME/.claude/themes"
-THEME_NAME="${CLAUDE_THEME:-default}"
+THEME_NAME="${CLAUDE_THEME:-card}"
 THEME_FILE="$THEME_DIR/$THEME_NAME"
 
 # 데이터를 export하여 테마에서 사용 가능하게
