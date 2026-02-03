@@ -25,7 +25,7 @@ parse_theme_name() {
     # 기본값
     COLOR_MODE="color"
     ANIMATION_MODE="static"
-    LAYOUT_MODE="2-line"
+    LAYOUT_MODE="2line"
     ICON_MODE="emoji"
 
     # 1. mono- 접두사 확인
@@ -52,10 +52,10 @@ parse_theme_name() {
     # 4. 레이아웃 결정
     case "$theme_name" in
         1-line|1line)
-            LAYOUT_MODE="1-line"
+            LAYOUT_MODE="1line"
             ;;
         2-line|2line|"")
-            LAYOUT_MODE="2-line"
+            LAYOUT_MODE="2line"
             ;;
         card)
             LAYOUT_MODE="card"
@@ -67,8 +67,8 @@ parse_theme_name() {
             LAYOUT_MODE="badges"
             ;;
         *)
-            # 알 수 없는 레이아웃 → 2-line 기본
-            LAYOUT_MODE="2-line"
+            # 알 수 없는 레이아웃 → 2line 기본
+            LAYOUT_MODE="2line"
             ;;
     esac
 }
@@ -113,7 +113,7 @@ load_theme() {
 # ============================================================
 
 list_all_themes() {
-    local layouts=("1-line" "2-line" "card" "bars" "badges")
+    local layouts=("1line" "2line" "card" "bars" "badges")
     local colors=("" "mono-")
     local anims=("" "lsd-" "rainbow-")
     local icons=("" "-nerd")
