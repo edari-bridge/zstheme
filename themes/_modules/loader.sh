@@ -1,6 +1,6 @@
 #!/bin/bash
 # Dynamic Theme Loader - 테마명 파싱 및 모듈 조합
-# 테마명 규칙: [mono-][lsd-]{layout}[-nerd]
+# 테마명 규칙: [mono-][lsd-|rainbow-]{layout}[-nerd]
 
 # ============================================================
 # 모듈 디렉토리 위치

@@ -15,7 +15,7 @@ MONO_CYCLE=(255 252 250 248 246 244 242 240 238 236)
 # 시간 기반 오프셋 (0.1초 단위 - 빠른 변화)
 COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) % 10))
 
-# 배경색 오프셋 (chips용 - 3가지 순환)
+# 배경색 오프셋 (bars용 - 3가지 순환)
 BG_OFFSET=$(($(date +%s%N | cut -c1-10) % 3))
 
 # ============================================================
@@ -33,7 +33,7 @@ get_animated_color() {
     fi
 }
 
-# 배경색 순환 (chips 레이아웃용)
+# 배경색 순환 (bars 레이아웃용)
 get_animated_bg() {
     local chip_idx="$1"  # 0=loc, 1=git, 2=ses
     local actual_idx=$(( (chip_idx + BG_OFFSET) % 3 ))
