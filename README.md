@@ -25,18 +25,23 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 ### Theme Combinations
 
-Themes support prefixes for color modes:
+Themes support prefixes and suffixes (60 combinations):
 
-| Prefix | Description |
-|--------|-------------|
+| Modifier | Description |
+|----------|-------------|
 | (none) | Default colorful theme |
 | `mono-` | Monochrome/grayscale |
-| `lsd-` | Rainbow animation (easter egg) |
+| `lsd-` | LSD-style color cycling animation |
+| `rainbow-` | Rainbow gradient animation |
+| `-nerd` | Nerd Font icons (requires Nerd Font) |
+
+**Format:** `[mono-][lsd-|rainbow-]{layout}[-nerd]`
 
 **Examples:**
 - `badges` = colorful individual badges
 - `mono-bars` = monochrome grouped bars
-- `lsd-badges` = rainbow animated badges
+- `lsd-badges` = LSD animated badges
+- `rainbow-2-line-nerd` = rainbow animation with Nerd Font icons
 
 ## Quick Start
 

@@ -40,11 +40,11 @@ print_header() {
     echo ""
 }
 
-# 모듈식 테마 목록 생성 (40개 조합)
+# 모듈식 테마 목록 생성 (60개 조합)
 get_modular_themes() {
     local layouts=("1-line" "2-line" "card" "bars" "badges")
     local colors=("" "mono-")
-    local anims=("" "lsd-")
+    local anims=("" "lsd-" "rainbow-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do
@@ -61,15 +61,11 @@ get_modular_themes() {
 # 테마가 유효한지 확인
 is_valid_theme() {
     local theme="$1"
-    # chips → bars 하위 호환
-    theme="${theme//chips/bars}"
-    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(mono-)?(lsd-|rainbow-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
 }
 
 get_current_theme() {
-    local theme="${CLAUDE_THEME:-2-line}"
-    # chips → bars 하위 호환
-    echo "${theme//chips/bars}"
+    echo "${CLAUDE_THEME:-2-line}"
 }
 
 theme_description() {
@@ -98,6 +94,8 @@ theme_description() {
 
     # 애니메이션
     if [[ "$theme" == *lsd-* ]]; then
+        desc="$desc lsd"
+    elif [[ "$theme" == *rainbow-* ]]; then
         desc="$desc rainbow"
     fi
 
@@ -116,8 +114,8 @@ theme_description() {
 cmd_list() {
     local current=$(get_current_theme)
     echo ""
-    echo "${BOLD}Available themes (40 combinations):${RST}"
-    echo "${DIM}Format: [mono-][lsd-]{layout}[-nerd]${RST}"
+    echo "${BOLD}Available themes (60 combinations):${RST}"
+    echo "${DIM}Format: [mono-][lsd-|rainbow-]{layout}[-nerd]${RST}"
     echo ""
 
     # 레이아웃별로 그룹핑하여 표시
@@ -164,7 +162,7 @@ cmd_preview() {
     export BURN_RATE='$4.76/h'
 
     # 샘플 테마 프리뷰
-    local samples=("1-line" "1-line-nerd" "2-line" "2-line-nerd" "card" "card-nerd" "bars" "bars-nerd" "badges" "badges-nerd" "lsd-2-line" "mono-2-line-nerd")
+    local samples=("1-line" "1-line-nerd" "2-line" "2-line-nerd" "card" "card-nerd" "bars" "bars-nerd" "badges" "badges-nerd" "lsd-2-line" "rainbow-2-line" "mono-2-line-nerd")
     for theme in "${samples[@]}"; do
         export THEME_NAME="$theme"
         echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
@@ -208,13 +206,11 @@ cmd_preview_all() {
 
 cmd_apply() {
     local theme="$1"
-    # chips → bars 하위 호환
-    theme="${theme//chips/bars}"
 
     if ! is_valid_theme "$theme"; then
         echo "${BOLD}Error:${RST} Theme '$theme' not found."
         echo ""
-        echo "Theme format: [mono-][lsd-]{layout}[-nerd]"
+        echo "Theme format: [mono-][lsd-|rainbow-]{layout}[-nerd]"
         echo "  Layouts: 1-line, 2-line, card, bars, badges"
         echo "  Examples: lsd-bars, mono-card-nerd, badges-nerd"
         echo ""
@@ -347,16 +343,16 @@ cmd_help() {
     echo "  zstheme <theme>      Apply a specific theme"
     echo "  zstheme --list       List available themes"
     echo "  zstheme --preview    Preview sample themes"
-    echo "  zstheme --preview-all Preview all 40 themes"
+    echo "  zstheme --preview-all Preview all 60 themes"
     echo "  zstheme --help       Show this help"
     echo "  zstheme --version    Show version"
     echo ""
     echo "${BOLD}Theme Format:${RST}"
-    echo "  [mono-][lsd-]{layout}[-nerd]"
+    echo "  [mono-][lsd-|rainbow-]{layout}[-nerd]"
     echo ""
     echo "  ${CYAN}Layouts:${RST}    1-line, 2-line, card, bars, badges"
     echo "  ${CYAN}Colors:${RST}     color (default) or mono-"
-    echo "  ${CYAN}Animation:${RST}  static (default) or lsd-"
+    echo "  ${CYAN}Animation:${RST}  static (default), lsd-, or rainbow-"
     echo "  ${CYAN}Icons:${RST}      emoji (default) or -nerd"
     echo ""
     echo "${BOLD}Examples:${RST}"

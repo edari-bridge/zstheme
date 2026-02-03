@@ -34,7 +34,7 @@ get_animated_color() {
     fi
 }
 
-# 배경색 오프셋 (chips 레이아웃용)
+# 배경색 오프셋 (bars 레이아웃용)
 BG_OFFSET=0
 
 # 배경색 순환 함수 (정적 = 변화 없음)
