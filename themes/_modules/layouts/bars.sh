@@ -1,11 +1,11 @@
 #!/bin/bash
-# Chips Layout Module
+# Bars/Badges Layout Module
 #
 # TINTED_MODE (loader.sh에서 설정):
-#   false (기본) - 그룹 단위 배경색
-#   true         - 요소별 역상 배경색
+#   false (기본) - bars: 그룹 단위 배경색 (여러 요소를 막대처럼 묶음)
+#   true         - badges: 요소별 개별 배경색 (각 요소마다 개별 배지)
 #
-# CHIP_STYLE 환경변수로 칩 스타일 선택 가능:
+# CHIP_STYLE 환경변수로 스타일 선택 가능:
 #   badge (기본)   - 배경만 (가장 미니멀)
 #   pipe           - ┃ ┃
 
@@ -106,7 +106,7 @@ render_grouped() {
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}${bg_git}" || ahead="${C_DIM_SYNC}↑ 0${RST}${bg_git}"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}${bg_git}" || behind="${C_DIM_SYNC}↓ 0${RST}${bg_git}"
         fi
-        git_content="${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind}"
+        git_content="${C_STATUS}${ICON_GIT_STATUS}${RST}${bg_git} ${add}  ${mod}  ${del}    ${C_SYNC}${ICON_SYNC}${RST}${bg_git} ${ahead}  ${behind}"
     else
         git_content="${C_DIM_STATUS}${ICON_GIT_STATUS} ---${RST}${bg_git}    ${C_DIM_SYNC}${ICON_SYNC} ---${RST}"
     fi
@@ -207,25 +207,25 @@ render_tinted() {
             [[ "$GIT_ADDED" -gt 0 ]] && add="${c3}+${GIT_ADDED}" || add="${c3}+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${c4}~${GIT_MODIFIED}" || mod="${c4}~0"
             [[ "$GIT_DELETED" -gt 0 ]] && del="${c5}-${GIT_DELETED}" || del="${c5}-0"
-            status_content="${ICON_GIT_STATUS} ${add}  ${mod}  ${del}"
+            status_content="${C_STATUS}${ICON_GIT_STATUS}${add}  ${mod}  ${del}"
 
             local c6=$(echo -e "$(get_animated_color 6)")
             local c7=$(echo -e "$(get_animated_color 7)")
             local ahead behind
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${c6}↑ ${GIT_AHEAD}" || ahead="${c6}↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${c7}↓ ${GIT_BEHIND}" || behind="${c7}↓ 0"
-            sync_content="${ICON_SYNC} ${ahead}  ${behind}"
+            sync_content="${C_SYNC}${ICON_SYNC}${ahead}  ${behind}"
         else
             local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}" || add="${C_DIM_STATUS}+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}" || mod="${C_DIM_STATUS}~0"
             [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}" || del="${C_DIM_STATUS}-0"
-            status_content="${ICON_GIT_STATUS} ${add}  ${mod}  ${del}"
+            status_content="${C_STATUS}${ICON_GIT_STATUS}${add}  ${mod}  ${del}"
 
             local ahead behind
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}" || ahead="${C_DIM_SYNC}↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}" || behind="${C_DIM_SYNC}↓ 0"
-            sync_content="${ICON_SYNC} ${ahead}  ${behind}"
+            sync_content="${C_SYNC}${ICON_SYNC}${ahead}  ${behind}"
         fi
         chip_status="$(make_chip "$C_BG_STATUS" "$status_content")"
         chip_sync="$(make_chip "$C_BG_SYNC" "$sync_content")"
@@ -234,12 +234,13 @@ render_tinted() {
         chip_sync="$(make_chip "$C_BG_SYNC" "${C_DIM_SYNC}${ICON_SYNC} ---")"
     fi
 
-    # 컨텍스트 칩
+    # 컨텍스트 (배경 없음)
+    local chip_ctx
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c8=$(echo -e "$(get_animated_color 8)")
-        chip_ctx="$(make_chip "$bg_ctx" "${c8}${CTX_ICON} ${CONTEXT_PCT}%")"
+        chip_ctx="${c8}${CTX_ICON} ${CONTEXT_PCT}%${RST}"
     else
-        chip_ctx="$(make_chip "$bg_ctx" "${C_CTX_TEXT}${CTX_ICON} ${CONTEXT_PCT}%")"
+        chip_ctx="${C_CTX_TEXT}${CTX_ICON} ${CONTEXT_PCT}%${RST}"
     fi
 
     local line1="${chip_branch} ${chip_tree} ${chip_dir}  ${chip_status} ${chip_sync}  ${chip_ctx}"
@@ -273,12 +274,12 @@ render_tinted() {
         chip_burn=""
     fi
 
-    # 테마 칩
+    # 테마 (배경 없음)
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c0=$(echo -e "$(get_animated_color 0)")
-        chip_theme="$(make_chip "$C_BG_BRANCH" "${c0}${ICON_THEME} ${THEME_NAME}")"
+        chip_theme="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
     else
-        chip_theme="$(make_chip "$C_BG_BRANCH" "${C_RATE}${ICON_THEME} ${THEME_NAME}")"
+        chip_theme="${C_RATE}${ICON_THEME} ${THEME_NAME}${RST}"
     fi
 
     local line2="${chip_model} ${chip_rate} ${chip_time} ${chip_burn}  ${chip_theme}"

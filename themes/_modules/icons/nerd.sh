@@ -7,34 +7,20 @@
 # ============================================================
 
 # nf-md-* (Material Design Icons) - Private Use Area
-# Unicode: U+F0000 - U+F9999 (Nerd Fonts v3 범위)
 # 참고: https://www.nerdfonts.com/cheat-sheet
 
-# U+F062C = 󰘬 (source_branch)
-ICON_BRANCH=$'\U000F062C'
-# U+F0645 = 󰙅 (tree)
-ICON_TREE=$'\U000F0645'
-# U+F024B = 󰉋 (folder_open)
-ICON_DIR=$'\U000F024B'
-# U+F02A2 = 󰊢 (source_commit)
-ICON_GIT_STATUS=$'\U000F02A2'
-# U+F04E6 = 󰓦 (sync)
-ICON_SYNC=$'\U000F04E6'
-# U+F09D9 = 󰧙 (brain)
-ICON_MODEL=$'\U000F09D9'
-# U+F0954 = 󰥔 (clock_outline)
-ICON_TIME=$'\U000F0954'
-# U+F017A = 󰅺 (comment)
-ICON_SESSION=$'\U000F017A'
-# ASCII dollar for maximum compatibility
-ICON_COST="$"
-# U+F03D8 = 󰏘 (palette)
-ICON_THEME=$'\U000F03D8'
+ICON_BRANCH="󰘬 "       # nf-md-source_branch (+1 space for nerd)
+ICON_TREE="󰙅 "         # nf-md-file_tree (+1 space for nerd)
+ICON_DIR="󰝰 "          # nf-md-folder_open (+1 space for nerd)
+ICON_GIT_STATUS="󰊤 "   # nf-md-github (+1 space for nerd)
+ICON_SYNC="󰓦 "         # nf-md-sync (+1 space for nerd)
+ICON_MODEL="󰚩 "        # nf-md-robot (+1 space for nerd)
+ICON_TIME="󰅐 "         # nf-md-clock_fast (+1 space for nerd)
+ICON_SESSION="󰭻 "      # nf-md-message_text (+1 space for nerd)
+ICON_COST="󰆼 "         # nf-md-diamond (+1 space for nerd)
+ICON_THEME="󰉼 "        # nf-md-format_paint (+1 space for nerd)
 
-# 컨텍스트 아이콘 (상태별)
-# U+F0079 = 󰁹 (battery)
-ICON_CTX_NORM=$'\U000F0079'
-# U+F007B = 󰁻 (battery_50)
-ICON_CTX_WARN=$'\U000F007B'
-# U+F008E = 󰂎 (fire) - battery_alert로 변경 가능
-ICON_CTX_CRIT=$'\U000F008E'
+# 컨텍스트 아이콘 (상태별, 색상은 레이아웃에서 적용)
+ICON_CTX_NORM="󰁹 "     # nf-md-battery (+1 space for nerd)
+ICON_CTX_WARN="󰁻 "     # nf-md-battery_50 (+1 space for nerd)
+ICON_CTX_CRIT="󰈸 "     # nf-md-fire (+1 space for nerd)

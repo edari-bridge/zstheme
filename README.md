@@ -16,12 +16,27 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 | Theme | Description |
 |-------|-------------|
-| `default` | 2-line layout with Git info & rate limits |
-| `1line` | Compact single line layout |
+| `2-line` | 2-line layout with Git info & rate limits |
+| `1-line` | Compact single line layout |
 | `card` | Rounded box with background |
-| `chips` | Grouped chips with backgrounds |
-| `lsd` | Rainbow colors, psychedelic vibes |
-| `lsd-chips` | Rainbow chips, maximum party |
+| `bars` | Grouped elements with bar backgrounds |
+| `badges` | Individual element badges (default) |
+| `lsd-*` | Rainbow colors, psychedelic vibes (easter egg) |
+
+### Theme Combinations
+
+Themes support prefixes for color modes:
+
+| Prefix | Description |
+|--------|-------------|
+| (none) | Default colorful theme |
+| `mono-` | Monochrome/grayscale |
+| `lsd-` | Rainbow animation (easter egg) |
+
+**Examples:**
+- `badges` = colorful individual badges
+- `mono-bars` = monochrome grouped bars
+- `lsd-badges` = rainbow animated badges
 
 ## Quick Start
 
@@ -97,20 +112,21 @@ zstheme --help       # Show help
 ### Examples
 
 ```bash
-zstheme 1line        # Switch to compact 1-line theme
-zstheme lsd          # Enable rainbow mode
-zstheme default      # Back to standard 2-line layout
+zstheme 1-line       # Switch to compact 1-line theme
+zstheme lsd-badges   # Enable rainbow mode
+zstheme badges       # Individual badge style (default)
+zstheme bars         # Grouped bar style
 ```
 
 ## Theme Previews
 
-### default
+### 2-line
 ```
 🔱 main    🌿 project    📂 src    💾 +2  ~1  -0    🔮 ↑1  ↓0    🔋 35%
 🧠 Claude Opus 4.5     ⏳ 2h 30m · 04:00 (42%)     💰 $4.76/h     💬 42m
 ```
 
-### 1line
+### 1-line
 ```
 🔱 main    🌿 project    📂 src    💾 +2  ~1  -0    🔮 ↑1  ↓0    🧠 Opus 4.5    🔋 35%    ⏳ 2h (42%)
 ```
@@ -119,6 +135,20 @@ zstheme default      # Back to standard 2-line layout
 ```
 ╭ 🔱 main  🌿 project  📂 src  💾 +2 ~1 -0  🔮 ↑1 ↓0  🔋 35% ╮
 ╰ 🧠 Claude Opus 4.5  ⏳ 2h 30m · 04:00 (42%)  💰 $4.76/h  💬 42m ╯
+```
+
+### bars
+Groups related elements with background bars:
+```
+ 🔱 main    🌿 project    📂 src     💾 +2  ~1  -0    🔮 ↑1  ↓0     🔋 35%
+ 🧠 Claude Opus 4.5     ⏳ 2h 30m · 04:00 (42%)     💰 $4.76/h     🎨 bars
+```
+
+### badges
+Individual badges for each element (default):
+```
+ 🔱 main   🌿 project   📂 src    💾 +2 ~1 -0   🔮 ↑1 ↓0    🔋 35%
+ 🧠 Opus 4.5   ⏳ 2h·04:00 42%   💬 42m   💰 $4.76/h    🎨 badges
 ```
 
 ## Customization
