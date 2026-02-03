@@ -23,7 +23,7 @@ format_git_status() {
         [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
     fi
 
-    echo "${ICON_GIT_STATUS} ${add}  ${mod}  ${del}"
+    echo "${C_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
 }
 
 format_git_sync() {
@@ -40,7 +40,7 @@ format_git_sync() {
         [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
     fi
 
-    echo "${ICON_SYNC} ${ahead}  ${behind}"
+    echo "${C_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
 }
 
 # ============================================================

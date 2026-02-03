@@ -23,7 +23,7 @@ parse_theme_name() {
     local theme_name="$1"
 
     # 기본값
-    COLOR_MODE="default"
+    COLOR_MODE="color"
     ANIMATION_MODE="static"
     TINTED_MODE="false"
     LAYOUT_MODE="2-line"
@@ -64,8 +64,14 @@ parse_theme_name() {
         card)
             LAYOUT_MODE="card"
             ;;
-        chips)
-            LAYOUT_MODE="chips"
+        bars)
+            # bars: 그룹 막대 스타일 (TINTED_MODE=false)
+            LAYOUT_MODE="bars"
+            ;;
+        badges)
+            # badges: 개별 배지 스타일 (TINTED_MODE=true)
+            LAYOUT_MODE="bars"
+            TINTED_MODE="true"
             ;;
         *)
             # 알 수 없는 레이아웃 → 2-line 기본
@@ -114,19 +120,16 @@ load_theme() {
 # ============================================================
 
 list_all_themes() {
-    local layouts=("1-line" "2-line" "card" "chips")
+    local layouts=("1-line" "2-line" "card" "bars" "badges")
     local colors=("" "mono-")
     local anims=("" "lsd-")
-    local tints=("" "tinted-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do
         for anim in "${anims[@]}"; do
-            for tint in "${tints[@]}"; do
-                for layout in "${layouts[@]}"; do
-                    for icon in "${icons[@]}"; do
-                        echo "${color}${anim}${tint}${layout}${icon}"
-                    done
+            for layout in "${layouts[@]}"; do
+                for icon in "${icons[@]}"; do
+                    echo "${color}${anim}${layout}${icon}"
                 done
             done
         done

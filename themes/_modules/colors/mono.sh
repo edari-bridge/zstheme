@@ -16,32 +16,38 @@ init_colors() {
     MONO_4=$'\033[38;5;240m'  # 어두움
     MONO_5=$'\033[38;5;236m'  # 가장 어두움
 
-    # Git 상태 색상 (회색)
-    C_DIM_STATUS=$'\033[38;5;243m'
-    C_BRIGHT_STATUS=$'\033[1;38;5;252m'
-    C_DIM_SYNC=$'\033[38;5;241m'
-    C_BRIGHT_SYNC=$'\033[1;38;5;250m'
+    # 기본 글씨색 (모델명과 동일)
+    C_BASE="$MONO_2"  # 250
 
-    # Rate limit 색상 (회색)
-    C_RATE=$'\033[38;5;248m'
-    C_BURN=$'\033[38;5;246m'
-    C_TIME=$'\033[38;5;244m'
+    # Git 상태 색상
+    C_DIM_STATUS="$C_BASE"           # n=0: 기본 글씨
+    C_BRIGHT_STATUS=$'\033[1;38;5;252m'  # n≠0: 강조 (유지)
+    C_DIM_SYNC="$C_BASE"             # n=0: 기본 글씨
+    C_BRIGHT_SYNC=$'\033[1;38;5;250m'    # n≠0: 강조 (유지)
+
+    # Rate limit 색상 (기본 글씨)
+    C_RATE="$C_BASE"
+    C_BURN="$C_BASE"
+    C_TIME="$C_BASE"
 
     # 박스/칩 테두리 (회색)
     C_BOX=$'\033[38;5;240m'
     C_CHIP=$'\033[38;5;242m'
 
-    # 칩/카드 배경색 (어두운 회색)
-    C_BG_LOC=$'\033[48;5;235m'
-    C_BG_GIT=$'\033[48;5;237m'
-    C_BG_SES=$'\033[48;5;233m'
+    # 칩/카드 배경색 (밝기 차이 극대화)
+    # C_DIR=MONO_4=240이므로 충돌 피해 다른 값 사용
+    C_BG_LOC=$'\033[48;5;239m'  # 중간 어두움
+    C_BG_GIT=$'\033[48;5;237m'  # LOC에 가깝게
+    C_BG_SES=$'\033[48;5;233m'  # 더 어두움
+    C_BG_CTX=$'\033[48;5;236m'  # 배터리/컨텍스트
+    C_BG_THEME=$'\033[48;5;235m'  # 테마
     C_BG=$'\033[48;5;234m'
 
-    # 배터리 배경색 (회색 계열)
+    # 배터리 배경색 (위험할수록 밝게 - 눈에 띄도록)
     C_BAT_EMPTY=$'\033[48;5;236m'
-    C_BAT_GREEN=$'\033[48;5;239m'
-    C_BAT_YELLOW=$'\033[48;5;241m'
-    C_BAT_RED=$'\033[48;5;243m'
+    C_BAT_GREEN=$'\033[48;5;237m'   # 정상 = 어두움
+    C_BAT_YELLOW=$'\033[48;5;242m'  # 경고 = 중간
+    C_BAT_RED=$'\033[48;5;248m'     # 위험 = 밝음
 
     # 컨텍스트 기반 동적 색상 (회색 밝기 변화)
     if [[ "$CONTEXT_PCT" -ge 70 ]]; then
@@ -50,6 +56,8 @@ init_colors() {
         C_TREE="$MONO_1"
         C_DIR="$MONO_1"
         C_MODEL="$MONO_1"
+        C_STATUS="$MONO_1"
+        C_SYNC="$MONO_1"
         C_CTX=$'\033[1;38;5;255m'
         CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
@@ -60,20 +68,24 @@ init_colors() {
         C_TREE="$MONO_2"
         C_DIR="$MONO_2"
         C_MODEL="$MONO_2"
+        C_STATUS="$MONO_2"
+        C_SYNC="$MONO_2"
         C_CTX=$'\033[1;38;5;250m'
         CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
         C_CTX_TEXT="$C_CTX"
     else
-        # 정상: 중간
-        C_BRANCH="$MONO_3"
-        C_TREE="$MONO_3"
-        C_DIR="$MONO_3"
-        C_MODEL="$MONO_3"
-        C_CTX="$MONO_3"
+        # 정상: 기본 글씨 통일
+        C_BRANCH="$C_BASE"
+        C_TREE="$C_BASE"
+        C_DIR="$C_BASE"
+        C_MODEL="$C_BASE"
+        C_STATUS="$C_BASE"
+        C_SYNC="$C_BASE"
+        C_CTX="$C_BASE"
         CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
-        C_CTX_TEXT="$C_CTX"
+        C_CTX_TEXT="$C_BASE"
     fi
 }
 

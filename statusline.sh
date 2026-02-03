@@ -148,7 +148,9 @@ fi
 # 5. 테마 로드 및 렌더링
 # ============================================================
 THEME_DIR="$HOME/.claude/themes"
-THEME_NAME="${CLAUDE_THEME:-card}"
+THEME_CONFIG="$HOME/.claude/theme-config.sh"
+[[ -f "$THEME_CONFIG" ]] && source "$THEME_CONFIG"
+THEME_NAME="${CLAUDE_THEME:-badges}"
 THEME_FILE="$THEME_DIR/$THEME_NAME"
 
 # 데이터를 export하여 테마에서 사용 가능하게
@@ -163,8 +165,8 @@ export THEME_NAME
 is_modular_theme() {
     local theme="$1"
     # 모듈식 테마 패턴: [mono-][lsd-]{layout}[-nerd]
-    # 레이아웃: 1-line, 2-line, card, chips
-    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
+    # 레이아웃: 1-line, 2-line, card, bars, badges
+    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
 }
 
 # 테마 로드 결정
