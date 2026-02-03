@@ -40,11 +40,6 @@ print_header() {
     echo ""
 }
 
-get_themes() {
-    # 기존 테마 파일 목록 (레거시 호환)
-    ls -1 "$THEME_DIR" 2>/dev/null | grep -v "^_" | sort
-}
-
 # 모듈식 테마 목록 생성 (40개 조합)
 get_modular_themes() {
     local layouts=("1-line" "2-line" "card" "bars" "badges")
@@ -63,78 +58,55 @@ get_modular_themes() {
     done
 }
 
-# 레거시 테마명 변환 (chips → bars 호환)
-normalize_theme_name() {
+# 테마가 유효한지 확인
+is_valid_theme() {
     local theme="$1"
-    # chips → bars 변환 (하위 호환)
-    echo "${theme//chips/bars}"
-}
-
-# 테마가 모듈식인지 확인
-is_modular_theme() {
-    local theme="$1"
+    # chips → bars 하위 호환
+    theme="${theme//chips/bars}"
     [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
 }
 
 get_current_theme() {
-    echo "${CLAUDE_THEME:-default}"
+    local theme="${CLAUDE_THEME:-2-line}"
+    # chips → bars 하위 호환
+    echo "${theme//chips/bars}"
 }
 
 theme_description() {
     local theme="$1"
+    local desc=""
 
-    # 레거시 테마
-    case "$theme" in
-        default)    echo "Default theme (2-line style)" ;;
-        lsd)        echo "Rainbow 2-line (legacy)" ;;
-        lsd-bars)   echo "Rainbow bars (legacy)" ;;
-    esac
-
-    # 모듈식 테마 설명 생성
-    if is_modular_theme "$theme"; then
-        local desc=""
-        local layout=""
-
-        # 레이아웃
-        if [[ "$theme" == *"1-line"* ]]; then
-            layout="1-line"
-            desc="Compact"
-        elif [[ "$theme" == *"2-line"* ]]; then
-            layout="2-line"
-            desc="Classic"
-        elif [[ "$theme" == *"card"* ]]; then
-            layout="card"
-            desc="Boxed"
-        elif [[ "$theme" == *"bars"* ]]; then
-            layout="bars"
-            desc="Grouped bars"
-        elif [[ "$theme" == *"badges"* ]]; then
-            layout="badges"
-            desc="Individual badges"
-        fi
-
-        # 색조
-        if [[ "$theme" == mono-* ]]; then
-            desc="$desc mono"
-        else
-            desc="$desc color"
-        fi
-
-        # 애니메이션
-        if [[ "$theme" == *lsd-* ]]; then
-            desc="$desc rainbow"
-        fi
-
-        # 아이콘
-        if [[ "$theme" == *-nerd ]]; then
-            desc="$desc (Nerd Font)"
-        fi
-
-        echo "$desc"
-        return
+    # 레이아웃
+    if [[ "$theme" == *"1-line"* ]]; then
+        desc="Compact"
+    elif [[ "$theme" == *"2-line"* ]]; then
+        desc="Classic"
+    elif [[ "$theme" == *"card"* ]]; then
+        desc="Boxed"
+    elif [[ "$theme" == *"bars"* ]]; then
+        desc="Grouped bars"
+    elif [[ "$theme" == *"badges"* ]]; then
+        desc="Individual badges"
     fi
 
-    echo "Custom theme"
+    # 색조
+    if [[ "$theme" == mono-* ]]; then
+        desc="$desc mono"
+    else
+        desc="$desc color"
+    fi
+
+    # 애니메이션
+    if [[ "$theme" == *lsd-* ]]; then
+        desc="$desc rainbow"
+    fi
+
+    # 아이콘
+    if [[ "$theme" == *-nerd ]]; then
+        desc="$desc (Nerd Font)"
+    fi
+
+    echo "$desc"
 }
 
 # ============================================================
@@ -144,22 +116,8 @@ theme_description() {
 cmd_list() {
     local current=$(get_current_theme)
     echo ""
-    echo "${BOLD}Available themes:${RST}"
-    echo ""
-
-    # 레거시 테마 (기존 파일 기반)
-    echo "${YELLOW}Legacy Themes:${RST}"
-    for theme in $(get_themes); do
-        if [[ "$theme" == "$current" ]]; then
-            echo "  ${GREEN}* ${BOLD}$theme${RST}"
-        else
-            echo "    ${CYAN}$theme${RST}"
-        fi
-    done
-
-    echo ""
-    echo "${YELLOW}Modular Themes (40 combinations):${RST}"
-    echo "${DIM}  Format: [mono-][lsd-]{layout}[-nerd]${RST}"
+    echo "${BOLD}Available themes (40 combinations):${RST}"
+    echo "${DIM}Format: [mono-][lsd-]{layout}[-nerd]${RST}"
     echo ""
 
     # 레이아웃별로 그룹핑하여 표시
@@ -205,20 +163,7 @@ cmd_preview() {
     export RATE_LIMIT_PCT=42
     export BURN_RATE='$4.76/h'
 
-    # 레거시 테마
-    echo "${MAGENTA}━━━ Legacy Themes ━━━${RST}"
-    echo ""
-    for theme in $(get_themes); do
-        export THEME_NAME="$theme"
-        echo "${YELLOW}━━━ ${BOLD}$theme${RST} ${YELLOW}━━━${RST}"
-        source "$THEME_DIR/$theme"
-        render
-        echo ""
-    done
-
-    # 모듈식 테마 (각 레이아웃별 기본 + lsd + nerd)
-    echo "${MAGENTA}━━━ Modular Themes (samples) ━━━${RST}"
-    echo ""
+    # 샘플 테마 프리뷰
     local samples=("1-line" "1-line-nerd" "2-line" "2-line-nerd" "card" "card-nerd" "bars" "bars-nerd" "badges" "badges-nerd" "lsd-2-line" "mono-2-line-nerd")
     for theme in "${samples[@]}"; do
         export THEME_NAME="$theme"
@@ -231,7 +176,7 @@ cmd_preview() {
 
 cmd_preview_all() {
     echo ""
-    echo "${BOLD}All 64 Modular Theme Previews:${RST}"
+    echo "${BOLD}All 40 Theme Previews:${RST}"
     echo ""
 
     # Mock data for preview
@@ -263,19 +208,17 @@ cmd_preview_all() {
 
 cmd_apply() {
     local theme="$1"
+    # chips → bars 하위 호환
+    theme="${theme//chips/bars}"
 
-    # 레거시 테마 또는 모듈식 테마 확인
-    if [[ ! -f "$THEME_DIR/$theme" ]] && ! is_modular_theme "$theme"; then
+    if ! is_valid_theme "$theme"; then
         echo "${BOLD}Error:${RST} Theme '$theme' not found."
         echo ""
-        echo "Available legacy themes:"
-        for t in $(get_themes); do
-            echo "  - $t"
-        done
-        echo ""
-        echo "Modular theme format: [mono-][lsd-]{layout}[-nerd]"
+        echo "Theme format: [mono-][lsd-]{layout}[-nerd]"
         echo "  Layouts: 1-line, 2-line, card, bars, badges"
         echo "  Examples: lsd-bars, mono-card-nerd, badges-nerd"
+        echo ""
+        echo "Run '${CYAN}zstheme --list${RST}' to see all available themes."
         exit 1
     fi
 
@@ -300,10 +243,7 @@ cmd_apply() {
 cmd_interactive() {
     print_header
 
-    # 레거시 + 모듈식 테마 합치기
-    local legacy_themes=($(get_themes))
-    local modular_themes=($(get_modular_themes))
-    local themes=("${legacy_themes[@]}" "${modular_themes[@]}")
+    local themes=($(get_modular_themes))
     local current=$(get_current_theme)
     local selected=0
 
@@ -362,14 +302,7 @@ cmd_interactive() {
 
         # Show preview of selected theme
         export THEME_NAME="${themes[$selected]}"
-        local theme_file="$THEME_DIR/${themes[$selected]}"
-        if [[ -f "$theme_file" ]]; then
-            source "$theme_file"
-        elif is_modular_theme "${themes[$selected]}"; then
-            source "$THEME_DIR/_modular"
-        else
-            source "$THEME_DIR/default"
-        fi
+        source "$THEME_DIR/_modular"
         render
 
         echo ""
@@ -414,11 +347,11 @@ cmd_help() {
     echo "  zstheme <theme>      Apply a specific theme"
     echo "  zstheme --list       List available themes"
     echo "  zstheme --preview    Preview sample themes"
-    echo "  zstheme --preview-all Preview all 64 modular themes"
+    echo "  zstheme --preview-all Preview all 40 themes"
     echo "  zstheme --help       Show this help"
     echo "  zstheme --version    Show version"
     echo ""
-    echo "${BOLD}Modular Theme Format:${RST}"
+    echo "${BOLD}Theme Format:${RST}"
     echo "  [mono-][lsd-]{layout}[-nerd]"
     echo ""
     echo "  ${CYAN}Layouts:${RST}    1-line, 2-line, card, bars, badges"
