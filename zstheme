@@ -45,21 +45,18 @@ get_themes() {
     ls -1 "$THEME_DIR" 2>/dev/null | grep -v "^_" | sort
 }
 
-# 모듈식 테마 목록 생성 (64개 조합)
+# 모듈식 테마 목록 생성 (40개 조합)
 get_modular_themes() {
-    local layouts=("1-line" "2-line" "card" "chips")
+    local layouts=("1-line" "2-line" "card" "bars" "badges")
     local colors=("" "mono-")
     local anims=("" "lsd-")
-    local tints=("" "tinted-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do
         for anim in "${anims[@]}"; do
-            for tint in "${tints[@]}"; do
-                for layout in "${layouts[@]}"; do
-                    for icon in "${icons[@]}"; do
-                        echo "${color}${anim}${tint}${layout}${icon}"
-                    done
+            for layout in "${layouts[@]}"; do
+                for icon in "${icons[@]}"; do
+                    echo "${color}${anim}${layout}${icon}"
                 done
             done
         done
@@ -69,7 +66,7 @@ get_modular_themes() {
 # 테마가 모듈식인지 확인
 is_modular_theme() {
     local theme="$1"
-    [[ "$theme" =~ ^(mono-)?(lsd-)?(tinted-)?(1-line|2-line|card|chips)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
 }
 
 get_current_theme() {
@@ -101,9 +98,12 @@ theme_description() {
         elif [[ "$theme" == *"card"* ]]; then
             layout="card"
             desc="Boxed"
-        elif [[ "$theme" == *"chips"* ]]; then
-            layout="chips"
-            desc="Chips"
+        elif [[ "$theme" == *"bars"* ]]; then
+            layout="bars"
+            desc="Grouped bars"
+        elif [[ "$theme" == *"badges"* ]]; then
+            layout="badges"
+            desc="Individual badges"
         fi
 
         # 색조

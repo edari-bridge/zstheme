@@ -90,13 +90,15 @@ render() {
         line1_parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
     fi
 
-    # 컨텍스트
+    # 컨텍스트 (Nerd: 아이콘=녹색, %=기본 / 이모지: 전체 기본)
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c
         c=$(echo -e "$(get_animated_color 8)")
         line1_parts+=("${c}${CTX_ICON} ${CONTEXT_PCT}%${RST}")
+    elif [[ "$ICON_MODE" == "nerd" ]]; then
+        line1_parts+=("${C_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     else
-        line1_parts+=("${C_CTX}${CTX_ICON} ${CONTEXT_PCT}%${RST}")
+        line1_parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     fi
 
     # Line 2: 세션 정보 + 테마

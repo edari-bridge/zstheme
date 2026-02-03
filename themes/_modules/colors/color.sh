@@ -72,8 +72,8 @@ init_colors() {
         C_MODEL=$'\033[95m'
         C_STATUS=$'\033[38;5;111m'
         C_SYNC=$'\033[38;5;141m'
-        C_CTX=$'\033[0m'
-        C_CTX_TEXT=$'\033[92m'
+        C_CTX=$'\033[92m'           # 아이콘: 녹색 (Nerd용)
+        C_CTX_TEXT=$'\033[0m'       # 텍스트: 기본(리셋)
         CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
     fi
