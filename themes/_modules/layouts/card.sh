@@ -109,7 +109,7 @@ render() {
     init_colors
 
     local V="${C_BOX}│${RST}"
-    local W=20  # 카드 내부 너비
+    local W=24  # 카드 내부 너비 (긴 테마명 수용)
 
     # 왼쪽 카드 내용
     local L1 L2 L3 L4 L5
@@ -148,9 +148,9 @@ render() {
         R5="${C_RATE}${ICON_THEME} ${THEME_NAME}${RST}"
     fi
 
-    # 테두리
-    local TOP1="${C_BOX}╭──────────────────────╮${RST}"
-    local BOT1="${C_BOX}╰──────────────────────╯${RST}"
+    # 테두리 (W=24 + 양쪽 공백 2 = 26)
+    local TOP1="${C_BOX}╭──────────────────────────╮${RST}"
+    local BOT1="${C_BOX}╰──────────────────────────╯${RST}"
     local BTOP="${C_BOX}╭─────╮${RST}"
     local BBOT="${C_BOX}╰─────╯${RST}"
     local BV="${C_BOX}│${RST}"
