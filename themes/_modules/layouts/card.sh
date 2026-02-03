@@ -81,7 +81,7 @@ format_git_status_card() {
         [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
     fi
 
-    echo "${C_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
+    echo "${C_I_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
 }
 
 format_git_sync_card() {
@@ -98,7 +98,7 @@ format_git_sync_card() {
         [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
     fi
 
-    echo "${C_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
+    echo "${C_I_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
 }
 
 # ============================================================
@@ -122,9 +122,9 @@ render() {
         L2="${c1}${ICON_TREE} ${WORKTREE:-worktree}${RST}"
         L3="${c2}${ICON_DIR} ${DIR_NAME}${RST}"
     else
-        L1="${C_BRANCH}${ICON_BRANCH} ${BRANCH:-branch}${RST}"
-        L2="${C_TREE}${ICON_TREE} ${WORKTREE:-worktree}${RST}"
-        L3="${C_DIR}${ICON_DIR} ${DIR_NAME}${RST}"
+        L1="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}"
+        L2="${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}"
+        L3="${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}"
     fi
     L4="$(format_git_status_card)"
     L5="$(format_git_sync_card)"
@@ -136,16 +136,16 @@ render() {
         c9=$(echo -e "$(get_animated_color 9)")
         R1="${c9}${ICON_MODEL} ${MODEL}${RST}"
     else
-        R1="${C_MODEL}${ICON_MODEL} ${MODEL}${RST}"
+        R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
     fi
-    R2="${C_RATE}${ICON_TIME} ${RATE_TIME_LEFT:-0m} · ${RATE_RESET_TIME:-00:00}${RST}"
-    R3="${C_TIME}${ICON_SESSION} ${SESSION_DURATION_MIN}m${RST}"
-    R4="${C_BURN}${ICON_COST} ${BURN_RATE:-\$0/h}${RST}"
+    R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT:-0m} · ${RATE_RESET_TIME:-00:00}${RST}"
+    R3="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}"
+    R4="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE:-\$0/h}${RST}"
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         c0=$(echo -e "$(get_animated_color 0)")
         R5="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
     else
-        R5="${C_RATE}${ICON_THEME} ${THEME_NAME}${RST}"
+        R5="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
 
     # 테두리 (W=24 + 양쪽 공백 2 = 26)

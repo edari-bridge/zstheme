@@ -20,6 +20,33 @@ init_colors() {
     C_BURN=$'\033[38;5;216m'
     C_TIME=$'\033[38;5;75m'
 
+    # 아이콘 색상 (텍스트와 동일 - 컬러 모드에서는 구분 없음)
+    C_I_BRANCH=$'\033[93m'
+    C_I_TREE=$'\033[92m'
+    C_I_DIR=$'\033[96m'
+    C_I_MODEL=$'\033[95m'
+    C_I_STATUS=$'\033[38;5;111m'
+    C_I_SYNC=$'\033[38;5;141m'
+    C_I_CTX=$'\033[92m'
+    C_I_RATE=$'\033[38;5;229m'
+    C_I_BURN=$'\033[38;5;216m'
+    C_I_TIME=$'\033[38;5;75m'
+    C_I_THEME=$'\033[38;5;229m'
+
+    # badges 레이아웃용 배경색 (글자색의 어두운 버전)
+    C_BG_BRANCH=$'\033[48;5;58m'    # Yellow → Dark Yellow/Olive
+    C_BG_TREE=$'\033[48;5;22m'      # Green → Dark Green
+    C_BG_DIR=$'\033[48;5;23m'       # Cyan → Dark Cyan/Teal
+    C_BG_STATUS=$'\033[48;5;24m'    # Blue
+    C_BG_SYNC=$'\033[48;5;53m'      # Purple → Dark Purple
+    C_BG_MODEL=$'\033[48;5;53m'     # Magenta → Dark Magenta
+    C_BG_RATE=$'\033[48;5;58m'      # Yellow → Dark Yellow
+    C_BG_TIME=$'\033[48;5;24m'      # Blue
+    C_BG_BURN=$'\033[48;5;94m'      # Orange → Dark Orange
+    C_BG_CTX=$'\033[48;5;22m'       # Context → Dark Green (정상)
+    C_BG_CTX_WARN=$'\033[48;5;94m'  # Context → Dark Orange (경고)
+    C_BG_CTX_CRIT=$'\033[48;5;52m'  # Context → Dark Red (위험)
+
     # 박스/칩 테두리 (고정)
     C_BOX=$'\033[38;5;240m'
     C_CHIP=$'\033[38;5;245m'
