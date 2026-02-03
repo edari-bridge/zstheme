@@ -43,6 +43,19 @@ init_colors() {
     C_BG_THEME=$'\033[48;5;235m'  # 테마
     C_BG=$'\033[48;5;234m'
 
+    # badges 레이아웃용 배경색 (회색 톤 섞기)
+    C_BG_BRANCH=$'\033[48;5;236m'
+    C_BG_TREE=$'\033[48;5;241m'
+    C_BG_DIR=$'\033[48;5;234m'
+    C_BG_STATUS=$'\033[48;5;239m'
+    C_BG_SYNC=$'\033[48;5;235m'
+    C_BG_MODEL=$'\033[48;5;240m'
+    C_BG_RATE=$'\033[48;5;237m'
+    C_BG_TIME=$'\033[48;5;242m'
+    C_BG_BURN=$'\033[48;5;235m'
+    C_BG_CTX_WARN=$'\033[48;5;240m'
+    C_BG_CTX_CRIT=$'\033[48;5;244m'
+
     # 배터리 배경색 (위험할수록 밝게 - 눈에 띄도록)
     C_BAT_EMPTY=$'\033[48;5;236m'
     C_BAT_GREEN=$'\033[48;5;237m'   # 정상 = 어두움
@@ -61,7 +74,8 @@ init_colors() {
         C_CTX=$'\033[1;38;5;255m'
         CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
-        C_CTX_TEXT="$C_CTX"
+        # 컨텍스트 % 텍스트만 빨간색 (경고 강조)
+        C_CTX_TEXT=$'\033[1;91m'
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         # 경고: 밝음
         C_BRANCH="$MONO_2"
@@ -73,7 +87,8 @@ init_colors() {
         C_CTX=$'\033[1;38;5;250m'
         CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
-        C_CTX_TEXT="$C_CTX"
+        # 컨텍스트 % 텍스트만 주황색 (경고 강조)
+        C_CTX_TEXT=$'\033[1;38;5;208m'
     else
         # 정상: 기본 글씨 통일
         C_BRANCH="$C_BASE"
