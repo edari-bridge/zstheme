@@ -53,37 +53,55 @@ render() {
         bg_ctx="$C_BG_CTX"
     fi
 
+    # lsd 모드: 배경색 순환, 글자색은 기존 유지
+    local bg_branch bg_tree bg_dir bg_status bg_sync bg_model
+    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        bg_branch=$(get_animated_badge_bg 0)
+        bg_tree=$(get_animated_badge_bg 1)
+        bg_dir=$(get_animated_badge_bg 2)
+        bg_status=$(get_animated_badge_bg 3)
+        bg_sync=$(get_animated_badge_bg 4)
+        bg_model=$(get_animated_badge_bg 5)
+    else
+        bg_branch="$C_BG_BRANCH"
+        bg_tree="$C_BG_TREE"
+        bg_dir="$C_BG_DIR"
+        bg_status="$C_BG_STATUS"
+        bg_sync="$C_BG_SYNC"
+        bg_model="$C_BG_MODEL"
+    fi
+
     # Line 1: 각 요소별 개별 칩
     local chip_branch chip_tree chip_dir chip_status chip_sync chip_ctx
 
     # 브랜치 칩
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c0=$(echo -e "$(get_animated_color 0)")
-        chip_branch="$(make_chip "$C_BG_BRANCH" "${c0}${ICON_BRANCH} ${BRANCH:-branch}")"
+        chip_branch="$(make_chip "$bg_branch" "${c0}${ICON_BRANCH} ${BRANCH:-branch}")"
     else
-        chip_branch="$(make_chip "$C_BG_BRANCH" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
+        chip_branch="$(make_chip "$bg_branch" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
     fi
 
     # 워크트리 칩
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c1=$(echo -e "$(get_animated_color 1)")
-        chip_tree="$(make_chip "$C_BG_TREE" "${c1}${ICON_TREE} ${WORKTREE:-worktree}")"
+        chip_tree="$(make_chip "$bg_tree" "${c1}${ICON_TREE} ${WORKTREE:-worktree}")"
     else
-        chip_tree="$(make_chip "$C_BG_TREE" "${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}")"
+        chip_tree="$(make_chip "$bg_tree" "${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}")"
     fi
 
     # 디렉토리 칩
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c2=$(echo -e "$(get_animated_color 2)")
-        chip_dir="$(make_chip "$C_BG_DIR" "${c2}${ICON_DIR} ${DIR_NAME}")"
+        chip_dir="$(make_chip "$bg_dir" "${c2}${ICON_DIR} ${DIR_NAME}")"
     else
-        chip_dir="$(make_chip "$C_BG_DIR" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
+        chip_dir="$(make_chip "$bg_dir" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
     fi
 
     # Git 상태 칩
     if [[ "$IS_GIT_REPO" == "true" ]]; then
         local status_content sync_content
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
             local c3=$(echo -e "$(get_animated_color 3)")
             local c4=$(echo -e "$(get_animated_color 4)")
             local c5=$(echo -e "$(get_animated_color 5)")
@@ -111,19 +129,16 @@ render() {
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}" || behind="${C_DIM_SYNC}↓ 0"
             sync_content="${C_I_SYNC}${ICON_SYNC}${ahead}  ${behind}"
         fi
-        chip_status="$(make_chip "$C_BG_STATUS" "$status_content")"
-        chip_sync="$(make_chip "$C_BG_SYNC" "$sync_content")"
+        chip_status="$(make_chip "$bg_status" "$status_content")"
+        chip_sync="$(make_chip "$bg_sync" "$sync_content")"
     else
-        chip_status="$(make_chip "$C_BG_STATUS" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---")"
-        chip_sync="$(make_chip "$C_BG_SYNC" "${C_DIM_SYNC}${ICON_SYNC} ---")"
+        chip_status="$(make_chip "$bg_status" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---")"
+        chip_sync="$(make_chip "$bg_sync" "${C_DIM_SYNC}${ICON_SYNC} ---")"
     fi
 
-    # 컨텍스트 (Nerd: 아이콘=컬러, %=텍스트색 / 이모지: 전체 텍스트색)
+    # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
     local chip_ctx
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        local c8=$(echo -e "$(get_animated_color 8)")
-        chip_ctx="${c8}${CTX_ICON} ${CONTEXT_PCT}%${RST}"
-    elif [[ "$ICON_MODE" == "nerd" ]]; then
+    if [[ "$ICON_MODE" == "nerd" ]]; then
         chip_ctx="${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
     else
         chip_ctx="${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
@@ -135,11 +150,11 @@ render() {
     local chip_model chip_rate chip_time chip_burn chip_theme
 
     # 모델 칩
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c9=$(echo -e "$(get_animated_color 9)")
-        chip_model="$(make_chip "$C_BG_MODEL" "${c9}${ICON_MODEL} ${MODEL}")"
+        chip_model="$(make_chip "$bg_model" "${c9}${ICON_MODEL} ${MODEL}")"
     else
-        chip_model="$(make_chip "$C_BG_MODEL" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
+        chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
     fi
 
     # Rate limit 칩
@@ -161,7 +176,7 @@ render() {
     fi
 
     # 테마 (배경 없음)
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c0=$(echo -e "$(get_animated_color 0)")
         chip_theme="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
     else

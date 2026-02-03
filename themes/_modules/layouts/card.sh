@@ -68,6 +68,15 @@ format_git_status_card() {
     local add mod del
 
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        # 글자 단위 그라데이션
+        local add_text mod_text del_text
+        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
+        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
+        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
+        add=$(colorize_text "$add_text" 3)
+        mod=$(colorize_text "$mod_text" 5)
+        del=$(colorize_text "$del_text" 7)
+    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c1 c2 c3
         c1=$(echo -e "$(get_animated_color 3)")
         c2=$(echo -e "$(get_animated_color 4)")
@@ -88,6 +97,13 @@ format_git_sync_card() {
     local ahead behind
 
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        # 글자 단위 그라데이션
+        local ahead_text behind_text
+        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
+        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
+        ahead=$(colorize_text "$ahead_text" 0)
+        behind=$(colorize_text "$behind_text" 4)
+    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
         local c1 c2
         c1=$(echo -e "$(get_animated_color 6)")
         c2=$(echo -e "$(get_animated_color 7)")
@@ -114,7 +130,11 @@ render() {
     # 왼쪽 카드 내용
     local L1 L2 L3 L4 L5
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        local c0 c1 c2 c9
+        L1="$(colorize_text "${ICON_BRANCH} ${BRANCH:-branch}" 0)"
+        L2="$(colorize_text "${ICON_TREE} ${WORKTREE:-worktree}" 3)"
+        L3="$(colorize_text "${ICON_DIR} ${DIR_NAME}" 6)"
+    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
+        local c0 c1 c2
         c0=$(echo -e "$(get_animated_color 0)")
         c1=$(echo -e "$(get_animated_color 1)")
         c2=$(echo -e "$(get_animated_color 2)")
@@ -132,7 +152,9 @@ render() {
     # 오른쪽 카드 내용
     local R1 R2 R3 R4 R5
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        local c9 c0
+        R1="$(colorize_text "${ICON_MODEL} ${MODEL}" 2)"
+    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
+        local c9
         c9=$(echo -e "$(get_animated_color 9)")
         R1="${c9}${ICON_MODEL} ${MODEL}${RST}"
     else
@@ -142,6 +164,9 @@ render() {
     R3="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}"
     R4="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE:-\$0/h}${RST}"
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        R5="$(colorize_text "${ICON_THEME} ${THEME_NAME}" 5)"
+    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
+        local c0
         c0=$(echo -e "$(get_animated_color 0)")
         R5="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
     else
