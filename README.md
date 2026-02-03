@@ -16,8 +16,8 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 | Theme | Description |
 |-------|-------------|
-| `2-line` | 2-line layout with Git info & rate limits |
-| `1-line` | Compact single line layout |
+| `2line` | 2line layout with Git info & rate limits |
+| `1line` | Compact single line layout |
 | `card` | Rounded box with background |
 | `bars` | Grouped elements with bar backgrounds |
 | `badges` | Individual element badges (default) |
@@ -41,7 +41,7 @@ Themes support prefixes and suffixes (60 combinations):
 - `badges` = colorful individual badges
 - `mono-bars` = monochrome grouped bars
 - `lsd-badges` = LSD animated badges
-- `rainbow-2-line-nerd` = rainbow animation with Nerd Font icons
+- `rainbow-2line-nerd` = rainbow animation with Nerd Font icons
 
 ## Quick Start
 
@@ -117,7 +117,7 @@ zstheme --help       # Show help
 ### Examples
 
 ```bash
-zstheme 1-line       # Switch to compact 1-line theme
+zstheme 1line       # Switch to compact 1line theme
 zstheme lsd-badges   # Enable rainbow mode
 zstheme badges       # Individual badge style (default)
 zstheme bars         # Grouped bar style
@@ -125,13 +125,13 @@ zstheme bars         # Grouped bar style
 
 ## Theme Previews
 
-### 2-line
+### 2line
 ```
 🔱 main    🌿 project    📂 src    💾 +2  ~1  -0    🔮 ↑1  ↓0    🔋 35%
 🧠 Claude Opus 4.5     ⏳ 2h 30m · 04:00 (42%)     💰 $4.76/h     💬 42m
 ```
 
-### 1-line
+### 1line
 ```
 🔱 main    🌿 project    📂 src    💾 +2  ~1  -0    🔮 ↑1  ↓0    🧠 Opus 4.5    🔋 35%    ⏳ 2h (42%)
 ```
