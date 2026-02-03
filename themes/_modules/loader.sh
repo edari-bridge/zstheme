@@ -34,10 +34,13 @@ parse_theme_name() {
         theme_name="${theme_name#mono-}"
     fi
 
-    # 2. lsd- 접두사 확인
+    # 2. lsd- 또는 rainbow- 접두사 확인
     if [[ "$theme_name" == lsd-* ]]; then
         ANIMATION_MODE="lsd"
         theme_name="${theme_name#lsd-}"
+    elif [[ "$theme_name" == rainbow-* ]]; then
+        ANIMATION_MODE="rainbow"
+        theme_name="${theme_name#rainbow-}"
     fi
 
     # 3. -nerd 접미사 확인
@@ -112,7 +115,7 @@ load_theme() {
 list_all_themes() {
     local layouts=("1-line" "2-line" "card" "bars" "badges")
     local colors=("" "mono-")
-    local anims=("" "lsd-")
+    local anims=("" "lsd-" "rainbow-")
     local icons=("" "-nerd")
 
     for color in "${colors[@]}"; do

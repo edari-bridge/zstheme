@@ -164,9 +164,9 @@ export THEME_NAME
 # 모듈식 테마 지원: 테마명에 따라 로더 사용
 is_modular_theme() {
     local theme="$1"
-    # 모듈식 테마 패턴: [mono-][lsd-]{layout}[-nerd]
+    # 모듈식 테마 패턴: [mono-][lsd-|rainbow-]{layout}[-nerd]
     # 레이아웃: 1-line, 2-line, card, bars, badges
-    [[ "$theme" =~ ^(mono-)?(lsd-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(mono-)?(lsd-|rainbow-)?(1-line|2-line|card|bars|badges)(-nerd)?$ ]]
 }
 
 # 테마 로드 결정
