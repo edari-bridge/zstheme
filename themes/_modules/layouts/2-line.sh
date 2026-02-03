@@ -24,7 +24,7 @@ format_git_status() {
         [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
     fi
 
-    echo "${C_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
+    echo "${C_I_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
 }
 
 format_git_sync() {
@@ -41,7 +41,7 @@ format_git_sync() {
         [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
     fi
 
-    echo "${C_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
+    echo "${C_I_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
 }
 
 # ============================================================
@@ -60,7 +60,7 @@ render() {
         c=$(echo -e "$(get_animated_color 0)")
         line1_parts+=("${c}${ICON_BRANCH} ${BRANCH:-branch}${RST}")
     else
-        line1_parts+=("${C_BRANCH}${ICON_BRANCH} ${BRANCH:-branch}${RST}")
+        line1_parts+=("${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}")
     fi
 
     # 워크트리
@@ -69,7 +69,7 @@ render() {
         c=$(echo -e "$(get_animated_color 1)")
         line1_parts+=("${c}${ICON_TREE} ${WORKTREE:-worktree}${RST}")
     else
-        line1_parts+=("${C_TREE}${ICON_TREE} ${WORKTREE:-worktree}${RST}")
+        line1_parts+=("${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}")
     fi
 
     # 디렉토리
@@ -78,7 +78,7 @@ render() {
         c=$(echo -e "$(get_animated_color 2)")
         line1_parts+=("${c}${ICON_DIR} ${DIR_NAME}${RST}")
     else
-        line1_parts+=("${C_DIR}${ICON_DIR} ${DIR_NAME}${RST}")
+        line1_parts+=("${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}")
     fi
 
     # Git 상태
@@ -90,13 +90,13 @@ render() {
         line1_parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
     fi
 
-    # 컨텍스트 (Nerd: 아이콘=녹색, %=기본 / 이모지: 전체 기본)
+    # 컨텍스트 (Nerd: 아이콘=컬러, %=텍스트색 / 이모지: 전체 텍스트색)
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c
         c=$(echo -e "$(get_animated_color 8)")
         line1_parts+=("${c}${CTX_ICON} ${CONTEXT_PCT}%${RST}")
     elif [[ "$ICON_MODE" == "nerd" ]]; then
-        line1_parts+=("${C_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
+        line1_parts+=("${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     else
         line1_parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     fi
@@ -110,22 +110,22 @@ render() {
         c=$(echo -e "$(get_animated_color 9)")
         line2_parts+=("${c}${ICON_MODEL} ${MODEL}${RST}")
     else
-        line2_parts+=("${C_MODEL}${ICON_MODEL} ${MODEL}${RST}")
+        line2_parts+=("${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}")
     fi
 
     # Rate limit 정보
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         local rate_color=$(get_rate_color)
-        line2_parts+=("${C_RATE}${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
+        line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
     elif [[ -n "$RATE_LIMIT_PCT" ]]; then
-        line2_parts+=("${C_RATE}${ICON_TIME} ${RATE_LIMIT_PCT}%${RST}")
+        line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_LIMIT_PCT}%${RST}")
     fi
 
     # 세션 시간
-    line2_parts+=("${C_TIME}${ICON_SESSION} ${SESSION_DURATION_MIN}m${RST}")
+    line2_parts+=("${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}")
 
     # 번레이트
-    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_BURN}${ICON_COST} ${BURN_RATE}${RST}")
+    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}")
 
     # 현재 테마
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
@@ -133,7 +133,7 @@ render() {
         c=$(echo -e "$(get_animated_color 0)")
         line2_parts+=("${c}${ICON_THEME} ${THEME_NAME}${RST}")
     else
-        line2_parts+=("${C_RATE}${ICON_THEME} ${THEME_NAME}${RST}")
+        line2_parts+=("${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}")
     fi
 
     # 출력

@@ -60,9 +60,9 @@ render() {
         loc_content="${loc_content}${c1}${ICON_TREE} ${WORKTREE:-worktree}${RST}${bg_loc}    "
         loc_content="${loc_content}${c2}${ICON_DIR} ${DIR_NAME}${RST}"
     else
-        loc_content="${C_BRANCH}${ICON_BRANCH} ${BRANCH:-branch}${RST}${bg_loc}    "
-        loc_content="${loc_content}${C_TREE}${ICON_TREE} ${WORKTREE:-worktree}${RST}${bg_loc}    "
-        loc_content="${loc_content}${C_DIR}${ICON_DIR} ${DIR_NAME}${RST}"
+        loc_content="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}${bg_loc}    "
+        loc_content="${loc_content}${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}${bg_loc}    "
+        loc_content="${loc_content}${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}"
     fi
 
     local git_content=""
@@ -86,18 +86,18 @@ render() {
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}${bg_git}" || ahead="${C_DIM_SYNC}↑ 0${RST}${bg_git}"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}${bg_git}" || behind="${C_DIM_SYNC}↓ 0${RST}${bg_git}"
         fi
-        git_content="${C_STATUS}${ICON_GIT_STATUS}${RST}${bg_git} ${add}  ${mod}  ${del}    ${C_SYNC}${ICON_SYNC}${RST}${bg_git} ${ahead}  ${behind}"
+        git_content="${C_I_STATUS}${ICON_GIT_STATUS}${RST}${bg_git} ${add}  ${mod}  ${del}    ${C_I_SYNC}${ICON_SYNC}${RST}${bg_git} ${ahead}  ${behind}"
     else
         git_content="${C_DIM_STATUS}${ICON_GIT_STATUS} ---${RST}${bg_git}    ${C_DIM_SYNC}${ICON_SYNC} ---${RST}"
     fi
 
-    # 컨텍스트 (Nerd: 아이콘=녹색, %=기본 / 이모지: 전체 기본)
+    # 컨텍스트 (Nerd: 아이콘=컬러, %=텍스트색 / 이모지: 전체 텍스트색)
     local ctx_display
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c8=$(echo -e "$(get_animated_color 8)")
         ctx_display="${c8}${CTX_ICON} ${CONTEXT_PCT}%${RST}"
     elif [[ "$ICON_MODE" == "nerd" ]]; then
-        ctx_display="${C_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
+        ctx_display="${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
     else
         ctx_display="${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
     fi
@@ -110,23 +110,23 @@ render() {
         local c9=$(echo -e "$(get_animated_color 9)")
         ses_content="${c9}${ICON_MODEL} ${MODEL}${RST}${bg_ses}"
     else
-        ses_content="${C_MODEL}${ICON_MODEL} ${MODEL}${RST}${bg_ses}"
+        ses_content="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}${bg_ses}"
     fi
 
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         local rate_color=$(get_rate_color)
-        ses_content="${ses_content}     ${C_RATE}${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%${RST}${bg_ses}"
+        ses_content="${ses_content}     ${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%${RST}${bg_ses}"
     fi
 
-    ses_content="${ses_content}     ${C_TIME}${ICON_SESSION} ${SESSION_DURATION_MIN}m${RST}${bg_ses}"
-    [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_BURN}${ICON_COST} ${BURN_RATE}${RST}"
+    ses_content="${ses_content}     ${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}${bg_ses}"
+    [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}"
 
     local theme_display
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c0=$(echo -e "$(get_animated_color 0)")
         theme_display="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
     else
-        theme_display="${C_RATE}${ICON_THEME} ${THEME_NAME}${RST}"
+        theme_display="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
 
     local line2="$(make_chip "$bg_ses" "$ses_content")    ${theme_display}"
