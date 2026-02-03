@@ -97,13 +97,15 @@ render() {
         parts+=("${C_MODEL}${ICON_MODEL} ${MODEL}${RST}")
     fi
 
-    # 컨텍스트
+    # 컨텍스트 (Nerd: 아이콘=녹색, %=기본 / 이모지: 전체 기본)
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         local c
         c=$(echo -e "$(get_animated_color 8)")
         parts+=("${c}${CTX_ICON} ${CONTEXT_PCT}%${RST}")
+    elif [[ "$ICON_MODE" == "nerd" ]]; then
+        parts+=("${C_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     else
-        parts+=("${C_CTX}${CTX_ICON} ${CONTEXT_PCT}%${RST}")
+        parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
     fi
 
     # Rate limit (컴팩트)

@@ -25,7 +25,6 @@ parse_theme_name() {
     # 기본값
     COLOR_MODE="color"
     ANIMATION_MODE="static"
-    TINTED_MODE="false"
     LAYOUT_MODE="2-line"
     ICON_MODE="emoji"
 
@@ -41,19 +40,13 @@ parse_theme_name() {
         theme_name="${theme_name#lsd-}"
     fi
 
-    # 3. tinted- 접두사 확인
-    if [[ "$theme_name" == tinted-* ]]; then
-        TINTED_MODE="true"
-        theme_name="${theme_name#tinted-}"
-    fi
-
-    # 4. -nerd 접미사 확인
+    # 3. -nerd 접미사 확인
     if [[ "$theme_name" == *-nerd ]]; then
         ICON_MODE="nerd"
         theme_name="${theme_name%-nerd}"
     fi
 
-    # 5. 레이아웃 결정
+    # 4. 레이아웃 결정
     case "$theme_name" in
         1-line|1line)
             LAYOUT_MODE="1-line"
@@ -65,13 +58,10 @@ parse_theme_name() {
             LAYOUT_MODE="card"
             ;;
         bars)
-            # bars: 그룹 막대 스타일 (TINTED_MODE=false)
             LAYOUT_MODE="bars"
             ;;
         badges)
-            # badges: 개별 배지 스타일 (TINTED_MODE=true)
-            LAYOUT_MODE="bars"
-            TINTED_MODE="true"
+            LAYOUT_MODE="badges"
             ;;
         *)
             # 알 수 없는 레이아웃 → 2-line 기본
