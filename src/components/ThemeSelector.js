@@ -9,7 +9,7 @@ import { saveThemeToShellConfig } from '../utils/shell.js';
 
 const e = React.createElement;
 
-export function ThemeSelector() {
+export function ThemeSelector({ onBack }) {
   const { exit } = useApp();
   const themes = getAllThemes();
   const currentTheme = getCurrentTheme();
@@ -28,7 +28,11 @@ export function ThemeSelector() {
   }, [selectedTheme]);
 
   useInput((input, key) => {
-    if (input === 'q' || input === 'Q') {
+    if (input === 'q' || input === 'Q' || input === 'b' || key.escape) {
+      if (onBack) {
+        onBack();
+        return;
+      }
       exit();
     }
 

@@ -7,7 +7,7 @@ import { FG_DEFAULTS, BG_DEFAULTS, loadCustomColors, saveCustomColors, resetToDe
 
 const e = React.createElement;
 
-export function ColorEditor() {
+export function ColorEditor({ onBack }) {
   const { exit } = useApp();
 
   // 색상 데이터 초기화
@@ -36,6 +36,10 @@ export function ColorEditor() {
     if (input === 'q' || input === 'Q') {
       if (modified) {
         console.log('\n\x1b[33mUnsaved changes discarded.\x1b[0m');
+      }
+      if (onBack) {
+        onBack();
+        return;
       }
       exit();
       return;
