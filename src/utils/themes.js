@@ -1,14 +1,18 @@
 import { readFileSync, existsSync } from 'fs';
-import { PATHS, LAYOUTS, COLOR_MODES, ANIMATION_MODES, ICON_MODES } from './config.js';
+import { PATHS, LAYOUTS, COLOR_MODES, ANIMATION_MODES, HIDDEN_ANIMATION_MODES, ICON_MODES } from './config.js';
 
 /**
- * 모든 테마 조합 생성 (60개)
+ * 모든 테마 조합 생성
+ * @param {boolean} includeHidden - 숨겨진 테마(lsd) 포함 여부
  */
-export function getAllThemes() {
+export function getAllThemes(includeHidden = false) {
   const themes = [];
+  const animations = includeHidden
+    ? [...ANIMATION_MODES, ...HIDDEN_ANIMATION_MODES]
+    : ANIMATION_MODES;
 
   for (const color of COLOR_MODES) {
-    for (const anim of ANIMATION_MODES) {
+    for (const anim of animations) {
       for (const layout of LAYOUTS) {
         for (const icon of ICON_MODES) {
           themes.push(`${color}${anim}${layout}${icon}`);
@@ -88,6 +92,32 @@ export function getThemesByLayout() {
   }
 
   return grouped;
+}
+
+/**
+ * 테마 필터링
+ */
+export function filterThemes(themes, filters) {
+  return themes.filter(theme => {
+    // 레이아웃 필터
+    if (filters.layout) {
+      const layoutMatch = theme.match(/(1line|2line|card|bars|badges)/);
+      if (!layoutMatch || layoutMatch[1] !== filters.layout) return false;
+    }
+
+    // 색상 필터
+    if (filters.color === 'mono' && !theme.startsWith('mono-')) return false;
+    if (filters.color === 'custom' && !theme.startsWith('custom-')) return false;
+
+    // 애니메이션 필터
+    if (filters.animation === 'lsd' && !theme.includes('lsd-')) return false;
+    if (filters.animation === 'rainbow' && !theme.includes('rainbow-')) return false;
+
+    // 아이콘 필터
+    if (filters.icon === 'nerd' && !theme.endsWith('-nerd')) return false;
+
+    return true;
+  });
 }
 
 /**
