@@ -338,8 +338,11 @@ cmd_interactive() {
 }
 
 cmd_edit() {
+    # 편집기 실행 중 set -e 비활성화 (read timeout이 non-zero exit 반환)
+    set +e
     source "$THEME_DIR/_modules/editor/main.sh"
     run_color_editor
+    set -e
 }
 
 cmd_help() {
