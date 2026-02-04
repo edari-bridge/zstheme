@@ -34,9 +34,10 @@ export function Logo() {
 
     const getGradientColor = (y, x) => {
         // Add vertical offset based on y to create a diagonal gradient flow
-        const r = Math.floor(128 + 127 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2));
-        const g = Math.floor(128 + 127 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2 + 2));
-        const b = Math.floor(128 + 127 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2 + 4));
+        // Pastel tone: High brightness (Base ~200), Low saturation (Amplitude ~55)
+        const r = Math.floor(200 + 55 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2));
+        const g = Math.floor(200 + 55 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2 + 2));
+        const b = Math.floor(200 + 55 * Math.sin(colorOffset * 0.1 + x * 0.05 + y * 0.2 + 4));
         return `rgb(${r},${g},${b})`;
     };
 
