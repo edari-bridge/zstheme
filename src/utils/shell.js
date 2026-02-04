@@ -19,6 +19,10 @@ export function getShellConfigPath() {
   return path.join(home, '.zshrc'); // default
 }
 
+export function getThemeConfigPath() {
+  return path.join(os.homedir(), '.claude', 'theme-config.sh');
+}
+
 export function saveThemeToShellConfig(theme) {
   const configPath = getShellConfigPath();
   const exportLine = `export CLAUDE_THEME="${theme}"`;
@@ -43,5 +47,14 @@ export function saveThemeToShellConfig(theme) {
   }
 
   fs.writeFileSync(configPath, content);
+
+  // Also update theme-config.sh for immediate effect
+  const themeConfigPath = getThemeConfigPath();
+  const themeConfigDir = path.dirname(themeConfigPath);
+  if (!fs.existsSync(themeConfigDir)) {
+    fs.mkdirSync(themeConfigDir, { recursive: true });
+  }
+  fs.writeFileSync(themeConfigPath, `CLAUDE_THEME="${theme}"\n`);
+
   return configPath;
 }
