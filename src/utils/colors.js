@@ -24,9 +24,9 @@ export const BG_DEFAULTS = {
   C_BG_STATUS: { name: 'BG Status', code: 24 },
   C_BG_SYNC: { name: 'BG Sync', code: 53 },
   C_BG_MODEL: { name: 'BG Model', code: 53 },
-  C_BG_LOC: { name: 'BG LOC', code: 23 },
-  C_BG_GIT: { name: 'BG GIT', code: 24 },
-  C_BG_SES: { name: 'BG SES', code: 53 },
+  C_BG_RATE: { name: 'BG Rate', code: 58 },
+  C_BG_TIME: { name: 'BG Time', code: 24 },
+  C_BG_BURN: { name: 'BG Burn', code: 94 },
 };
 
 /**

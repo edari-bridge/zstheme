@@ -162,44 +162,58 @@ export function ColorEditor() {
         e(Text, { dimColor: true }, '────────────────────────'),
         e(Text, null, ' '),
 
-        // 2line Preview
-        e(Text, { dimColor: true }, '┌─ 2line ──────────────────┐'),
+        // 2line Preview (full)
+        e(Text, { dimColor: true }, '─ 2line ─'),
         e(Box, null,
-          e(Text, { dimColor: true }, '│ '),
           e(Text, null, `\x1b[38;5;${fgColors.C_BRANCH}m🌿 main\x1b[0m`),
           e(Text, null, '  '),
-          e(Text, null, `\x1b[38;5;${fgColors.C_TREE}mmain\x1b[0m`),
+          e(Text, null, `\x1b[38;5;${fgColors.C_TREE}m🌳 project\x1b[0m`),
           e(Text, null, '  '),
-          e(Text, null, `\x1b[38;5;${fgColors.C_DIR}mproject\x1b[0m`),
-          e(Text, { dimColor: true }, '    │')
+          e(Text, null, `\x1b[38;5;${fgColors.C_DIR}m📂 src\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_STATUS}m💾 +3  ~2  -0\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_SYNC}m🔮 ↑ 1  ↓ 0\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_CTX}m🔋 35%\x1b[0m`)
         ),
         e(Box, null,
-          e(Text, { dimColor: true }, '│ '),
-          e(Text, null, `\x1b[38;5;${fgColors.C_MODEL}m🤖 Claude Opus 4.5\x1b[0m`),
-          e(Text, null, ' '),
-          e(Text, null, `\x1b[38;5;${fgColors.C_CTX}m35%\x1b[0m`),
-          e(Text, { dimColor: true }, '   │')
+          e(Text, null, `\x1b[38;5;${fgColors.C_MODEL}m🧠 Claude Opus 4.5\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_RATE}m⏳ 2h 30m · 04:00 (42%)\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_TIME}m💬 42m\x1b[0m`),
+          e(Text, null, '  '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_BURN}m💰 $4.76/h\x1b[0m`)
         ),
-        e(Text, { dimColor: true }, '└───────────────────────────┘'),
         e(Text, null, ' '),
 
-        // badges Preview
-        e(Text, { dimColor: true }, '┌─ badges ─────────────────┐'),
+        // badges Preview (full)
+        e(Text, { dimColor: true }, '─ badges ─'),
         e(Box, null,
-          e(Text, { dimColor: true }, '│ '),
-          e(Text, null, `\x1b[48;5;${bgColors.C_BG_BRANCH}m\x1b[38;5;${fgColors.C_BRANCH}m main \x1b[0m`),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_BRANCH}m\x1b[38;5;${fgColors.C_BRANCH}m 🌿 main \x1b[0m`),
           e(Text, null, ' '),
-          e(Text, null, `\x1b[48;5;${bgColors.C_BG_STATUS}m\x1b[38;5;${fgColors.C_STATUS}m +3 ~2 \x1b[0m`),
-          e(Text, { dimColor: true }, '      │')
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_TREE}m\x1b[38;5;${fgColors.C_TREE}m 🌳 project \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_DIR}m\x1b[38;5;${fgColors.C_DIR}m 📂 src \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_STATUS}m\x1b[38;5;${fgColors.C_STATUS}m 💾 +3 ~2 -0 \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_SYNC}m\x1b[38;5;${fgColors.C_SYNC}m 🔮 ↑ 1  ↓ 0 \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_CTX}m🔋 35%\x1b[0m`)
         ),
         e(Box, null,
-          e(Text, { dimColor: true }, '│ '),
-          e(Text, null, `\x1b[48;5;${bgColors.C_BG_MODEL}m\x1b[38;5;${fgColors.C_MODEL}m Opus \x1b[0m`),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_MODEL}m\x1b[38;5;${fgColors.C_MODEL}m 🧠 Opus 4.5 \x1b[0m`),
           e(Text, null, ' '),
-          e(Text, null, `\x1b[38;5;${fgColors.C_CTX}m🔋 35%\x1b[0m`),
-          e(Text, { dimColor: true }, '       │')
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_RATE}m\x1b[38;5;${fgColors.C_RATE}m ⏳ 2h·04:00 42% \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_TIME}m\x1b[38;5;${fgColors.C_TIME}m 💬 42m \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[48;5;${bgColors.C_BG_BURN}m\x1b[38;5;${fgColors.C_BURN}m 💰 $4.76/h \x1b[0m`),
+          e(Text, null, ' '),
+          e(Text, null, `\x1b[38;5;${fgColors.C_RATE}m🎨 badges\x1b[0m`)
         ),
-        e(Text, { dimColor: true }, '└───────────────────────────┘'),
         e(Text, null, ' '),
 
         e(Text, { dimColor: true }, '────────────────────────'),
