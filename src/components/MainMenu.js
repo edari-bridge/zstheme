@@ -8,9 +8,9 @@ const e = React.createElement;
 
 // Menu items definition
 const MENU_ITEMS = [
-    { id: 'themes', label: 'Explore Themes', icon: '🎨' },
-    { id: 'editor', label: 'Color Editor', icon: '🛠️ ' },
-    { id: 'exit', label: 'Exit', icon: '👋' },
+    { id: 'themes', label: 'Explore Themes' },
+    { id: 'editor', label: 'Color Editor' },
+    { id: 'exit', label: 'Exit' },
 ];
 
 export function MainMenu() {
@@ -70,7 +70,7 @@ export function MainMenu() {
                             bold: isSelected,
                             backgroundColor: isSelected ? '#333' : undefined
                         },
-                            `${item.icon} ${item.label}`
+                            item.label
                         )
                     );
                 })
