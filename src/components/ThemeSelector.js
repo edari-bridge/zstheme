@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
+import path from 'path';
 import { Header } from './common/Header.js';
 import { HelpBar } from './common/HelpBar.js';
 import { getAllThemes, getCurrentTheme, getThemeDescription } from '../utils/themes.js';
 import { renderThemePreview } from '../utils/preview.js';
+import { saveThemeToShellConfig } from '../utils/shell.js';
 
 const e = React.createElement;
 
@@ -39,13 +41,17 @@ export function ThemeSelector() {
     }
 
     if (key.return) {
-      // 선택 완료 - 적용 안내 출력
+      // 선택 완료 - 자동 저장
+      const configPath = saveThemeToShellConfig(selectedTheme);
+      const configName = path.basename(configPath);
+
       console.log('');
-      console.log(`\x1b[32mTheme '\x1b[1m${selectedTheme}\x1b[22m' selected!\x1b[0m`);
+      console.log(`\x1b[32mTheme '\x1b[1m${selectedTheme}\x1b[22m' saved to ~/${configName}\x1b[0m`);
       console.log('');
-      console.log('To apply, add this to your shell config (~/.zshrc or ~/.bashrc):');
+      console.log('To apply now, run:');
+      console.log(`  \x1b[36msource ~/${configName}\x1b[0m`);
       console.log('');
-      console.log(`  \x1b[36mexport CLAUDE_THEME="${selectedTheme}"\x1b[0m`);
+      console.log('\x1b[2mOr restart your terminal / Claude Code.\x1b[0m');
       console.log('');
       exit();
     }

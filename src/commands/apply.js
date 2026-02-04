@@ -1,5 +1,7 @@
 import chalk from 'chalk';
+import path from 'path';
 import { isValidTheme } from '../utils/themes.js';
+import { saveThemeToShellConfig } from '../utils/shell.js';
 
 export function cmdApply(theme) {
   if (!isValidTheme(theme)) {
@@ -13,18 +15,16 @@ export function cmdApply(theme) {
     process.exit(1);
   }
 
+  // Save to shell config
+  const configPath = saveThemeToShellConfig(theme);
+  const configName = path.basename(configPath);
+
   console.log('');
-  console.log(chalk.green(`Theme '${chalk.bold(theme)}' selected!`));
+  console.log(chalk.green(`Theme '${chalk.bold(theme)}' saved to ~/${configName}`));
   console.log('');
-  console.log('To apply, add this to your shell config (~/.zshrc or ~/.bashrc):');
+  console.log('To apply now, run:');
+  console.log(`  ${chalk.cyan(`source ~/${configName}`)}`);
   console.log('');
-  console.log(`  ${chalk.cyan(`export CLAUDE_THEME="${theme}"`)}`);
-  console.log('');
-  console.log('Then restart your terminal or run:');
-  console.log('');
-  console.log(`  ${chalk.cyan('source ~/.zshrc')}`);
-  console.log('');
-  console.log(chalk.dim('Quick apply (current session only):'));
-  console.log(`  ${chalk.cyan(`export CLAUDE_THEME="${theme}"`)}`);
+  console.log(chalk.dim('Or restart your terminal / Claude Code.'));
   console.log('');
 }
