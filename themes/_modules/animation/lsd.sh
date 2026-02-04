@@ -7,13 +7,14 @@
 # ============================================================
 
 # 파스텔 레인보우 (기존 테마 톤앤무드 유지)
-RAINBOW_COLORS=(217 222 229 157 159 153 183 218 223 189)
+# 파스텔 톤 레인보우 (Logo.js 알고리즘 기반 생성됨: RGB 200 ± 55)
+RAINBOW_COLORS=("200;250;158" "205;247;154" "210;244;152" "216;241;149" "221;237;147" "226;232;146" "231;228;145" "235;223;145" "239;218;145" "243;213;145" "246;207;147" "249;202;149" "251;196;151" "252;191;154" "254;185;157" "254;180;161" "254;175;165" "254;170;169" "253;166;174" "252;162;179" "250;158;184" "247;154;189" "244;152;195" "241;149;200" "237;147;206" "232;146;211" "228;145;217" "223;145;222" "218;145;227" "213;145;231" "207;147;236" "202;149;240" "196;151;243" "191;154;246" "185;157;249" "180;161;251" "175;165;253" "170;169;254" "166;174;254" "162;179;254" "158;184;254" "154;189;253" "152;195;251" "149;200;249" "147;206;247" "146;211;243" "145;217;240" "145;222;236" "145;227;232" "145;231;227" "147;236;222" "149;240;217" "151;243;212" "154;246;206" "157;249;201" "161;251;195" "165;253;190" "169;254;185" "174;254;179" "179;254;174")
 
 # 모노 레인보우 (회색 순환)
 MONO_CYCLE=(255 252 250 248 246 244 242 240 238 236)
 
 # 시간 기반 오프셋 (0.1초 단위 - 빠른 변화)
-COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) % 10))
+COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) % 60))
 
 # 배경색 오프셋 (bars용 - 3가지 순환)
 BG_OFFSET=$(($(date +%s%N | cut -c1-10) % 3))
@@ -31,12 +32,13 @@ colorize_text() {
 
     # UTF-8 문자를 하나씩 처리 (grep -o로 문자 분리)
     while IFS= read -r char; do
-        local color_idx=$(( (start_idx + i + COLOR_OFFSET) % 10 ))
+        local color_idx=$(( (start_idx + i + COLOR_OFFSET) % 60 ))
 
         if [[ "$COLOR_MODE" == "mono" ]]; then
-            result+="\033[1;38;5;${MONO_CYCLE[$color_idx]}m${char}"
+            local mono_idx=$(( color_idx % 10 ))
+            result+="\033[1;38;5;${MONO_CYCLE[$mono_idx]}m${char}"
         else
-            result+="\033[1;38;5;${RAINBOW_COLORS[$color_idx]}m${char}"
+            result+="\033[1;38;2;${RAINBOW_COLORS[$color_idx]}m${char}"
         fi
         ((i++))
     done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
@@ -50,12 +52,13 @@ colorize_text() {
 
 get_animated_color() {
     local idx="$1"
-    local actual_idx=$(( (idx + COLOR_OFFSET) % 10 ))
+    local actual_idx=$(( (idx + COLOR_OFFSET) % 60 ))
 
     if [[ "$COLOR_MODE" == "mono" ]]; then
-        echo "\033[1;38;5;${MONO_CYCLE[$actual_idx]}m"
+        local mono_idx=$(( actual_idx % 10 ))
+        echo "\033[1;38;5;${MONO_CYCLE[$mono_idx]}m"
     else
-        echo "\033[1;38;5;${RAINBOW_COLORS[$actual_idx]}m"
+        echo "\033[1;38;2;${RAINBOW_COLORS[$actual_idx]}m"
     fi
 }
 
