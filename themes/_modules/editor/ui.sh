@@ -19,11 +19,11 @@ _WHITE=$'\033[37m'
 # ============================================================
 
 draw_editor_screen() {
-    tput clear 2>/dev/null || clear
-    tput cup 0 0
+    # ANSI escape로 화면 클리어 및 커서 홈
+    printf '\033[2J\033[H'
 
-    local term_width=$(tput cols)
-    local term_height=$(tput lines)
+    local term_width=$(tput cols 2>/dev/null || echo 80)
+    local term_height=$(tput lines 2>/dev/null || echo 24)
 
     # 헤더
     draw_header

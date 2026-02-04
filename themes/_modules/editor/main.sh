@@ -85,12 +85,18 @@ run_color_editor() {
     # 초기화
     init_color_values
 
-    # 터미널 설정
-    stty -echo 2>/dev/null || true
+    # 터미널 설정 저장
+    local saved_stty
+    saved_stty=$(stty -g 2>/dev/null) || true
+
+    # 커서 숨기기만 (stty -echo 제거 - read -s가 처리함)
     tput civis 2>/dev/null || true
 
     # 종료 시 복구
-    trap 'cleanup_editor' EXIT INT TERM
+    trap 'cleanup_editor "$saved_stty"' EXIT INT TERM
+
+    # 초기 화면 그리기
+    printf '\033[2J\033[H'  # 화면 클리어 + 커서 홈
 
     # 메인 루프
     while true; do
@@ -98,7 +104,8 @@ run_color_editor() {
         draw_editor_screen
 
         # 키 입력 대기
-        local action=$(read_editor_key)
+        local action
+        action=$(read_editor_key)
 
         case "$action" in
             "up")
@@ -140,7 +147,7 @@ run_color_editor() {
         esac
     done
 
-    cleanup_editor
+    cleanup_editor "$saved_stty"
 }
 
 # ============================================================
@@ -248,7 +255,16 @@ confirm_quit() {
 # ============================================================
 
 cleanup_editor() {
-    stty echo 2>/dev/null || true
-    tput cnorm 2>/dev/null || true
-    tput clear 2>/dev/null || clear
+    local saved_stty="${1:-}"
+
+    # 터미널 상태 복구
+    if [[ -n "$saved_stty" ]]; then
+        stty "$saved_stty" 2>/dev/null || true
+    fi
+
+    # 커서 표시
+    tput cnorm 2>/dev/null || printf '\033[?25h'
+
+    # 화면 클리어
+    printf '\033[2J\033[H'
 }
