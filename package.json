@@ -1,0 +1,38 @@
+{
+  "name": "zstheme",
+  "version": "2.1.0",
+  "description": "Claude Code Statusline Theme Manager - 60+ customizable themes",
+  "main": "src/index.js",
+  "bin": {
+    "zstheme": "./bin/zstheme.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node bin/zstheme.js",
+    "dev": "node bin/zstheme.js"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "statusline",
+    "theme",
+    "terminal",
+    "cli"
+  ],
+  "author": "edari-bridge",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edari-bridge/zstheme"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ink": "^5.0.1",
+    "ink-select-input": "^6.0.0",
+    "react": "^18.3.1"
+  }
+}

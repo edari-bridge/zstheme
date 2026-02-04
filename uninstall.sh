@@ -1,11 +1,10 @@
 #!/bin/bash
 # zstheme uninstaller
-# Removes symlinks and optionally restores backups
+# Removes symlinks and CLI
 
 set -e
 
 CLAUDE_DIR="$HOME/.claude"
-LOCAL_BIN="$HOME/.local/bin"
 
 # Colors
 RST=$'\033[0m'
@@ -24,20 +23,19 @@ echo "${MAGENTA}${BOLD}  ╰─────────────────�
 echo ""
 
 # ============================================================
-# 1. Remove symlinks
+# 1. Remove symlinks from ~/.claude
 # ============================================================
-echo "${BOLD}Removing symlinks...${RST}"
-
 remove_symlink() {
     local file="$1"
     if [[ -L "$file" ]]; then
-        echo "  ${YELLOW}Removing: $file${RST}"
         rm "$file"
+        echo "  ${GREEN}Removed: $file${RST}"
     elif [[ -e "$file" ]]; then
-        echo "  ${BLUE}Skipping (not a symlink): $file${RST}"
+        echo "  ${YELLOW}Skipped (not a symlink): $file${RST}"
     fi
 }
 
+echo "${BOLD}Removing symlinks...${RST}"
 remove_symlink "$CLAUDE_DIR/statusline.sh"
 remove_symlink "$CLAUDE_DIR/themes"
 
@@ -47,52 +45,41 @@ remove_symlink "$CLAUDE_DIR/themes"
 echo ""
 echo "${BOLD}Removing CLI...${RST}"
 
-if [[ -L "$LOCAL_BIN/zstheme" ]]; then
-    rm "$LOCAL_BIN/zstheme"
-    echo "  ${YELLOW}Removed: $LOCAL_BIN/zstheme${RST}"
-fi
+LOCAL_BIN="$HOME/.local/bin/zstheme"
+GLOBAL_BIN="/usr/local/bin/zstheme"
 
-if [[ -L "/usr/local/bin/zstheme" ]]; then
-    rm "/usr/local/bin/zstheme" 2>/dev/null || echo "  ${BLUE}Cannot remove /usr/local/bin/zstheme (permission denied)${RST}"
-fi
+for bin_path in "$LOCAL_BIN" "$GLOBAL_BIN"; do
+    if [[ -L "$bin_path" ]]; then
+        rm "$bin_path"
+        echo "  ${GREEN}Removed: $bin_path${RST}"
+    fi
+done
 
 # ============================================================
-# 3. Check for backups
+# 3. Note about settings.json
 # ============================================================
 echo ""
-echo "${BOLD}Checking for backups...${RST}"
+echo "${YELLOW}Note:${RST} statusLine config in ~/.claude/settings.json was not removed."
+echo "Remove manually if no longer needed:"
+echo "  ${CYAN}\"statusLine\": { \"command\": \"~/.claude/statusline.sh\" }${RST}"
 
-backups=$(ls -1 "$CLAUDE_DIR"/*.backup.* 2>/dev/null || true)
-if [[ -n "$backups" ]]; then
-    echo "${YELLOW}Found backup files:${RST}"
-    echo "$backups" | while read -r backup; do
-        echo "  - $backup"
-    done
+# ============================================================
+# 4. Note about custom colors
+# ============================================================
+CUSTOM_DIR="$HOME/.config/zstheme"
+if [[ -d "$CUSTOM_DIR" ]]; then
     echo ""
-    echo "${BLUE}You can restore these manually if needed.${RST}"
-else
-    echo "  ${GREEN}No backups found.${RST}"
+    echo "${YELLOW}Note:${RST} Custom color config preserved at:"
+    echo "  ${CYAN}$CUSTOM_DIR${RST}"
+    echo "Delete manually if no longer needed."
 fi
 
 # ============================================================
-# 4. Note about settings.json
-# ============================================================
-echo ""
-echo "${BOLD}Note:${RST}"
-echo "  settings.json was not modified. To remove statusLine config:"
-echo "  ${CYAN}Edit ~/.claude/settings.json${RST} and remove the \"statusLine\" section."
-
-# ============================================================
-# 5. Environment variable
-# ============================================================
-echo ""
-echo "${BOLD}Cleanup:${RST}"
-echo "  Remove from your shell config (~/.zshrc or ~/.bashrc):"
-echo "  ${CYAN}export CLAUDE_THEME=\"...\"${RST}"
-
-# ============================================================
-# Done
+# 5. Done!
 # ============================================================
 echo ""
 echo "${GREEN}${BOLD}Uninstallation complete!${RST}"
+echo ""
+echo "To fully remove zstheme, delete this directory:"
+echo "  ${CYAN}rm -rf $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)${RST}"
 echo ""

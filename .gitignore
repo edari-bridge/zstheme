@@ -2,6 +2,10 @@
 .DS_Store
 ._*
 
+# Node.js
+node_modules/
+package-lock.json
+
 # Cache
 /tmp/
 *.cache
