@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from 'ink';
-import { ThemeSelector } from '../components/ThemeSelector.js';
+import { MainMenu } from '../components/MainMenu.js';
 
 export function cmdInteractive() {
-  render(React.createElement(ThemeSelector));
+  render(React.createElement(MainMenu));
 }
