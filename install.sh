@@ -1,10 +1,16 @@
 #!/bin/bash
 # zstheme installer
 # Creates symlinks, installs dependencies, and configures Claude Code statusline
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
+#   or
+#   git clone ... && cd zstheme && ./install.sh
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/edari-bridge/zstheme.git"
+INSTALL_DIR="$HOME/.zstheme"
 CLAUDE_DIR="$HOME/.claude"
 
 # Colors
@@ -24,7 +30,45 @@ echo "${MAGENTA}${BOLD}  ╰─────────────────�
 echo ""
 
 # ============================================================
-# 0. Check Node.js
+# 0. Determine install location (remote or local)
+# ============================================================
+
+# Check if running via curl | bash (BASH_SOURCE is empty)
+if [[ -z "${BASH_SOURCE[0]}" ]]; then
+    # Running via curl | bash - always clone
+    REMOTE_INSTALL=true
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+
+    # Check if running from a valid zstheme directory
+    if [[ -f "$SCRIPT_DIR/statusline.sh" && -d "$SCRIPT_DIR/themes" && -f "$SCRIPT_DIR/package.json" ]]; then
+        # Running from cloned repo
+        INSTALL_DIR="$SCRIPT_DIR"
+        echo "${BLUE}Installing from local directory: $INSTALL_DIR${RST}"
+        REMOTE_INSTALL=false
+    else
+        REMOTE_INSTALL=true
+    fi
+fi
+
+if [[ "$REMOTE_INSTALL" == true ]]; then
+    echo "${BLUE}Installing to: $INSTALL_DIR${RST}"
+    if [[ -d "$INSTALL_DIR" ]]; then
+        echo "${YELLOW}Updating existing installation...${RST}"
+        cd "$INSTALL_DIR"
+        git pull --ff-only 2>/dev/null || {
+            echo "${YELLOW}Git pull failed, removing and re-cloning...${RST}"
+            rm -rf "$INSTALL_DIR"
+            git clone "$REPO_URL" "$INSTALL_DIR"
+        }
+    else
+        echo "${GREEN}Cloning zstheme...${RST}"
+        git clone "$REPO_URL" "$INSTALL_DIR"
+    fi
+fi
+
+# ============================================================
+# 1. Check Node.js
 # ============================================================
 if ! command -v node &>/dev/null; then
     echo "${RED}Error: Node.js is required but not installed.${RST}"
@@ -38,14 +82,14 @@ if [[ $NODE_VERSION -lt 18 ]]; then
 fi
 
 # ============================================================
-# 1. Install npm dependencies
+# 2. Install npm dependencies
 # ============================================================
 echo "${GREEN}Installing npm dependencies...${RST}"
-cd "$SCRIPT_DIR"
+cd "$INSTALL_DIR"
 npm install --omit=dev 2>/dev/null || npm install
 
 # ============================================================
-# 2. Create ~/.claude directory if needed
+# 3. Create ~/.claude directory if needed
 # ============================================================
 if [[ ! -d "$CLAUDE_DIR" ]]; then
     echo "${YELLOW}Creating ~/.claude directory...${RST}"
@@ -53,7 +97,7 @@ if [[ ! -d "$CLAUDE_DIR" ]]; then
 fi
 
 # ============================================================
-# 3. Backup existing files
+# 4. Backup existing files
 # ============================================================
 backup_file() {
     local file="$1"
@@ -71,18 +115,18 @@ backup_file "$CLAUDE_DIR/statusline.sh"
 backup_file "$CLAUDE_DIR/themes"
 
 # ============================================================
-# 4. Create symlinks
+# 5. Create symlinks
 # ============================================================
 echo "${GREEN}Creating symlinks...${RST}"
 
-ln -s "$SCRIPT_DIR/statusline.sh" "$CLAUDE_DIR/statusline.sh"
-echo "  ${CYAN}~/.claude/statusline.sh${RST} -> $SCRIPT_DIR/statusline.sh"
+ln -s "$INSTALL_DIR/statusline.sh" "$CLAUDE_DIR/statusline.sh"
+echo "  ${CYAN}~/.claude/statusline.sh${RST} -> $INSTALL_DIR/statusline.sh"
 
-ln -s "$SCRIPT_DIR/themes" "$CLAUDE_DIR/themes"
-echo "  ${CYAN}~/.claude/themes/${RST} -> $SCRIPT_DIR/themes/"
+ln -s "$INSTALL_DIR/themes" "$CLAUDE_DIR/themes"
+echo "  ${CYAN}~/.claude/themes/${RST} -> $INSTALL_DIR/themes/"
 
 # ============================================================
-# 5. Configure settings.json
+# 6. Configure settings.json
 # ============================================================
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
@@ -119,25 +163,25 @@ EOF
 configure_settings
 
 # ============================================================
-# 6. Install zstheme CLI
+# 7. Install zstheme CLI
 # ============================================================
 echo ""
 echo "${BOLD}Installing zstheme CLI...${RST}"
 
 # Make executable
-chmod +x "$SCRIPT_DIR/bin/zstheme.js"
+chmod +x "$INSTALL_DIR/bin/zstheme.js"
 
 # Check common bin directories
 LOCAL_BIN="$HOME/.local/bin"
 if [[ -d "$LOCAL_BIN" ]]; then
-    ln -sf "$SCRIPT_DIR/bin/zstheme.js" "$LOCAL_BIN/zstheme"
+    ln -sf "$INSTALL_DIR/bin/zstheme.js" "$LOCAL_BIN/zstheme"
     echo "  ${GREEN}Installed to $LOCAL_BIN/zstheme${RST}"
 elif [[ -d "/usr/local/bin" && -w "/usr/local/bin" ]]; then
-    ln -sf "$SCRIPT_DIR/bin/zstheme.js" "/usr/local/bin/zstheme"
+    ln -sf "$INSTALL_DIR/bin/zstheme.js" "/usr/local/bin/zstheme"
     echo "  ${GREEN}Installed to /usr/local/bin/zstheme${RST}"
 else
     mkdir -p "$LOCAL_BIN"
-    ln -sf "$SCRIPT_DIR/bin/zstheme.js" "$LOCAL_BIN/zstheme"
+    ln -sf "$INSTALL_DIR/bin/zstheme.js" "$LOCAL_BIN/zstheme"
     echo "  ${GREEN}Installed to $LOCAL_BIN/zstheme${RST}"
     echo ""
     echo "${YELLOW}Add to your PATH (add to ~/.zshrc or ~/.bashrc):${RST}"
@@ -145,7 +189,7 @@ else
 fi
 
 # ============================================================
-# 7. Done!
+# 8. Done!
 # ============================================================
 echo ""
 echo "${GREEN}${BOLD}Installation complete!${RST}"

@@ -1,10 +1,25 @@
 #!/bin/bash
 # zstheme uninstaller
-# Removes symlinks and CLI
+# Removes symlinks, CLI, and optionally all files
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash -s -- --purge
+#   or
+#   ~/.zstheme/uninstall.sh [--purge]
 
 set -e
 
+INSTALL_DIR="$HOME/.zstheme"
 CLAUDE_DIR="$HOME/.claude"
+PURGE=false
+
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --purge) PURGE=true ;;
+    esac
+done
 
 # Colors
 RST=$'\033[0m'
@@ -64,22 +79,47 @@ echo "Remove manually if no longer needed:"
 echo "  ${CYAN}\"statusLine\": { \"command\": \"~/.claude/statusline.sh\" }${RST}"
 
 # ============================================================
-# 4. Note about custom colors
+# 4. Handle --purge (complete removal)
 # ============================================================
 CUSTOM_DIR="$HOME/.config/zstheme"
-if [[ -d "$CUSTOM_DIR" ]]; then
-    echo ""
-    echo "${YELLOW}Note:${RST} Custom color config preserved at:"
-    echo "  ${CYAN}$CUSTOM_DIR${RST}"
-    echo "Delete manually if no longer needed."
-fi
 
-# ============================================================
-# 5. Done!
-# ============================================================
-echo ""
-echo "${GREEN}${BOLD}Uninstallation complete!${RST}"
-echo ""
-echo "To fully remove zstheme, delete this directory:"
-echo "  ${CYAN}rm -rf $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)${RST}"
+if [[ "$PURGE" == true ]]; then
+    echo ""
+    echo "${BOLD}Purging all zstheme files...${RST}"
+
+    # Remove custom colors
+    if [[ -d "$CUSTOM_DIR" ]]; then
+        rm -rf "$CUSTOM_DIR"
+        echo "  ${GREEN}Removed: $CUSTOM_DIR${RST}"
+    fi
+
+    # Remove installation directory
+    if [[ -d "$INSTALL_DIR" ]]; then
+        rm -rf "$INSTALL_DIR"
+        echo "  ${GREEN}Removed: $INSTALL_DIR${RST}"
+    fi
+
+    echo ""
+    echo "${GREEN}${BOLD}Complete removal finished!${RST}"
+else
+    # ============================================================
+    # 5. Notes (without --purge)
+    # ============================================================
+    echo ""
+    echo "${YELLOW}Preserved:${RST}"
+
+    if [[ -d "$CUSTOM_DIR" ]]; then
+        echo "  - Custom colors: ${CYAN}$CUSTOM_DIR${RST}"
+    fi
+
+    if [[ -d "$INSTALL_DIR" ]]; then
+        echo "  - Installation: ${CYAN}$INSTALL_DIR${RST}"
+    fi
+
+    echo ""
+    echo "${GREEN}${BOLD}Uninstallation complete!${RST}"
+    echo ""
+    echo "To fully remove everything:"
+    echo "  ${CYAN}curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash -s -- --purge${RST}"
+fi
 echo ""
