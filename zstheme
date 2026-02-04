@@ -61,7 +61,7 @@ get_modular_themes() {
 # 테마가 유효한지 확인
 is_valid_theme() {
     local theme="$1"
-    [[ "$theme" =~ ^(mono-)?(lsd-|rainbow-)?(1line|2line|card|bars|badges)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(custom-)?(mono-)?(lsd-|rainbow-)?(1line|2line|card|bars|badges)(-nerd)?$ ]]
 }
 
 get_current_theme() {
@@ -337,6 +337,11 @@ cmd_interactive() {
     done
 }
 
+cmd_edit() {
+    source "$THEME_DIR/_modules/editor/main.sh"
+    run_color_editor
+}
+
 cmd_help() {
     echo ""
     echo "${BOLD}zstheme${RST} - Claude Code Statusline Theme Manager (v$VERSION)"
@@ -347,14 +352,15 @@ cmd_help() {
     echo "  zstheme --list       List available themes"
     echo "  zstheme --preview    Preview sample themes"
     echo "  zstheme --preview-all Preview all 60 themes"
+    echo "  zstheme --edit       Color editor (tweakcc style)"
     echo "  zstheme --help       Show this help"
     echo "  zstheme --version    Show version"
     echo ""
     echo "${BOLD}Theme Format:${RST}"
-    echo "  [mono-][lsd-|rainbow-]{layout}[-nerd]"
+    echo "  [custom-][mono-][lsd-|rainbow-]{layout}[-nerd]"
     echo ""
     echo "  ${CYAN}Layouts:${RST}    1line, 2line, card, bars, badges"
-    echo "  ${CYAN}Colors:${RST}     color (default) or mono-"
+    echo "  ${CYAN}Colors:${RST}     color (default), mono-, or custom-"
     echo "  ${CYAN}Animation:${RST}  static (default), lsd-, or rainbow-"
     echo "  ${CYAN}Icons:${RST}      emoji (default) or -nerd"
     echo ""
@@ -363,6 +369,11 @@ cmd_help() {
     echo "  zstheme bars-nerd        # Grouped bars with Nerd Font"
     echo "  zstheme mono-card        # Monochrome card"
     echo "  zstheme lsd-badges-nerd  # Rainbow badges with Nerd Font"
+    echo "  zstheme custom-2line    # Custom colors + 2line layout"
+    echo ""
+    echo "${BOLD}Color Editor:${RST}"
+    echo "  zstheme --edit          # Launch interactive color editor"
+    echo "  Saved to: ~/.config/zstheme/custom-color.sh"
     echo ""
     echo "${BOLD}Configuration:${RST}"
     echo "  Add to ~/.zshrc or ~/.bashrc:"
@@ -387,6 +398,9 @@ case "${1:-}" in
         ;;
     --preview-all|-P)
         cmd_preview_all
+        ;;
+    --edit|-e)
+        cmd_edit
         ;;
     --help|-h)
         cmd_help

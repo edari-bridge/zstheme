@@ -28,13 +28,19 @@ parse_theme_name() {
     LAYOUT_MODE="2line"
     ICON_MODE="emoji"
 
-    # 1. mono- 접두사 확인
+    # 1. custom- 접두사 확인 (가장 먼저)
+    if [[ "$theme_name" == custom-* ]]; then
+        COLOR_MODE="custom"
+        theme_name="${theme_name#custom-}"
+    fi
+
+    # 2. mono- 접두사 확인
     if [[ "$theme_name" == mono-* ]]; then
         COLOR_MODE="mono"
         theme_name="${theme_name#mono-}"
     fi
 
-    # 2. lsd- 또는 rainbow- 접두사 확인
+    # 3. lsd- 또는 rainbow- 접두사 확인
     if [[ "$theme_name" == lsd-* ]]; then
         ANIMATION_MODE="lsd"
         theme_name="${theme_name#lsd-}"
@@ -43,13 +49,13 @@ parse_theme_name() {
         theme_name="${theme_name#rainbow-}"
     fi
 
-    # 3. -nerd 접미사 확인
+    # 4. -nerd 접미사 확인
     if [[ "$theme_name" == *-nerd ]]; then
         ICON_MODE="nerd"
         theme_name="${theme_name%-nerd}"
     fi
 
-    # 4. 레이아웃 결정
+    # 5. 레이아웃 결정
     case "$theme_name" in
         1-line|1line)
             LAYOUT_MODE="1line"
@@ -82,7 +88,18 @@ load_modules() {
     source "$MODULES_DIR/icons/${ICON_MODE}.sh"
 
     # 2. 색상 모듈 로드
-    source "$MODULES_DIR/colors/${COLOR_MODE}.sh"
+    if [[ "$COLOR_MODE" == "custom" ]]; then
+        # 커스텀 색상: 사용자 설정 파일 또는 기본 color.sh
+        local custom_file="$HOME/.config/zstheme/custom-color.sh"
+        if [[ -f "$custom_file" ]]; then
+            source "$custom_file"
+        else
+            # 커스텀 파일 없으면 기본 색상 사용
+            source "$MODULES_DIR/colors/color.sh"
+        fi
+    else
+        source "$MODULES_DIR/colors/${COLOR_MODE}.sh"
+    fi
 
     # 3. 애니메이션 모듈 로드
     source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
