@@ -9,13 +9,13 @@ import { cmdEdit } from './commands/edit.js';
 export function cli() {
   program
     .name('zstheme')
-    .description('Claude Code Statusline Theme Manager - 90 customizable themes')
+    .description('Claude Code Statusline Theme Manager - 60 customizable themes')
     .version(VERSION, '-v, --version', 'Show version');
 
   program
     .option('-l, --list', 'List available themes')
     .option('-p, --preview', 'Preview themes')
-    .option('-P, --preview-all', 'Preview all 90 themes')
+    .option('-P, --preview-all', 'Preview all 60 themes')
     .option('-e, --edit', 'Launch interactive color editor')
     // 필터 옵션
     .option('--1line', 'Filter: 1line layout')
@@ -56,7 +56,7 @@ export function cli() {
 
   // 명령어 라우팅
   if (options.list) {
-    cmdList();
+    cmdList(filters);
   } else if (options.previewAll) {
     cmdPreview(true, filters);
   } else if (options.preview) {
