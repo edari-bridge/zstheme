@@ -260,8 +260,9 @@ run_color_editor() {
                 adjust_color -10
                 ;;
             $'\x1b')  # Escape sequence
-                read -rsn2 -t 0.1 seq
-                case "$seq" in
+                read -rsn1 -t 0.5 seq1 || true
+                read -rsn1 -t 0.5 seq2 || true
+                case "${seq1}${seq2}" in
                     '[A')  # Up
                         move_selection -1
                         ;;
