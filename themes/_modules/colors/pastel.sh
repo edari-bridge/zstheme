@@ -27,7 +27,7 @@ init_colors() {
     C_I_MODEL=$'\033[95m'
     C_I_STATUS=$'\033[38;5;111m'
     C_I_SYNC=$'\033[38;5;141m'
-    C_I_CTX=$'\033[92m'
+    # C_I_CTX는 컨텍스트 조건문에서 동적 설정
     C_I_RATE=$'\033[38;5;229m'
     C_I_BURN=$'\033[38;5;216m'
     C_I_TIME=$'\033[38;5;75m'
@@ -77,6 +77,7 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;183m'
         C_CTX=$'\033[1;91m'
         C_CTX_TEXT=$'\033[1;91m'
+        C_I_CTX=$'\033[1;91m'       # 아이콘도 빨간색 (nerd 모드용)
         CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
@@ -89,6 +90,7 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;147m'
         C_CTX=$'\033[1;38;5;208m'
         C_CTX_TEXT=$'\033[1;38;5;208m'
+        C_I_CTX=$'\033[1;38;5;208m' # 아이콘도 주황색 (nerd 모드용)
         CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
     else
@@ -101,6 +103,7 @@ init_colors() {
         C_SYNC=$'\033[38;5;141m'
         C_CTX=$'\033[92m'           # 아이콘: 녹색 (Nerd용)
         C_CTX_TEXT=$'\033[0m'       # 텍스트: 기본(리셋)
+        C_I_CTX=$'\033[92m'         # 아이콘도 녹색 (nerd 모드용)
         CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
     fi
