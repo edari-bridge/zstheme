@@ -16,12 +16,8 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 ## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/edari-bridge/zstheme.git
-cd zstheme
-
-# Install (requires Node.js 18+)
-./install.sh
+# One-line install (requires Node.js 18+)
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
 
 # Select a theme interactively
 zstheme
@@ -128,9 +124,12 @@ Use with any layout: `export CLAUDE_THEME="custom-2line"`
 ### Install Steps
 
 ```bash
+# Option 1: One-line install (recommended)
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
+
+# Option 2: Clone and install
 git clone https://github.com/edari-bridge/zstheme.git ~/.zstheme
-cd ~/.zstheme
-./install.sh
+~/.zstheme/install.sh
 ```
 
 The installer will:
@@ -200,8 +199,11 @@ Themes have access to these environment variables:
 ## Uninstall
 
 ```bash
-cd ~/.zstheme  # or wherever you cloned
-./uninstall.sh
+# Remove symlinks and CLI (keeps config)
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash
+
+# Complete removal (removes everything)
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash -s -- --purge
 ```
 
 ## License
