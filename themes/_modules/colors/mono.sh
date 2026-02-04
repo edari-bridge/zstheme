@@ -37,7 +37,7 @@ init_colors() {
     C_I_MODEL=$'\033[95m'       # 마젠타
     C_I_STATUS=$'\033[38;5;111m'  # 파랑
     C_I_SYNC=$'\033[38;5;141m'    # 보라
-    C_I_CTX=$'\033[92m'         # 녹색
+    # C_I_CTX는 컨텍스트 조건문에서 동적 설정
     C_I_RATE=$'\033[38;5;229m'   # 노랑
     C_I_BURN=$'\033[38;5;216m'   # 주황
     C_I_TIME=$'\033[38;5;75m'    # 파랑
@@ -89,6 +89,7 @@ init_colors() {
         C_BAT_FILL="$C_BAT_RED"
         # 컨텍스트 % 텍스트만 빨간색 (경고 강조)
         C_CTX_TEXT=$'\033[1;91m'
+        C_I_CTX=$'\033[1;91m'       # 아이콘도 빨간색 (nerd 모드용)
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         # 경고: 밝음
         C_BRANCH="$MONO_2"
@@ -102,6 +103,7 @@ init_colors() {
         C_BAT_FILL="$C_BAT_YELLOW"
         # 컨텍스트 % 텍스트만 주황색 (경고 강조)
         C_CTX_TEXT=$'\033[1;38;5;208m'
+        C_I_CTX=$'\033[1;38;5;208m' # 아이콘도 주황색 (nerd 모드용)
     else
         # 정상: 기본 글씨 통일
         C_BRANCH="$C_BASE"
@@ -114,6 +116,7 @@ init_colors() {
         CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
         C_CTX_TEXT="$C_BASE"
+        C_I_CTX=$'\033[92m'         # 아이콘은 녹색 (nerd 모드용)
     fi
 }
 
