@@ -47,7 +47,7 @@ export function MainMenu() {
         return e(ColorEditor, { onBack: () => setActiveTab('menu') });
     }
 
-    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 80 },
+    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 90 },
         // Header Area
         e(Box, { justifyContent: 'space-between', paddingBottom: 1 },
             e(Text, { color: 'magenta', bold: true }, 'zstheme'),
@@ -56,7 +56,7 @@ export function MainMenu() {
 
         e(Box, { flexDirection: 'row' },
             // Left Column: Menu
-            e(Box, { flexDirection: 'column', width: '40%', paddingRight: 2 },
+            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2 },
                 e(Text, { bold: true, color: 'white', underline: true }, 'Menu'),
                 e(Box, { height: 1 }),
                 ...MENU_ITEMS.map((item, index) => {
@@ -77,7 +77,7 @@ export function MainMenu() {
             ),
 
             // Right Column: Hero/Logo
-            e(Box, { flexDirection: 'column', width: '60%', alignItems: 'center', justifyContent: 'center' },
+            e(Box, { flexDirection: 'column', width: '65%', alignItems: 'center', justifyContent: 'center' },
                 e(Logo, null)
             )
         ),
