@@ -3,6 +3,5 @@ name: dashboard
 description: Show Claude Code usage dashboard
 ---
 
-대시보드 기능은 현재 준비중입니다.
-
-전체 상태창을 보려면 /dashboard-full 을 사용하세요.
+zstheme --dashboard 명령어를 실행해서 Claude Code 사용량 대시보드를 보여줘.
+결과를 그대로 출력하고 추가 설명은 하지마.
