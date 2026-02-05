@@ -120,6 +120,74 @@ export function filterThemes(themes, filters) {
   });
 }
 
+
+
+/**
+ * 테마 정렬 (Smart Sorting)
+ * Layout -> Style (Priority List) -> Icon
+ */
+export function sortThemes(themes) {
+  // User defined Layout Order: 1line, 2line, Badges, Bars, Card
+  const LAYOUT_ORDER = ['1line', '2line', 'badges', 'bars', 'card'];
+
+  return themes.sort((a, b) => {
+    const infoA = parseThemeName(a);
+    const infoB = parseThemeName(b);
+
+    // 1. Layout Priority
+    const layoutIdxA = LAYOUT_ORDER.indexOf(infoA.layout);
+    const layoutIdxB = LAYOUT_ORDER.indexOf(infoB.layout);
+
+    // If layout is not in the list (shouldn't happen for known layouts), put it at the end
+    const safeLayoutA = layoutIdxA === -1 ? 99 : layoutIdxA;
+    const safeLayoutB = layoutIdxB === -1 ? 99 : layoutIdxB;
+
+    if (safeLayoutA !== safeLayoutB) return safeLayoutA - safeLayoutB;
+
+    // 2. Style Priority (Detailed User Request)
+    // Order: Default -> Nerd -> Mono -> Nerd Mono -> Rainbow -> Mono Rainbow -> Custom
+    const getStyleWeight = (info) => {
+      const isNerd = info.icon === 'nerd';
+
+      if (info.color === 'custom') return 99; // Custom at the end
+
+      // 1. Default (Pastel, Static, Emoji)
+      if (info.color === 'pastel' && info.animation === 'static' && !isNerd) return 0;
+
+      // 2. Nerd (Pastel, Static, Nerd)
+      if (info.color === 'pastel' && info.animation === 'static' && isNerd) return 1;
+
+      // 3. Mono (Mono, Static, Emoji)
+      if (info.color === 'mono' && info.animation === 'static' && !isNerd) return 2;
+
+      // 4. Nerd Mono (Mono, Static, Nerd)
+      if (info.color === 'mono' && info.animation === 'static' && isNerd) return 3;
+
+      // 5. Rainbow (Rainbow, Emoji) - (Grouping Rainbow Nerd here too closely? User didn't specify rainbow nerd separately)
+      // Let's assume Rainbow generally.
+      if (info.animation === 'rainbow' && info.color === 'pastel') {
+        // If we want Rainbow Nerd after Rainbow Emoji, use decimal or sub-sort
+        return isNerd ? 4.5 : 4;
+      }
+
+      // 6. Mono Rainbow
+      if (info.animation === 'rainbow' && info.color === 'mono') {
+        return isNerd ? 5.5 : 5;
+      }
+
+      return 10; // Other variants
+    };
+
+    const styleA = getStyleWeight(infoA);
+    const styleB = getStyleWeight(infoB);
+
+    if (styleA !== styleB) return styleA - styleB;
+
+    // 3. Tie breaker (shouldn't be reached if logic covers all)
+    return a.localeCompare(b);
+  });
+}
+
 /**
  * 테마명 파싱
  */

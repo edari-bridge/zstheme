@@ -44,6 +44,15 @@ parse_theme_name() {
     elif [[ "$theme_name" == rainbow-* ]]; then
         ANIMATION_MODE="rainbow"
         theme_name="${theme_name#rainbow-}"
+    elif [[ "$theme_name" == plasma-* ]]; then
+        ANIMATION_MODE="plasma"
+        theme_name="${theme_name#plasma-}"
+    elif [[ "$theme_name" == neon-* ]]; then
+        ANIMATION_MODE="neon"
+        theme_name="${theme_name#neon-}"
+    elif [[ "$theme_name" == noise-* ]]; then
+        ANIMATION_MODE="noise"
+        theme_name="${theme_name#noise-}"
     fi
 
     # 4. -nerd 접미사 확인
@@ -99,7 +108,16 @@ load_modules() {
     fi
 
     # 3. 애니메이션 모듈 로드
-    source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
+    case "$ANIMATION_MODE" in
+        lsd|rainbow|plasma|neon|noise)
+            source "$MODULES_DIR/animation/rainbow.sh"
+            ;;
+        *)
+            if [[ -f "$MODULES_DIR/animation/${ANIMATION_MODE}.sh" ]]; then
+                source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
+            fi
+            ;;
+    esac
 
     # 4. 레이아웃 모듈 로드 (render 함수 포함)
     source "$MODULES_DIR/layouts/${LAYOUT_MODE}.sh"
