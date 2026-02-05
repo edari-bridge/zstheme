@@ -14,8 +14,6 @@ const VISIBLE_ROWS = 6;
 
 export function ThemeSelector({ onBack }) {
   const { exit } = useApp();
-  // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
-  const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked)), [isLsdUnlocked]);
   const currentTheme = getCurrentTheme();
 
   // 상태
@@ -28,6 +26,8 @@ export function ThemeSelector({ onBack }) {
   const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
 
+  // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
+  const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked)), [isLsdUnlocked]);
 
 
   // Dynamic Tabs
