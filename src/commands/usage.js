@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
 // Opus 4.5 가격 (USD per 1M tokens)
 const PRICING = {
@@ -58,6 +59,138 @@ function padRight(str, len) {
 function padLeft(str, len) {
   const displayWidth = getDisplayWidth(str);
   return ' '.repeat(Math.max(0, len - displayWidth)) + str;
+}
+
+// ccusage에서 Rate Limit 정보 가져오기
+function getRateLimitInfo() {
+  try {
+    const result = execSync('npx ccusage blocks --json 2>/dev/null', {
+      encoding: 'utf-8',
+      timeout: 10000,
+    });
+    const data = JSON.parse(result);
+    const blocks = data.blocks || [];
+
+    // 가장 최근 블록 (projection이 있는 것 우선)
+    const activeBlock = blocks.find(b => b.projection) || blocks[0];
+
+    if (!activeBlock) return null;
+
+    const costUSD = activeBlock.costUSD || 0;
+    const projection = activeBlock.projection;
+    const burnRate = activeBlock.burnRate;
+    const resetAt = activeBlock.resetAt;
+
+    let ratePct = null;
+    if (projection?.totalCost) {
+      ratePct = Math.round((costUSD / projection.totalCost) * 100);
+    }
+
+    let timeLeft = null;
+    if (projection?.remainingMinutes) {
+      const mins = projection.remainingMinutes;
+      if (mins >= 60) {
+        timeLeft = `${Math.floor(mins / 60)}h ${mins % 60}m`;
+      } else {
+        timeLeft = `${mins}m`;
+      }
+    }
+
+    let resetTime = null;
+    if (resetAt) {
+      resetTime = new Date(resetAt).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+    }
+
+    let burnRateStr = null;
+    if (burnRate?.costPerHour) {
+      burnRateStr = `$${burnRate.costPerHour.toFixed(2)}/h`;
+    }
+
+    return { costUSD, ratePct, timeLeft, resetTime, burnRateStr };
+  } catch (e) {
+    return null;
+  }
+}
+
+// 현재 세션 정보 가져오기
+function getCurrentSessionInfo() {
+  try {
+    // 현재 디렉토리 기반 프로젝트 경로 찾기
+    const cwd = process.cwd().replace(/\//g, '-').replace(/^-/, '-');
+    const projectsDir = join(homedir(), '.claude', 'projects');
+
+    if (!existsSync(projectsDir)) return null;
+
+    // 프로젝트 폴더 찾기
+    const dirs = readdirSync(projectsDir);
+    const projectDir = dirs.find(d => cwd.includes(d.slice(1)) || d.slice(1).includes(cwd.slice(1)));
+
+    if (!projectDir) return null;
+
+    const projectPath = join(projectsDir, projectDir);
+
+    // 가장 최근 세션 파일 찾기
+    const files = readdirSync(projectPath)
+      .filter(f => f.endsWith('.jsonl'))
+      .map(f => ({
+        name: f,
+        path: join(projectPath, f),
+        mtime: statSync(join(projectPath, f)).mtime,
+      }))
+      .sort((a, b) => b.mtime - a.mtime);
+
+    if (files.length === 0) return null;
+
+    const latestSession = files[0];
+    const content = readFileSync(latestSession.path, 'utf-8');
+    const lines = content.trim().split('\n');
+
+    // 메시지 수 카운트
+    let userMessages = 0;
+    let assistantMessages = 0;
+    let firstTimestamp = null;
+    let lastTimestamp = null;
+
+    for (const line of lines) {
+      try {
+        const msg = JSON.parse(line);
+        if (msg.type === 'user') userMessages++;
+        if (msg.type === 'assistant') assistantMessages++;
+        if (msg.timestamp) {
+          if (!firstTimestamp) firstTimestamp = msg.timestamp;
+          lastTimestamp = msg.timestamp;
+        }
+      } catch (e) {}
+    }
+
+    // 세션 경과 시간
+    let duration = null;
+    if (firstTimestamp) {
+      const start = new Date(firstTimestamp);
+      const now = new Date();
+      const diffMs = now - start;
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins >= 60) {
+        duration = `${Math.floor(diffMins / 60)}h ${diffMins % 60}m`;
+      } else {
+        duration = `${diffMins}m`;
+      }
+    }
+
+    return {
+      messages: userMessages + assistantMessages,
+      userMessages,
+      assistantMessages,
+      duration,
+      sessionFile: latestSession.name.replace('.jsonl', '').slice(0, 8),
+    };
+  } catch (e) {
+    return null;
+  }
 }
 
 export function cmdDashboard() {
@@ -402,6 +535,41 @@ export function cmdStats() {
     console.log(chalk.cyan(DIV));
     console.log(chalk.cyan(valueLine('📈 Max:', formatNumber(maxT))));
     console.log(chalk.cyan(valueLine('📉 Min:', formatNumber(minT))));
+  }
+
+  // Rate Limit 정보 (ccusage)
+  const rateInfo = getRateLimitInfo();
+  if (rateInfo) {
+    console.log(chalk.cyan(MID));
+    console.log(chalk.cyan(center('⏳ RATE LIMIT (ccusage)')));
+    console.log(chalk.cyan(MID));
+
+    if (rateInfo.ratePct !== null) {
+      console.log(chalk.cyan(valueLine('📊 Usage:', `${rateInfo.ratePct}%`)));
+    }
+    if (rateInfo.burnRateStr) {
+      console.log(chalk.cyan(valueLine('🔥 Burn Rate:', rateInfo.burnRateStr)));
+    }
+    if (rateInfo.timeLeft) {
+      console.log(chalk.cyan(valueLine('⏱️ Time Left:', rateInfo.timeLeft)));
+    }
+    if (rateInfo.resetTime) {
+      console.log(chalk.cyan(valueLine('🔄 Reset At:', rateInfo.resetTime)));
+    }
+    console.log(chalk.cyan(valueLine('💵 Block Cost:', formatCurrency(rateInfo.costUSD))));
+  }
+
+  // 현재 세션 정보
+  const sessionInfo = getCurrentSessionInfo();
+  if (sessionInfo) {
+    console.log(chalk.cyan(MID));
+    console.log(chalk.cyan(center('🔄 CURRENT SESSION')));
+    console.log(chalk.cyan(MID));
+    console.log(chalk.cyan(valueLine('💬 Messages:', `${formatNumber(sessionInfo.messages)} (👤 ${sessionInfo.userMessages} / 🤖 ${sessionInfo.assistantMessages})`)));
+    if (sessionInfo.duration) {
+      console.log(chalk.cyan(valueLine('⏱️ Duration:', sessionInfo.duration)));
+    }
+    console.log(chalk.cyan(valueLine('🔑 Session ID:', sessionInfo.sessionFile + '...')));
   }
 
   console.log(chalk.cyan(BOT));
