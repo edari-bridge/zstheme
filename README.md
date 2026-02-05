@@ -92,22 +92,20 @@ zstheme --list       # List all 60 theme combinations
 zstheme --preview    # Preview sample themes
 zstheme --preview-all # Preview all themes
 zstheme --edit       # Launch color editor
-zstheme --stats      # Show Claude Code usage statistics
+zstheme --status      # Show Claude Code usage statistics
 zstheme --help       # Show help
 zstheme --version    # Show version
 ```
 
 ### Claude Code Skills
 
-Use skills directly in Claude Code to view usage statistics:
+Use skills directly in Claude Code:
 
 ```bash
 # In Claude Code, type:
-/dashboard       # Usage dashboard
-/dashboard-full  # Full usage dashboard (same output)
+/dashboard       # Dashboard (coming soon)
+/dashboard-full  # Full status view (zstheme --status)
 ```
-
-These skills execute `zstheme --stats` and display the usage dashboard inline.
 
 To install the skills:
 ```bash
