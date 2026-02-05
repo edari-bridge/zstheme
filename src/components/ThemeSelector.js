@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import path from 'path';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
-import { renderThemePreview } from '../utils/preview.js';
+import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 
 const e = React.createElement;
@@ -117,14 +117,33 @@ export function ThemeSelector({ onBack }) {
   }, [currentVisualRowIndex, startRow]);
 
 
-  // 프리뷰 업데이트
+  // Preview update effect
   useEffect(() => {
-    if (selectedTheme) {
-      const p = renderThemePreview(selectedTheme);
-      setPreview(p);
-    } else {
-      setPreview('');
+    let isMounted = true;
+    let timer = null;
+
+    // Initial render (sync/fast)
+    const initial = selectedTheme ? renderThemePreview(selectedTheme) : '';
+    setPreview(initial);
+
+    // Animation loop for Rainbow/LSD
+    const isAnimated = selectedTheme && (selectedTheme.includes('rainbow') || selectedTheme.includes('lsd'));
+
+    if (isAnimated) {
+      // 100ms interval for smooth animation
+      timer = setInterval(() => {
+        if (!isMounted) return;
+
+        renderThemePreviewAsync(selectedTheme).then(result => {
+          if (isMounted) setPreview(result);
+        });
+      }, 100);
     }
+
+    return () => {
+      isMounted = false;
+      if (timer) clearInterval(timer);
+    };
   }, [selectedTheme]);
 
   // 탭 변경 시 인덱스 리셋

@@ -52,6 +52,40 @@ export function renderThemePreview(themeName) {
 }
 
 /**
+ * 비동기 프리뷰 렌더링 (애니메이션용)
+ * @returns {Promise<string>}
+ */
+export function renderThemePreviewAsync(themeName) {
+  return new Promise((resolve) => {
+    const env = {
+      ...process.env,
+      ...Object.fromEntries(
+        Object.entries(MOCK_DATA).map(([k, v]) => [k, String(v)])
+      ),
+      THEME_NAME: themeName,
+    };
+
+    const script = `
+      source "${PATHS.modular}"
+      render
+    `;
+
+    import('child_process').then(({ exec }) => {
+      exec(`bash -c '${script}'`, {
+        env,
+        timeout: 2000,
+      }, (error, stdout, stderr) => {
+        if (error) {
+          resolve(`[Preview error: ${error.message}]`);
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    });
+  });
+}
+
+/**
  * 간단한 인라인 프리뷰 (bash 호출 없이)
  */
 export function simplePreview(themeName, colors = null) {
