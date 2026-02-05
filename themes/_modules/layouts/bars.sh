@@ -52,24 +52,42 @@ render() {
 
     # Line 1: 위치 칩 + Git 칩 + 컨텍스트
     local loc_content=""
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
-        # Raw content for gradient background
-        # Padding spaces added directly to string for colorize_bg to color them
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        # Define base colors for Rainbow Shimmer here (Hardcoded for now as vars are in C_BG_*)
+        # We need to pass the ANSI codes.
+        
+        # Raw content strings
         local raw_loc=" ${ICON_BRANCH} ${BRANCH:-branch}    ${ICON_TREE} ${WORKTREE:-worktree}    ${ICON_DIR} ${DIR_NAME} "
-        # Use colorize_bg with Black text
-        # Offset 0
-        local chip_loc=$(colorize_bg "$raw_loc" 0 "\033[30m")
-        # Reuse chip_loc as the full chip since background is applied
-
-        # We construct chips individually or as a block?
-        # make_chip applies padding.
-        # If I use colorize_bg, I should include padding in the text.
-        # Let's construct the whole line 1 chips.
         
-        local line1_chips=""
+        local chip_loc
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_loc=$(colorize_bg_lsd "$raw_loc" 0 "\033[30m")
+        else
+            # Rainbow Shimmer: Use specific base colors for the entire bar?
+            # User wants: "Original badge color... shimmer".
+            # But here 'raw_loc' combines 3 distinct semantic parts (Branch, Tree, Dir).
+            # In 'Bars' layout, they are often unified or separate chips?
+            # In the original static logic, line 1 is ONE chip for "Loc + Git + Ctx"?
+            # Wait, original static uses `make_chip "$bg_loc" "$loc_content"` where `loc_content` has text colors.
+            # And `bg_loc` is ONE color.
+            # So the whole "Location" block has ONE background color.
+            # Therefore, for Rainbow Mode, I should use *that* background color + Shimmer.
+            
+            # Static bg_loc comes from `get_animated_bg 0`.
+            # If Rainbow, `get_animated_bg` returned a gradient color before.
+            # Now for Rainbow Shimmer, we revert to "Original Color".
+            # Original Colors are: C_BG_LOC, C_BG_GIT, C_BG_SES.
+            
+            # Applying Shimmer to C_BG_LOC (e.g. Blue). 
+            # I need a Highlight version. Let's pick a brighter Cyan or White.
+            # C_BG_LOC is usually Blue. Highlight: Cyan (\033[46m) or Bright Blue (\033[104m).
+            # I will use Bright Standard Colors as highlights for simplicity.
+            
+            # LOC (Blue-ish) -> Highlight Cyan
+            chip_loc=$(colorize_bg_rainbow "$raw_loc" "$C_BG_LOC" "\033[46m" 0 "\033[30m")
+        fi
         
-        # Loc Chip
-        line1_chips+="${chip_loc}    "
+        local line1_chips="${chip_loc}    "
         
         # Git Chip
         if [[ "$IS_GIT_REPO" == "true" ]]; then
@@ -81,11 +99,23 @@ render() {
              [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
              
              local raw_git=" ${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind} "
-             local chip_git=$(colorize_bg "$raw_git" 20 "\033[30m")
+             
+             local chip_git
+             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                 chip_git=$(colorize_bg_lsd "$raw_git" 20 "\033[30m")
+             else
+                 # GIT (Green/Yellow-ish) -> Highlight Bright Green
+                 chip_git=$(colorize_bg_rainbow "$raw_git" "$C_BG_GIT" "\033[102m" 20 "\033[30m")
+             fi
              line1_chips+="${chip_git}    "
         else
              local raw_git=" ${ICON_GIT_STATUS} ---    ${ICON_SYNC} --- "
-             local chip_git=$(colorize_bg "$raw_git" 20 "\033[30;2m") # Dim black?
+             local chip_git
+             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                chip_git=$(colorize_bg_lsd "$raw_git" 20 "\033[30;2m")
+             else
+                chip_git=$(colorize_bg_rainbow "$raw_git" "$C_BG_GIT" "\033[102m" 20 "\033[30;2m")
+             fi
              line1_chips+="${chip_git}    "
         fi
         
@@ -110,19 +140,49 @@ render() {
         [[ -n "$BURN_RATE" ]] && ses_raw+="     ${ICON_COST} ${BURN_RATE}"
         ses_raw+=" "
         
-        local chip_ses=$(colorize_bg "$ses_raw" 40 "\033[30m")
+        local chip_ses
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_ses=$(colorize_bg_lsd "$ses_raw" 40 "\033[30m")
+        else
+            # SESSION (Purple/Pink-ish) -> Highlight Magenta
+            chip_ses=$(colorize_bg_rainbow "$ses_raw" "$C_BG_SES" "\033[105m" 40 "\033[30m")
+        fi
+        
         line2_chips+="${chip_ses}    "
         
         # Theme
+        # For Theme, we used colorize_text for gradient.
+        # LSD: Text Gradient
+        # Rainbow: Shimmer Text? Or Text Gradient?
+        # User said "Rainbow: Shimmer / LSD: Full Spectrum".
+        # Let's keep Text Gradient (colorize_text) for LSD.
+        # For Rainbow, let's just use standard text color or Color Gradient?
+        # "Rainbow Background... But Theme has no background".
+        # Let's keep `colorize_text` for both to be safe, or just LSD.
+        # Existing code already uses colorize_text.
+        # I'll use colorize_text for both for now, assuming colorize_text follows the color palette (which is Pastel for Rainbow, Vivid for LSD).
+        # Wait, colorize_text uses `RAINBOW_COLORS` or `LSD_COLORS`?
+        # `lsd.sh` defines `LSD_COLORS`. `rainbow.sh` defines `RAINBOW_COLORS`.
+        # I need to ensure `colorize_text` picks the right one.
+        # Currently `rainbow.sh` uses `RAINBOW_COLORS`.
+        # I should update `colorize_text` to support switching or use separate functions?
+        # Actually, `rainbow.sh` is now the single source of truth for "Rainbow" mode animation.
+        # `lsd.sh` is separate? No, `rainbow.sh` handles both.
+        # I need to check `colorize_text` in `rainbow.sh`.
+        
         local theme_raw="${ICON_THEME} ${THEME_NAME}"
-        # Theme is usually just text. Let's keep it simple or apply gradient?
-        # Let's apply gradient to theme too for consistency.
-        local chip_theme=$(colorize_text "$theme_raw") # Theme uses text gradient usually?
-        # User said "LSD text effect... on background".
-        # Let's use text gradient for Theme name (as it has no background chip usually).
-        # OR should Theme name also have background?
-        # In bars, Theme name is standalone.
-        # Let's keep Theme name as Text Gradient (colorize_text) as it fits better without a bar.
+        local chip_theme
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+             # Use LSD colors via a text function?
+             # I need to make sure colorize_text uses vivid colors for LSD.
+             # Currently `rainbow.sh` uses `RAINBOW_COLORS` (Pastel).
+             # I'll update `rainbow.sh` to select palette based on mode in `colorize_text` later.
+             # Assuming `colorize_text` works:
+             chip_theme=$(colorize_text "$theme_raw")
+        else
+             # Rainbow: Pastel text gradient
+             chip_theme=$(colorize_text "$theme_raw")
+        fi
         
         line2_chips+="${chip_theme}"
         
