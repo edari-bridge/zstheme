@@ -143,9 +143,6 @@ export function cmdStats() {
   // Tool Calls 총합
   const totalToolCalls = dailyActivity.reduce((sum, d) => sum + (d.toolCallCount || 0), 0);
 
-  // Web Searches
-  const webSearches = modelUsage.webSearchRequests || 0;
-
   // 시간대별 활동 분석
   const hourCounts = stats.hourCounts || {};
   const hourEntries = Object.entries(hourCounts).map(([h, c]) => [parseInt(h), c]);
@@ -238,7 +235,6 @@ export function cmdStats() {
   console.log(chalk.cyan(valueLine('📁 Sessions:', formatNumber(totalSessions))));
   console.log(chalk.cyan(valueLine('💬 Messages:', formatNumber(totalMessages))));
   console.log(chalk.cyan(valueLine('🔧 Tool Calls:', formatNumber(totalToolCalls))));
-  console.log(chalk.cyan(valueLine('🔍 Web Searches:', formatNumber(webSearches))));
   console.log(chalk.cyan(MID));
   console.log(chalk.cyan(center('TOKEN USAGE')));
   console.log(chalk.cyan(MID));
