@@ -18,22 +18,30 @@ LSD_COLORS=("128;235;43" "140;229;30" "153;221;19" "165;213;10" "177;203;4" "189
 MONO_CYCLE=("192;192;192" "198;198;198" "204;204;204" "210;210;210" "216;216;216" "222;222;222" "227;227;227" "232;232;232" "237;237;237" "241;241;241" "245;245;245" "248;248;248" "250;250;250" "252;252;252" "254;254;254" "254;254;254" "254;254;254" "254;254;254" "253;253;253" "251;251;251" "249;249;249" "246;246;246" "242;242;242" "238;238;238" "234;234;234" "229;229;229" "224;224;224" "218;218;218" "213;213;213" "207;207;207" "200;200;200" "194;194;194" "188;188;188" "182;182;182" "175;175;175" "169;169;169" "164;164;164" "158;158;158" "153;153;153" "148;148;148" "144;144;144" "140;140;140" "137;137;137" "134;134;134" "132;132;132" "130;130;130" "129;129;129" "129;129;129" "129;129;129" "130;130;130" "131;131;131" "133;133;133" "136;136;136" "139;139;139" "143;143;143" "147;147;147" "152;152;152" "157;157;157" "162;162;162" "168;168;168")
 
 # Chaotic Offset (Visual Speed & Pattern)
+# Use Perl for cross-platform sub-second precision (macOS date doesn't support %N)
+get_timestamp_decis() {
+    if command -v perl >/dev/null 2>&1; then
+        perl -MTime::HiRes -e 'printf "%.0f\n", Time::HiRes::time()*10'
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Fallback for macOS if Perl missing (unlikely): standard date (seconds only)
+        # Multiply by 10 to match scale
+        echo $(($(date +%s) * 10))
+    else
+        # Linux fallback
+        date +%s%1N
+    fi
+}
+TIMESTAMP=$(get_timestamp_decis)
+
 if [[ "$ANIMATION_MODE" == "lsd" ]]; then
     # LSD: Hyper Fast & Random (Chaotic)
     # Multiplier 41 (Prime) causes coloring to jump wildly across the spectrum
-    COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) * 41 % 60))
-    BG_OFFSET=$(($(date +%s%N | cut -c1-10) * 37 % 60))
+    COLOR_OFFSET=$(( TIMESTAMP * 41 % 60 ))
+    BG_OFFSET=$(( TIMESTAMP * 37 % 60 ))
 else
     # Rainbow/Others: Smooth Wave (Time-based)
     # 0.1s resolution (10Hz) for smooth animation
-    # Using %N (nanoseconds) to derive deciseconds
-    current_time=$(date +%s%N)
-    # Extract deciseconds (100ms units) effectively
-    # Simple approach: (seconds * 10) + (nanos / 100000000)
-    # But simply using raw nanos / large_number % 60 provides a cycle.
-    # 1e8 ns = 0.1s.
-    # We want 0-59 loop.
-    COLOR_OFFSET=$(($(echo "$current_time" | cut -c1-10) / 10000000 % 60))
+    COLOR_OFFSET=$(( TIMESTAMP % 60 ))
     # Background offset slightly shifted
     BG_OFFSET=$(( (COLOR_OFFSET + 30) % 60 ))
 fi
