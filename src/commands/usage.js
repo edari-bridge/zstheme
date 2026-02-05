@@ -83,10 +83,10 @@ export function cmdDashboard() {
   const outputTokens = modelUsage.outputTokens || 0;
   const cacheRead = modelUsage.cacheReadInputTokens || 0;
   const cacheCreate = modelUsage.cacheCreationInputTokens || 0;
-  const totalTokens = inputTokens + outputTokens + cacheRead + cacheCreate;
+  const cacheTotal = cacheRead + cacheCreate;
+  const totalTokens = inputTokens + outputTokens + cacheTotal;
 
   const totalSessions = stats.totalSessions || 0;
-  const totalMessages = stats.totalMessages || 0;
 
   // 기간 계산
   const dailyActivity = stats.dailyActivity || [];
@@ -102,21 +102,58 @@ export function cmdDashboard() {
 
   // 일일 평균
   const dailyAvgCost = totalCost / days;
+  const dailyAvgTokens = totalTokens / days;
 
   // 월간 추정
   const estMonthly = dailyAvgCost * 30;
 
-  // 출력
-  const W = 44;
-  const line = '━'.repeat(W);
+  // 효율성
+  const efficiency = totalCost > 0 ? Math.round(totalTokens / totalCost) : 0;
+
+  // O/I 비율
+  const oiRatio = inputTokens > 0 ? (outputTokens / inputTokens).toFixed(1) : '0';
+
+  // 캐시 히트율
+  const cacheHitRate = (inputTokens + cacheCreate) > 0
+    ? ((cacheRead / (inputTokens + cacheCreate)) * 100).toFixed(1)
+    : '0';
+
+  // 박스 그리기
+  const W = 72;
+  const TOP = '┌' + '─'.repeat(W) + '┐';
+  const MID = '├' + '─'.repeat(W) + '┤';
+  const BOT = '└' + '─'.repeat(W) + '┘';
+
+  const row = (content) => {
+    const displayWidth = getDisplayWidth(content);
+    const pad = Math.max(0, W - displayWidth);
+    return '│ ' + content + ' '.repeat(pad) + '│';
+  };
 
   console.log('');
-  console.log(chalk.cyan('📊 Claude Code Dashboard'));
-  console.log(chalk.dim(line));
-  console.log(`💬 ${chalk.white(formatNumber(totalMessages))} messages  │  📁 ${chalk.white(formatNumber(totalSessions))} sessions`);
-  console.log(`💵 ${chalk.yellow(formatCurrency(totalCost))} total  │  📆 ${chalk.white(formatCurrency(dailyAvgCost))}/day`);
-  console.log(`⏱️  ${chalk.white(days)} days  │  📅 Est. ${chalk.white(formatCurrency(estMonthly))}/mo`);
-  console.log(chalk.dim(line));
+  console.log(chalk.cyan(TOP));
+  console.log(chalk.cyan(row(chalk.bold('💰 COST & USAGE SUMMARY'))));
+  console.log(chalk.cyan(MID));
+
+  // Row 1: Total Cost | Period | Total Tokens
+  const r1 = `💵 Total Cost: ${chalk.yellow(formatCurrency(totalCost))}  │  📅 Period: ${chalk.white(days + ' days')}  │  🎯 Total Tokens: ${chalk.white(formatNumber(totalTokens))}`;
+  console.log(chalk.cyan(row(r1)));
+
+  // Row 2: Input | Output | Cache
+  const r2 = `📥 Input: ${chalk.white(formatNumber(inputTokens))}  │  📤 Output: ${chalk.white(formatNumber(outputTokens))}  │  💾 Cache: ${chalk.white(formatNumber(cacheTotal))}`;
+  console.log(chalk.cyan(row(r2)));
+
+  console.log(chalk.cyan(MID));
+
+  // Row 3: Efficiency | O/I Ratio | Cache Hit
+  const r3 = `⚡ Efficiency: ${chalk.white(formatNumber(efficiency) + ' tok/$')}  │  📊 O/I Ratio: ${chalk.white(oiRatio + ':1')}  │  🎯 Cache Hit: ${chalk.white(cacheHitRate + '%')}`;
+  console.log(chalk.cyan(row(r3)));
+
+  // Row 4: Daily Avg | Est. Monthly
+  const r4 = `📆 Daily Avg: ${chalk.white(formatCurrency(dailyAvgCost))} (${formatNumber(Math.round(dailyAvgTokens))} tokens)  │  💡 Est. Monthly: ${chalk.yellow(formatCurrency(estMonthly))}`;
+  console.log(chalk.cyan(row(r4)));
+
+  console.log(chalk.cyan(BOT));
   console.log('');
 }
 
