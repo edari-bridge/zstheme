@@ -65,6 +65,12 @@ export function ThemeSelector({ onBack }) {
           rows.push({ type: 'theme', items: currentRowItems });
           currentRowItems = [];
         }
+
+        // Add Spacer (Empty Row) before Divider if it's not the first group
+        if (lastLayout !== '') {
+          rows.push({ type: 'spacer' });
+        }
+
         // Add Divider
         // Capitalize layout name for display
         const label = layout.charAt(0).toUpperCase() + layout.slice(1);
@@ -169,8 +175,8 @@ export function ThemeSelector({ onBack }) {
       const currentColumn = gridRows[currentVisualRowIndex].items.indexOf(selectedIndex);
       let targetRowIndex = currentVisualRowIndex - 1;
 
-      // Skip dividers
-      while (targetRowIndex >= 0 && gridRows[targetRowIndex].type === 'divider') {
+      // Skip dividers and spacers
+      while (targetRowIndex >= 0 && (gridRows[targetRowIndex].type === 'divider' || gridRows[targetRowIndex].type === 'spacer')) {
         targetRowIndex--;
       }
 
@@ -189,8 +195,8 @@ export function ThemeSelector({ onBack }) {
       const currentColumn = gridRows[currentVisualRowIndex].items.indexOf(selectedIndex);
       let targetRowIndex = currentVisualRowIndex + 1;
 
-      // Skip dividers
-      while (targetRowIndex < gridRows.length && gridRows[targetRowIndex].type === 'divider') {
+      // Skip dividers and spacers
+      while (targetRowIndex < gridRows.length && (gridRows[targetRowIndex].type === 'divider' || gridRows[targetRowIndex].type === 'spacer')) {
         targetRowIndex++;
       }
 
@@ -239,7 +245,11 @@ export function ThemeSelector({ onBack }) {
     // Padding for empty rows if filteredThemes is small logic is implicit via minHeight
 
     visibleGridRows.forEach((row, r) => {
-      if (row.type === 'divider') {
+      if (row.type === 'spacer') {
+        renderedRows.push(
+          e(Box, { key: `spacer-${startRow + r}`, width: '100%', height: 1 })
+        );
+      } else if (row.type === 'divider') {
         renderedRows.push(
           e(Box, { key: `div-${startRow + r}`, width: '100%', marginBottom: 0, paddingX: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderTop: false, borderColor: 'gray' },
             e(Text, { dimColor: true, italic: true }, ` ${row.label} `)
