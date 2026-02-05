@@ -108,7 +108,16 @@ load_modules() {
     fi
 
     # 3. 애니메이션 모듈 로드
-    source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
+    case "$ANIMATION_MODE" in
+        lsd|rainbow|plasma|neon|noise)
+            source "$MODULES_DIR/animation/rainbow.sh"
+            ;;
+        *)
+            if [[ -f "$MODULES_DIR/animation/${ANIMATION_MODE}.sh" ]]; then
+                source "$MODULES_DIR/animation/${ANIMATION_MODE}.sh"
+            fi
+            ;;
+    esac
 
     # 4. 레이아웃 모듈 로드 (render 함수 포함)
     source "$MODULES_DIR/layouts/${LAYOUT_MODE}.sh"
