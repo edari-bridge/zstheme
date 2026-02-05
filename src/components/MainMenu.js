@@ -20,56 +20,62 @@ export function MainMenu() {
 
     // Easter Egg State
     const [rightPressCount, setRightPressCount] = useState(0);
+    const [leftPressCount, setLeftPressCount] = useState(0);
     const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
-    const [focus, setFocus] = useState('menu'); // 'menu' | 'logo'
 
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
 
         // Quit
-        if (input === 'q' && focus === 'menu') exit();
+        if (input === 'q') exit();
 
-        // Menu Navigation (Only when focus is menu)
-        if (focus === 'menu') {
-            if (key.upArrow) {
-                setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
-            }
-
-            if (key.downArrow) {
-                setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
-            }
-
-            if (key.return) {
-                const selected = MENU_ITEMS[selectedIndex];
-                if (selected.id === 'exit') exit();
-                else if (selected.id === 'themes') setActiveTab('themes');
-                else if (selected.id === 'editor') setActiveTab('editor');
-            }
-
-            // Easter Egg Trigger: Right Arrow
-            if (key.rightArrow) {
-                setRightPressCount(prev => {
-                    const newCount = prev + 1;
-                    if (newCount >= 3) {
-                        setIsLsdUnlocked(true);
-                        setFocus('logo');
-                        return 0; // Reset count
-                    }
-                    return newCount;
-                });
-            } else {
-                // Reset count on any other key
-                if (!key.upArrow && !key.downArrow) {
-                    setRightPressCount(0);
-                }
-            }
+        // Menu Navigation
+        if (key.upArrow) {
+            setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
+            setRightPressCount(0);
+            setLeftPressCount(0);
         }
 
-        // Logo Focus Mode
-        if (focus === 'logo') {
-            if (key.leftArrow || key.escape || input === 'q') {
-                setFocus('menu');
-            }
+        if (key.downArrow) {
+            setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
+            setRightPressCount(0);
+            setLeftPressCount(0);
+        }
+
+        if (key.return) {
+            const selected = MENU_ITEMS[selectedIndex];
+            if (selected.id === 'exit') exit();
+            else if (selected.id === 'themes') setActiveTab('themes');
+            else if (selected.id === 'editor') setActiveTab('editor');
+
+            // Reset counts
+            setRightPressCount(0);
+            setLeftPressCount(0);
+        }
+
+        // Easter Egg Triggers
+        if (key.rightArrow) {
+            setLeftPressCount(0);
+            setRightPressCount(prev => {
+                const newCount = prev + 1;
+                if (newCount >= 3) {
+                    setIsLsdUnlocked(true);
+                    return 0; // Reset
+                }
+                return newCount;
+            });
+        }
+
+        if (key.leftArrow) {
+            setRightPressCount(0);
+            setLeftPressCount(prev => {
+                const newCount = prev + 1;
+                if (newCount >= 3) {
+                    setIsLsdUnlocked(false);
+                    return 0; // Reset
+                }
+                return newCount;
+            });
         }
     });
 
@@ -93,11 +99,11 @@ export function MainMenu() {
 
         e(Box, { flexDirection: 'row' },
             // Left Column: Menu
-            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2, borderStyle: focus === 'menu' ? undefined : 'single', borderColor: 'gray' }, // Optional dimming
+            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2 },
                 e(Text, { bold: true, color: 'white', underline: true }, 'Menu'),
                 e(Box, { height: 1 }),
                 ...MENU_ITEMS.map((item, index) => {
-                    const isSelected = index === selectedIndex && focus === 'menu';
+                    const isSelected = index === selectedIndex;
                     return e(Box, { key: item.id, paddingLeft: 1 },
                         e(Text, { color: isSelected ? 'green' : 'gray' },
                             isSelected ? '❯ ' : '  '
@@ -119,8 +125,6 @@ export function MainMenu() {
                 width: '65%',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderStyle: focus === 'logo' ? 'double' : undefined,
-                borderColor: isLsdUnlocked ? 'magenta' : 'white',
                 padding: 1
             },
                 e(Logo, { lsdMode: isLsdUnlocked })
