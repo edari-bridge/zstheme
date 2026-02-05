@@ -92,7 +92,8 @@ zstheme --list       # List all 60 theme combinations
 zstheme --preview    # Preview sample themes
 zstheme --preview-all # Preview all themes
 zstheme --edit       # Launch color editor
-zstheme --status      # Show Claude Code usage statistics
+zstheme --status      # Show full usage statistics
+zstheme --dashboard   # Show compact usage dashboard
 zstheme --help       # Show help
 zstheme --version    # Show version
 ```
@@ -103,7 +104,7 @@ Use skills directly in Claude Code:
 
 ```bash
 # In Claude Code, type:
-/dashboard       # Dashboard (coming soon)
+/dashboard       # Compact dashboard (zstheme --dashboard)
 /dashboard-full  # Full status view (zstheme --status)
 ```
 

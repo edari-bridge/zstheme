@@ -5,7 +5,7 @@ import { cmdPreview } from './commands/preview.js';
 import { cmdApply } from './commands/apply.js';
 import { cmdInteractive } from './commands/interactive.js';
 import { cmdEdit } from './commands/edit.js';
-import { cmdStats } from './commands/usage.js';
+import { cmdStats, cmdDashboard } from './commands/usage.js';
 
 export function cli() {
   program
@@ -19,6 +19,7 @@ export function cli() {
     .option('-P, --preview-all', 'Preview all 60 themes')
     .option('-e, --edit', 'Launch interactive color editor')
     .option('-s, --status', 'Show Claude Code usage statistics')
+    .option('-d, --dashboard', 'Show compact usage dashboard')
     // 필터 옵션
     .option('--1line', 'Filter: 1line layout')
     .option('--2line', 'Filter: 2line layout')
@@ -67,6 +68,8 @@ export function cli() {
     cmdEdit();
   } else if (options.status) {
     cmdStats();
+  } else if (options.dashboard) {
+    cmdDashboard();
   } else if (args.length > 0) {
     cmdApply(args[0]);
   } else {

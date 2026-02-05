@@ -60,6 +60,66 @@ function padLeft(str, len) {
   return ' '.repeat(Math.max(0, len - displayWidth)) + str;
 }
 
+export function cmdDashboard() {
+  const statsPath = join(homedir(), '.claude', 'stats-cache.json');
+
+  if (!existsSync(statsPath)) {
+    console.log(chalk.yellow('⚠️  stats-cache.json not found'));
+    console.log(chalk.dim('Run Claude Code to generate statistics.'));
+    return;
+  }
+
+  let stats;
+  try {
+    stats = JSON.parse(readFileSync(statsPath, 'utf-8'));
+  } catch (e) {
+    console.log(chalk.red('❌ Failed to parse stats-cache.json'));
+    return;
+  }
+
+  // 데이터 추출
+  const modelUsage = stats.modelUsage?.['claude-opus-4-5-20251101'] || {};
+  const inputTokens = modelUsage.inputTokens || 0;
+  const outputTokens = modelUsage.outputTokens || 0;
+  const cacheRead = modelUsage.cacheReadInputTokens || 0;
+  const cacheCreate = modelUsage.cacheCreationInputTokens || 0;
+  const totalTokens = inputTokens + outputTokens + cacheRead + cacheCreate;
+
+  const totalSessions = stats.totalSessions || 0;
+  const totalMessages = stats.totalMessages || 0;
+
+  // 기간 계산
+  const dailyActivity = stats.dailyActivity || [];
+  const dates = dailyActivity.map(d => d.date).sort();
+  const days = dates.length || 1;
+
+  // 비용 계산
+  const inputCost = (inputTokens / 1_000_000) * PRICING.input;
+  const outputCost = (outputTokens / 1_000_000) * PRICING.output;
+  const cacheReadCost = (cacheRead / 1_000_000) * PRICING.cacheRead;
+  const cacheCreateCost = (cacheCreate / 1_000_000) * PRICING.cacheCreate;
+  const totalCost = inputCost + outputCost + cacheReadCost + cacheCreateCost;
+
+  // 일일 평균
+  const dailyAvgCost = totalCost / days;
+
+  // 월간 추정
+  const estMonthly = dailyAvgCost * 30;
+
+  // 출력
+  const W = 44;
+  const line = '━'.repeat(W);
+
+  console.log('');
+  console.log(chalk.cyan('📊 Claude Code Dashboard'));
+  console.log(chalk.dim(line));
+  console.log(`💬 ${chalk.white(formatNumber(totalMessages))} messages  │  📁 ${chalk.white(formatNumber(totalSessions))} sessions`);
+  console.log(`💵 ${chalk.yellow(formatCurrency(totalCost))} total  │  📆 ${chalk.white(formatCurrency(dailyAvgCost))}/day`);
+  console.log(`⏱️  ${chalk.white(days)} days  │  📅 Est. ${chalk.white(formatCurrency(estMonthly))}/mo`);
+  console.log(chalk.dim(line));
+  console.log('');
+}
+
 export function cmdStats() {
   const statsPath = join(homedir(), '.claude', 'stats-cache.json');
 
