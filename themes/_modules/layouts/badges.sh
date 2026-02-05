@@ -80,8 +80,8 @@ render() {
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_branch=$(colorize_bg_lsd "$raw_branch" 0 "\033[30m")
         else
-            # Branch (Purple) -> Highlight Magenta
-            chip_branch=$(colorize_bg_rainbow "$raw_branch" "$C_BG_BRANCH" "\033[105m" 0 "\033[30m")
+            # Branch (Purple) -> Highlight Magenta. Text White.
+            chip_branch=$(colorize_bg_rainbow "$raw_branch" "$C_BG_BRANCH" "\033[105m" 0 "\033[97m")
         fi
     else
         chip_branch="$(make_chip "$bg_branch" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
@@ -93,7 +93,7 @@ render() {
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_tree=$(colorize_bg_lsd "$raw_tree" 10 "\033[30m")
         else
-            # Tree (Green) -> Highlight Bright Green
+            # Tree (Green) -> Highlight Bright Green. Text Black.
             chip_tree=$(colorize_bg_rainbow "$raw_tree" "$C_BG_TREE" "\033[102m" 10 "\033[30m")
         fi
     else
@@ -106,8 +106,8 @@ render() {
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_dir=$(colorize_bg_lsd "$raw_dir" 20 "\033[30m")
         else
-            # Dir (Blue) -> Highlight Cyan
-            chip_dir=$(colorize_bg_rainbow "$raw_dir" "$C_BG_DIR" "\033[46m" 20 "\033[30m")
+            # Dir (Blue) -> Highlight Cyan. Text White.
+            chip_dir=$(colorize_bg_rainbow "$raw_dir" "$C_BG_DIR" "\033[46m" 20 "\033[97m")
         fi
     else
         chip_dir="$(make_chip "$bg_dir" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
@@ -127,7 +127,7 @@ render() {
             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                  chip_status=$(colorize_bg_lsd "$raw_status" 30 "\033[30m")
             else
-                 # Status (Yellow) -> Highlight Bright Yellow
+                 # Status (Yellow) -> Highlight Bright Yellow. Text Black.
                  chip_status=$(colorize_bg_rainbow "$raw_status" "$C_BG_STATUS" "\033[103m" 30 "\033[30m")
             fi
 
@@ -140,7 +140,7 @@ render() {
             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                 chip_sync=$(colorize_bg_lsd "$raw_sync" 40 "\033[30m")
             else
-                # Sync (Cyan) -> Highlight Bright Cyan
+                # Sync (Cyan) -> Highlight Bright Cyan. Text Black.
                 chip_sync=$(colorize_bg_rainbow "$raw_sync" "$C_BG_SYNC" "\033[106m" 40 "\033[30m")
             fi
         else
@@ -182,8 +182,8 @@ render() {
          if [[ "$ANIMATION_MODE" == "lsd" ]]; then
              chip_model=$(colorize_bg_lsd "$raw_model" 50 "\033[30m")
          else
-             # Model (White/Purple) -> Highlight Magenta
-             chip_model=$(colorize_bg_rainbow "$raw_model" "$C_BG_MODEL" "\033[105m" 50 "\033[30m")
+             # Model (White/Purple) -> Highlight Magenta. Text White.
+             chip_model=$(colorize_bg_rainbow "$raw_model" "$C_BG_MODEL" "\033[105m" 50 "\033[97m")
          fi
     else
         chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"

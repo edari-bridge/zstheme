@@ -84,7 +84,22 @@ render() {
             # I will use Bright Standard Colors as highlights for simplicity.
             
             # LOC (Blue-ish) -> Highlight Cyan
-            chip_loc=$(colorize_bg_rainbow "$raw_loc" "$C_BG_LOC" "\033[46m" 0 "\033[30m")
+            # Usage: colorize_bg_rainbow "text" "base_bg" "highlight_bg" "offset" "fg_color"
+            
+            # Since raw_loc has multiple parts (Branch, Tree, Dir), treating them as one block with one color policy is hard if we want adaptive text.
+            # IN BARS LAYOUT: line 1 is usually unified or closely packed.
+            # But here we are constructing `chip_loc` from `raw_loc` which contains Branch/Tree/Dir.
+            # `bg_loc` in static mode is ONE color (usually Blue/Purple).
+            # So `colorize_bg_rainbow` applies ONE base/highlight style.
+            
+            # If `raw_loc` spans Branch(Purple) + Tree(Green) + Dir(Blue) visually in *Badges* layout, they are distinct.
+            # But in *Bars* layout, strictly speaking, `bg_loc` is the *Group* background.
+            # `bars.sh` defines `C_BG_LOC`. Let's check `colors.sh` (implied).
+            # Usually `C_BG_LOC` is a single color (e.g. Blue).
+            # So text should be White on Blue.
+            
+            # We will switch text to White (\033[97m) for Loc.
+            chip_loc=$(colorize_bg_rainbow "$raw_loc" "$C_BG_LOC" "\033[46m" 0 "\033[97m")
         fi
         
         local line1_chips="${chip_loc}    "
@@ -104,7 +119,7 @@ render() {
              if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                  chip_git=$(colorize_bg_lsd "$raw_git" 20 "\033[30m")
              else
-                 # GIT (Green/Yellow-ish) -> Highlight Bright Green
+                 # GIT (Green/Yellow-ish) -> Highlight Bright Green. Text Black.
                  chip_git=$(colorize_bg_rainbow "$raw_git" "$C_BG_GIT" "\033[102m" 20 "\033[30m")
              fi
              line1_chips+="${chip_git}    "
@@ -144,8 +159,8 @@ render() {
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_ses=$(colorize_bg_lsd "$ses_raw" 40 "\033[30m")
         else
-            # SESSION (Purple/Pink-ish) -> Highlight Magenta
-            chip_ses=$(colorize_bg_rainbow "$ses_raw" "$C_BG_SES" "\033[105m" 40 "\033[30m")
+            # SESSION (Purple/Pink-ish) -> Highlight Magenta. Text White for contrast.
+            chip_ses=$(colorize_bg_rainbow "$ses_raw" "$C_BG_SES" "\033[105m" 40 "\033[97m")
         fi
         
         line2_chips+="${chip_ses}    "
