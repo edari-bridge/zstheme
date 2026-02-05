@@ -23,10 +23,10 @@ make_chip() {
 
     case "$CHIP_STYLE" in
         pipe)
-            echo "${C_CHIP}┃${RST}${bg} ${content} ${RST}${C_CHIP}┃${RST}"
+            echo "${C_CHIP}┃${RST}${bg} ${content}${bg} ${RST}${C_CHIP}┃${RST}"
             ;;
         *)  # badge (기본) - 배경만
-            echo "${bg} ${content} ${RST}"
+            echo "${bg} ${content}${bg} ${RST}"
             ;;
     esac
 }
