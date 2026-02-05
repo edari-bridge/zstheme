@@ -44,7 +44,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   }, [isLsdUnlocked]);
 
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
-  const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked)), [isLsdUnlocked]);
+  const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked), isLsdUnlocked), [isLsdUnlocked]);
 
 
   // Dynamic Tabs
