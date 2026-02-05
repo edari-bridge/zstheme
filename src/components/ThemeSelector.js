@@ -12,7 +12,7 @@ const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
 const COLUMNS = 3;
 const VISIBLE_ROWS = 6;
 
-export function ThemeSelector({ onBack }) {
+export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
   const currentTheme = getCurrentTheme();
 
@@ -20,10 +20,6 @@ export function ThemeSelector({ onBack }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [preview, setPreview] = useState('');
-
-  // Easter Egg State
-  const [keyBuffer, setKeyBuffer] = useState([]);
-  const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
 
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
@@ -181,21 +177,12 @@ export function ThemeSelector({ onBack }) {
       exit();
     }
 
-    // Easter Egg Listener
+    // Easter Egg Listener (Removed in favor of MainMenu trigger)
+    /*
     if (input && ['l', 's', 'd'].includes(input.toLowerCase())) {
-      const nextBuffer = [...keyBuffer, input.toLowerCase()].slice(-3);
-      setKeyBuffer(nextBuffer);
-
-      if (nextBuffer.join('') === 'lsd') {
-        setIsLsdUnlocked(prev => !prev);
-        setShowMessage(true);
-        setTimeout(() => setShowMessage(false), 2000);
-        setKeyBuffer([]); // Reset buffer
-        return; // Consume the key
-      }
-    } else if (input) {
-      setKeyBuffer([]); // Reset on other keys
+      // ... (Old Logic Removed)
     }
+    */
 
     // 탭 네비게이션 (Tab 키)
     if (key.tab) {
