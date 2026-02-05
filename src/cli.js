@@ -18,7 +18,7 @@ export function cli() {
     .option('-p, --preview', 'Preview themes')
     .option('-P, --preview-all', 'Preview all 60 themes')
     .option('-e, --edit', 'Launch interactive color editor')
-    .option('-s, --stats', 'Show Claude Code usage statistics')
+    .option('-s, --status', 'Show Claude Code usage statistics')
     // 필터 옵션
     .option('--1line', 'Filter: 1line layout')
     .option('--2line', 'Filter: 2line layout')
@@ -65,7 +65,7 @@ export function cli() {
     cmdPreview(false, filters);
   } else if (options.edit) {
     cmdEdit();
-  } else if (options.stats) {
+  } else if (options.status) {
     cmdStats();
   } else if (args.length > 0) {
     cmdApply(args[0]);
