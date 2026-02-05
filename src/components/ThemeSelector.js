@@ -224,8 +224,8 @@ export function ThemeSelector({ onBack }) {
     // Full Width Preview Card
     e(Box, {
       flexDirection: 'column',
-      borderStyle: 'single',
-      borderColor: 'white',
+      // borderStyle: 'single',
+      // borderColor: 'white',
       padding: 1,
       marginTop: 0,
       minHeight: 10
