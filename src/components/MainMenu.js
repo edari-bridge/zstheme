@@ -18,49 +18,86 @@ export function MainMenu() {
     const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor'
     const [selectedIndex, setSelectedIndex] = useState(0);
 
+    // Easter Egg State
+    const [rightPressCount, setRightPressCount] = useState(0);
+    const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
+    const [focus, setFocus] = useState('menu'); // 'menu' | 'logo'
+
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
 
-        if (input === 'q') exit();
+        // Quit
+        if (input === 'q' && focus === 'menu') exit();
 
-        if (key.upArrow) {
-            setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
+        // Menu Navigation (Only when focus is menu)
+        if (focus === 'menu') {
+            if (key.upArrow) {
+                setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
+            }
+
+            if (key.downArrow) {
+                setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
+            }
+
+            if (key.return) {
+                const selected = MENU_ITEMS[selectedIndex];
+                if (selected.id === 'exit') exit();
+                else if (selected.id === 'themes') setActiveTab('themes');
+                else if (selected.id === 'editor') setActiveTab('editor');
+            }
+
+            // Easter Egg Trigger: Right Arrow
+            if (key.rightArrow) {
+                setRightPressCount(prev => {
+                    const newCount = prev + 1;
+                    if (newCount >= 3) {
+                        setIsLsdUnlocked(true);
+                        setFocus('logo');
+                        return 0; // Reset count
+                    }
+                    return newCount;
+                });
+            } else {
+                // Reset count on any other key
+                if (!key.upArrow && !key.downArrow) {
+                    setRightPressCount(0);
+                }
+            }
         }
 
-        if (key.downArrow) {
-            setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
-        }
-
-        if (key.return) {
-            const selected = MENU_ITEMS[selectedIndex];
-            if (selected.id === 'exit') exit();
-            else if (selected.id === 'themes') setActiveTab('themes');
-            else if (selected.id === 'editor') setActiveTab('editor');
+        // Logo Focus Mode
+        if (focus === 'logo') {
+            if (key.leftArrow || key.escape || input === 'q') {
+                setFocus('menu');
+            }
         }
     });
 
     if (activeTab === 'themes') {
-        return e(ThemeSelector, { onBack: () => setActiveTab('menu') });
+        return e(ThemeSelector, {
+            onBack: () => setActiveTab('menu'),
+            isLsdUnlocked: isLsdUnlocked
+        });
     }
 
     if (activeTab === 'editor') {
         return e(ColorEditor, { onBack: () => setActiveTab('menu') });
     }
 
-    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 90 },
+    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: isLsdUnlocked ? 'magenta' : 'cyan', width: 90 },
         // Header Area
         e(Box, { justifyContent: 'space-between', paddingBottom: 1 },
-            e(Text, { color: 'magenta', bold: true }, 'zstheme'),
+            e(Text, { color: isLsdUnlocked ? 'magenta' : 'magenta', bold: true }, isLsdUnlocked ? 'zstheme (LSD Mode)' : 'zstheme'),
             e(Text, { dimColor: true }, 'v2.1.0')
         ),
 
         e(Box, { flexDirection: 'row' },
             // Left Column: Menu
-            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2 },
+            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2, borderStyle: focus === 'menu' ? undefined : 'single', borderColor: 'gray' }, // Optional dimming
                 e(Text, { bold: true, color: 'white', underline: true }, 'Menu'),
                 e(Box, { height: 1 }),
                 ...MENU_ITEMS.map((item, index) => {
-                    const isSelected = index === selectedIndex;
+                    const isSelected = index === selectedIndex && focus === 'menu';
                     return e(Box, { key: item.id, paddingLeft: 1 },
                         e(Text, { color: isSelected ? 'green' : 'gray' },
                             isSelected ? '❯ ' : '  '
@@ -77,8 +114,16 @@ export function MainMenu() {
             ),
 
             // Right Column: Hero/Logo
-            e(Box, { flexDirection: 'column', width: '65%', alignItems: 'center', justifyContent: 'center' },
-                e(Logo, null)
+            e(Box, {
+                flexDirection: 'column',
+                width: '65%',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderStyle: focus === 'logo' ? 'double' : undefined,
+                borderColor: isLsdUnlocked ? 'magenta' : 'white',
+                padding: 1
+            },
+                e(Logo, { lsdMode: isLsdUnlocked })
             )
         ),
 
