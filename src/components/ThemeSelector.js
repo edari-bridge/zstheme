@@ -19,26 +19,35 @@ export function ThemeSelector({ onBack }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [preview, setPreview] = useState('');
 
+  // Grid 설정
+  const COLUMNS = 3;
+  const ROWS = 6; // 한 화면에 보여줄 줄 수
+  const PAGE_SIZE = COLUMNS * ROWS;
+
   // 현재 탭에 맞는 테마 필터링
   const currentTabName = TABS[activeTab];
 
-  // Memoized filtered themes to avoid recalculation on every render
   const filteredThemes = useMemo(() => {
-    if (activeTab === 0) return allThemes; // All
-
+    if (activeTab === 0) return allThemes;
     const filterKey = currentTabName.toLowerCase();
-    return allThemes.filter(theme => {
-      // "2line", "1line" 등은 테마명에 포함되어 있음
-      // 예: "rainbow-2line-nerd" -> includes "2line"
-      return theme.includes(filterKey);
-    });
+    return allThemes.filter(theme => theme.includes(filterKey));
   }, [activeTab, allThemes, currentTabName]);
-
-  // 초기 진입 시 현재 테마가 있는 탭과 인덱스로 이동 (Optional enhancement)
-  // 현재는 단순하게 탭 변경시 인덱스 0으로 리셋하는 로직 사용
 
   const selectedTheme = filteredThemes[selectedIndex] || filteredThemes[0];
   const description = selectedTheme ? getThemeDescription(selectedTheme) : '';
+
+  // Scroll offset calculation
+  // selectedIndex가 현재 페이지 범위를 벗어나면 startOffset을 조정
+  const currentRow = Math.floor(selectedIndex / COLUMNS);
+  const [startRow, setStartRow] = useState(0);
+
+  useEffect(() => {
+    if (currentRow < startRow) {
+      setStartRow(currentRow);
+    } else if (currentRow >= startRow + ROWS) {
+      setStartRow(currentRow - ROWS + 1);
+    }
+  }, [currentRow, startRow]);
 
   // 프리뷰 업데이트
   useEffect(() => {
@@ -53,6 +62,7 @@ export function ThemeSelector({ onBack }) {
   // 탭 변경 시 인덱스 리셋
   useEffect(() => {
     setSelectedIndex(0);
+    setStartRow(0);
   }, [activeTab]);
 
   useInput((input, key) => {
@@ -64,37 +74,45 @@ export function ThemeSelector({ onBack }) {
       exit();
     }
 
-    // 탭 네비게이션
-    if (key.leftArrow || input === 'h') {
-      setActiveTab(prev => (prev > 0 ? prev - 1 : TABS.length - 1));
-      return; // 탭 변경 시 리스트 이동 방지
-    }
-    if (key.rightArrow || input === 'l' || key.tab) {
+    // 탭 네비게이션 (Tab 키)
+    if (key.tab) {
       setActiveTab(prev => (prev < TABS.length - 1 ? prev + 1 : 0));
       return;
     }
 
-    // 리스트 네비게이션
-    if (key.upArrow || input === 'k') {
+    // 그리드 네비게이션 (Arrow Keys)
+    if (key.leftArrow || input === 'h') {
+      const prevIndex = selectedIndex - 1;
+      // 같은 행에서 왼쪽으로 이동하거나, 이전 행의 마지막으로 이동
+      // 단, 단순 인덱스 감소가 그리드 이동 로직에 부합
       setSelectedIndex(prev => (prev > 0 ? prev - 1 : filteredThemes.length - 1));
     }
-
-    if (key.downArrow || input === 'j') {
+    if (key.rightArrow || input === 'l') {
       setSelectedIndex(prev => (prev < filteredThemes.length - 1 ? prev + 1 : 0));
+    }
+    if (key.upArrow || input === 'k') {
+      setSelectedIndex(prev => {
+        const next = prev - COLUMNS;
+        return next >= 0 ? next : prev;
+      });
+    }
+    if (key.downArrow || input === 'j') {
+      setSelectedIndex(prev => {
+        const next = prev + COLUMNS;
+        return next < filteredThemes.length ? next : prev;
+      });
     }
 
     if (key.pageUp) {
-      setSelectedIndex(prev => Math.max(0, prev - 5));
+      setSelectedIndex(prev => Math.max(0, prev - PAGE_SIZE));
     }
-
     if (key.pageDown) {
-      setSelectedIndex(prev => Math.min(filteredThemes.length - 1, prev + 5));
+      setSelectedIndex(prev => Math.min(filteredThemes.length - 1, prev + PAGE_SIZE));
     }
 
     if (key.return) {
       if (!selectedTheme) return;
 
-      // 선택 완료 - 자동 저장
       const configPath = saveThemeToShellConfig(selectedTheme);
       const configName = path.basename(configPath);
 
@@ -108,32 +126,70 @@ export function ThemeSelector({ onBack }) {
     }
   });
 
-  // 보이는 범위 계산 (스크롤)
-  const visibleCount = 18;
-  const halfVisible = Math.floor(visibleCount / 2);
-  let startIndex = Math.max(0, selectedIndex - halfVisible);
-  let endIndex = Math.min(filteredThemes.length, startIndex + visibleCount);
+  // Grid Rendering Helper
+  const renderGrid = () => {
+    if (filteredThemes.length === 0) {
+      return e(Box, { height: ROWS + 2, justifyContent: 'center', alignItems: 'center' },
+        e(Text, { color: 'gray', italic: true }, 'No themes found')
+      );
+    }
 
-  if (endIndex - startIndex < visibleCount) {
-    startIndex = Math.max(0, endIndex - visibleCount);
-  }
+    const gridRows = [];
+    for (let r = 0; r < ROWS; r++) {
+      const rowIndex = startRow + r;
+      const rowItems = [];
 
-  // 범위 보정 (필터링된 개수가 visibleCount보다 적을 때)
-  if (filteredThemes.length <= visibleCount) {
-    startIndex = 0;
-    endIndex = filteredThemes.length;
-  }
+      for (let c = 0; c < COLUMNS; c++) {
+        const itemIndex = rowIndex * COLUMNS + c;
+        // 범위를 벗어나면 빈 박스만 채움 (레이아웃 유지)
+        if (itemIndex >= filteredThemes.length && filteredThemes.length > 0) {
+          rowItems.push(e(Box, { key: `${r}-${c}`, width: '33%', paddingX: 1 }));
+          continue;
+        }
+        if (filteredThemes.length === 0) break;
 
-  const visibleList = filteredThemes.slice(startIndex, endIndex);
 
-  return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 90 },
-    // Header
+        const theme = filteredThemes[itemIndex];
+        const isSelected = itemIndex === selectedIndex;
+        const isCurrent = theme === currentTheme;
+
+        rowItems.push(
+          e(Box, {
+            key: `${r}-${c}`,
+            width: '33%', // 3 columns
+            paddingX: 1
+          },
+            e(Text, {
+              color: isSelected ? 'green' : (isCurrent ? 'cyan' : 'gray'),
+              bold: isSelected,
+              backgroundColor: isSelected ? '#333' : undefined,
+              wrap: 'truncate-end'
+            },
+              (isSelected ? '❯ ' : '  ') + theme + (isCurrent ? ' *' : '')
+            )
+          )
+        );
+      }
+
+      gridRows.push(
+        e(Box, { key: `row-${r}`, flexDirection: 'row', marginBottom: 0 },
+          ...rowItems
+        )
+      );
+    }
+
+    // minHeight ensures consistent layout even if fewer rows
+    return e(Box, { flexDirection: 'column', minHeight: 7 }, ...gridRows);
+  };
+
+  return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 110 },
+    // [Header Area]
     e(Box, { justifyContent: 'space-between', marginBottom: 1 },
       e(Text, { color: 'magenta', bold: true }, 'Explore Themes'),
-      e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length}`)
+      e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
 
-    // Tabs
+    // [Tabs]
     e(Box, { flexDirection: 'row', marginBottom: 1, borderStyle: 'single', borderBottom: true, borderTop: false, borderLeft: false, borderRight: false, borderColor: 'gray' },
       ...TABS.map((tab, i) => {
         const isActive = i === activeTab;
@@ -147,76 +203,45 @@ export function ThemeSelector({ onBack }) {
       })
     ),
 
-    e(Box, { flexDirection: 'row' },
-      // Left Column: List
-      e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2 },
-        // Empty list handling
-        visibleList.length === 0 ?
-          e(Text, { color: 'gray', italic: true }, 'No themes found') :
-          visibleList.map((theme, i) => {
-            const actualIndex = startIndex + i; // 원래 인덱스 (현재 필터링된 배열 기준)
-            // const actualIndex = i; // visibleList 내부 인덱스
-            // 위 로직에서 map의 i는 visibleList의 인덱스이므로,
-            // 전체 리스트(filteredThemes)에서의 인덱스와 비교하려면 startIndex를 더해야 함.
+    // [Top: Theme Grid]
+    e(Box, {
+      flexDirection: 'column',
+      marginBottom: 1,
+      borderStyle: 'single',
+      borderColor: 'gray',
+      padding: 1
+    },
+      renderGrid()
+    ),
 
-            const isSelected = (startIndex + i) === selectedIndex;
-            const isCurrent = theme === currentTheme;
+    // [Bottom: Info & Preview]
+    // Theme Title & Desc
+    selectedTheme ? e(Box, { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 0 },
+      e(Text, { bold: true, color: 'yellow' }, selectedTheme),
+      e(Text, { italic: true, color: 'white' }, description || '')
+    ) : null,
 
-            return e(Box, { key: theme },
-              e(Text, { color: isSelected ? 'green' : 'gray' },
-                isSelected ? '❯ ' : '  '
-              ),
-              e(Text, {
-                color: isSelected ? 'white' : (isCurrent ? 'green' : 'gray'),
-                bold: isSelected,
-                backgroundColor: isSelected ? '#333' : undefined
-              },
-                theme + (isCurrent ? ' *' : '')
-              )
-            );
-          })
-      ),
-
-      // Right Column: Detail & Preview
-      e(Box, { flexDirection: 'column', width: '65%', paddingLeft: 1 },
-        // Theme Info Card
-        selectedTheme ? e(Box, { flexDirection: 'column', marginBottom: 1 },
-          e(Text, { bold: true, color: 'yellow', underline: true }, selectedTheme),
-          e(Box, { height: 1 }),
-          e(Text, { italic: true, color: 'white' }, description || 'No description available.')
-        ) : e(Text, null, ''),
-
-        // Preview Box
-        e(Box, {
-          flexDirection: 'column',
-          borderStyle: 'single',
-          borderColor: 'gray',
-          padding: 1,
-          marginTop: 1,
-          minHeight: 10
-        },
-          e(Text, { dimColor: true, marginBottom: 1 }, 'Terminal Preview'),
-          e(Text, null, preview)
-        )
-      )
+    // Full Width Preview Card
+    e(Box, {
+      flexDirection: 'column',
+      borderStyle: 'single',
+      borderColor: 'white',
+      padding: 1,
+      marginTop: 0,
+      minHeight: 10
+    },
+      e(Text, null, preview)
     ),
 
     // Footer
     e(Box, {
       marginTop: 1,
-      paddingTop: 1,
-      borderStyle: 'single',
-      borderTop: true,
-      borderBottom: false,
-      borderLeft: false,
-      borderRight: false,
-      borderColor: 'gray'
     },
       e(Text, { dimColor: true },
         'Use ',
-        e(Text, { color: 'yellow' }, '←→'),
-        ' tabs, ',
-        e(Text, { color: 'yellow' }, '↑↓'),
+        e(Text, { color: 'yellow' }, 'Tab'),
+        ' category, ',
+        e(Text, { color: 'yellow' }, 'Arrow Keys'),
         ' navigate, ',
         e(Text, { color: 'yellow' }, 'Enter'),
         ' apply'

@@ -3,7 +3,7 @@ import { PATHS } from './config.js';
 
 // 프리뷰용 Mock 데이터
 export const MOCK_DATA = {
-  MODEL: 'Claude Opus 4.5',
+  MODEL: 'Opus 4.5',
   DIR_NAME: 'my-project',
   CONTEXT_PCT: 35,
   SESSION_DURATION_MIN: 42,
@@ -87,7 +87,7 @@ export function simplePreview(themeName, colors = null) {
 
     case '2line':
       lines.push(`${fg(c.branch)}${icons.branch} main${RST}  ${fg(c.tree)}my-project${RST}  ${fg(c.dir)}project${RST}`);
-      lines.push(`${fg(c.model)}${icons.model} Claude Opus 4.5${RST}  ${fg(c.ctx)}35%${RST}`);
+      lines.push(`${fg(c.model)}${icons.model} Opus 4.5${RST}  ${fg(c.ctx)}35%${RST}`);
       break;
 
     case 'card':
