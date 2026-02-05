@@ -286,6 +286,50 @@ export function cmdDashboard() {
   const r4 = `📆 Daily Avg: ${chalk.white(formatCurrency(dailyAvgCost))} (${formatNumber(Math.round(dailyAvgTokens))} tokens)  │  💡 Est. Monthly: ${chalk.yellow(formatCurrency(estMonthly))}`;
   console.log(chalk.cyan(row(r4)));
 
+  // TODAY 섹션
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  const todayActivity = dailyActivity.find(d => d.date === today);
+  const yesterdayActivity = dailyActivity.find(d => d.date === yesterday);
+
+  // dailyModelTokens에서 오늘 토큰 계산
+  const dailyModelTokens = stats.dailyModelTokens || [];
+  const todayTokens = dailyModelTokens.find(d => d.date === today);
+
+  if (todayActivity || todayTokens) {
+    console.log(chalk.cyan(MID));
+    console.log(chalk.cyan(row(chalk.bold('📅 TODAY'))));
+    console.log(chalk.cyan(MID));
+
+    // 오늘 비용 계산 (토큰 기준 비율로 추정)
+    let todayCost = 0;
+    if (todayTokens?.tokensByModel) {
+      const todayTotalTokens = Object.values(todayTokens.tokensByModel).reduce((a, b) => a + b, 0);
+      // 전체 평균 비용률 ($/token)을 사용해서 추정
+      if (totalTokens > 0 && todayTotalTokens > 0) {
+        const costPerToken = totalCost / totalTokens;
+        todayCost = todayTotalTokens * costPerToken;
+      }
+    }
+
+    const todayMsgs = todayActivity?.messageCount || 0;
+    const todaySessions = todayActivity?.sessionCount || 0;
+    const yesterdayMsgs = yesterdayActivity?.messageCount || 0;
+
+    // 어제 대비 변화율
+    let changeStr = '';
+    if (yesterdayMsgs > 0) {
+      const changePct = Math.round(((todayMsgs - yesterdayMsgs) / yesterdayMsgs) * 100);
+      const sign = changePct >= 0 ? '+' : '';
+      const color = changePct >= 0 ? chalk.green : chalk.red;
+      changeStr = `  │  📈 ${color(sign + changePct + '% vs yday')}`;
+    }
+
+    const todayRow = `💵 Cost: ${chalk.yellow(formatCurrency(todayCost))}  │  💬 ${chalk.white(formatNumber(todayMsgs))} msgs  │  📁 ${chalk.white(todaySessions)} sessions${changeStr}`;
+    console.log(chalk.cyan(row(todayRow)));
+  }
+
   console.log(chalk.cyan(BOT));
   console.log('');
 }
