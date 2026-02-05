@@ -7,8 +7,8 @@ import { saveThemeToShellConfig } from '../utils/shell.js';
 
 const e = React.createElement;
 
-// User Requested Order: 1line, 2line, Badges, Bars, Card
-const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
+// User Requested Order: 1line, 2line, Badges, Bars, Card, Lab
+const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
 const COLUMNS = 3;
 const VISIBLE_ROWS = 6;
 
@@ -31,12 +31,15 @@ export function ThemeSelector({ onBack }) {
 
 
   // Dynamic Tabs
-  const TABS = useMemo(() => isLsdUnlocked ? [...BASE_TABS, 'LSD'] : BASE_TABS, [isLsdUnlocked]);
+  const TABS = useMemo(() => isLsdUnlocked ? [...BASE_TABS.filter(t => t !== 'LSD'), 'LSD'] : BASE_TABS, [isLsdUnlocked]);
 
   // 현재 탭에 맞는 테마 필터링
   const currentTabName = TABS[activeTab] || TABS[0];
 
   const filteredThemes = useMemo(() => {
+    if (currentTabName === 'Lab') {
+      return ['plasma-badges', 'neon-badges', 'noise-badges'];
+    }
     if (activeTab === 0) return allThemes;
     const filterKey = currentTabName.toLowerCase();
     return allThemes.filter(theme => theme.includes(filterKey));
@@ -137,8 +140,14 @@ export function ThemeSelector({ onBack }) {
     const initial = selectedTheme ? renderThemePreview(selectedTheme) : '';
     setPreview(initial);
 
-    // Animation loop for Rainbow/LSD
-    const isAnimated = selectedTheme && (selectedTheme.includes('rainbow') || selectedTheme.includes('lsd'));
+    // Animation loop for Rainbow/LSD/Lab
+    const isAnimated = selectedTheme && (
+      selectedTheme.includes('rainbow') ||
+      selectedTheme.includes('lsd') ||
+      selectedTheme.includes('plasma') ||
+      selectedTheme.includes('neon') ||
+      selectedTheme.includes('noise')
+    );
 
     if (isAnimated) {
       // 100ms interval for smooth animation

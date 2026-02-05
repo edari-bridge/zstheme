@@ -177,14 +177,17 @@ render() {
     local chip_model chip_rate chip_time chip_burn chip_theme
 
     # 모델 칩
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
          local raw_model=" ${ICON_MODEL} ${MODEL} "
-         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-             chip_model=$(colorize_bg_lsd "$raw_model" 50 "\033[30m")
-         else
-             # Model (White/Purple) -> Highlight Magenta. Text White.
-             chip_model=$(colorize_bg_rainbow "$raw_model" "$C_BG_MODEL" "\033[105m" 50 "\033[97m")
-         fi
+         case "$ANIMATION_MODE" in
+             lsd)    chip_model=$(colorize_bg_lsd "$raw_model" 50 "\033[30m") ;;
+             plasma) chip_model=$(colorize_bg_plasma "$raw_model" 50 "\033[30m") ;;
+             neon)   chip_model=$(colorize_bg_neon "$raw_model" 50 "\033[97m") ;; # Neon Purple
+             noise)  chip_model=$(colorize_bg_noise "$raw_model") ;;
+             rainbow)
+                 chip_model=$(colorize_bg_rainbow "$raw_model" "$C_BG_MODEL" "\033[105m" 50 "\033[97m")
+                 ;;
+         esac
     else
         chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
     fi

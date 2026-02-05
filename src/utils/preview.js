@@ -151,6 +151,9 @@ function parseThemeForPreview(themeName) {
   if (name.startsWith('mono-')) { result.color = 'mono'; name = name.slice(5); }
   if (name.startsWith('lsd-')) { result.animation = 'lsd'; name = name.slice(4); }
   else if (name.startsWith('rainbow-')) { result.animation = 'rainbow'; name = name.slice(8); }
+  else if (name.startsWith('plasma-')) { result.animation = 'plasma'; name = name.slice(7); }
+  else if (name.startsWith('neon-')) { result.animation = 'neon'; name = name.slice(5); }
+  else if (name.startsWith('noise-')) { result.animation = 'noise'; name = name.slice(6); }
   if (name.endsWith('-nerd')) { result.icon = 'nerd'; name = name.slice(0, -5); }
 
   if (['1line', '2line', 'card', 'bars', 'badges'].includes(name)) {
