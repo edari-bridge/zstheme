@@ -22,6 +22,24 @@ export function MainMenu() {
     const [rightPressCount, setRightPressCount] = useState(0);
     const [leftPressCount, setLeftPressCount] = useState(0);
     const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
+    const [borderColor, setBorderColor] = useState('cyan');
+
+    React.useEffect(() => {
+        if (!isLsdUnlocked) {
+            setBorderColor('cyan');
+            return;
+        }
+
+        const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
+        let colorIndex = 0;
+
+        const timer = setInterval(() => {
+            colorIndex = (colorIndex + 1) % colors.length;
+            setBorderColor(colors[colorIndex]);
+        }, 100); // Fast cycle for "flashing" effect
+
+        return () => clearInterval(timer);
+    }, [isLsdUnlocked]);
 
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
@@ -90,7 +108,7 @@ export function MainMenu() {
         return e(ColorEditor, { onBack: () => setActiveTab('menu') });
     }
 
-    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: isLsdUnlocked ? 'magenta' : 'cyan', width: 90 },
+    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: borderColor, width: 90 },
         // Header Area
         e(Box, { justifyContent: 'space-between', paddingBottom: 1 },
             e(Text, { color: isLsdUnlocked ? 'magenta' : 'magenta', bold: true }, isLsdUnlocked ? 'zstheme (LSD Mode)' : 'zstheme'),
