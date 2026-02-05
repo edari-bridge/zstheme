@@ -8,13 +8,14 @@ import { saveThemeToShellConfig } from '../utils/shell.js';
 const e = React.createElement;
 
 // User Requested Order: 1line, 2line, Badges, Bars, Card
-const TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
+const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
 const COLUMNS = 3;
 const VISIBLE_ROWS = 6;
 
 export function ThemeSelector({ onBack }) {
   const { exit } = useApp();
-  const allThemes = useMemo(() => sortThemes(getAllThemes()), []);
+  // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
+  const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked)), [isLsdUnlocked]);
   const currentTheme = getCurrentTheme();
 
   // 상태
@@ -22,8 +23,18 @@ export function ThemeSelector({ onBack }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [preview, setPreview] = useState('');
 
+  // Easter Egg State
+  const [keyBuffer, setKeyBuffer] = useState([]);
+  const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+
+
+
+  // Dynamic Tabs
+  const TABS = useMemo(() => isLsdUnlocked ? [...BASE_TABS, 'LSD'] : BASE_TABS, [isLsdUnlocked]);
+
   // 현재 탭에 맞는 테마 필터링
-  const currentTabName = TABS[activeTab];
+  const currentTabName = TABS[activeTab] || TABS[0];
 
   const filteredThemes = useMemo(() => {
     if (activeTab === 0) return allThemes;
@@ -39,7 +50,7 @@ export function ThemeSelector({ onBack }) {
   const visualActiveTab = useMemo(() => {
     if (activeTab !== 0 || !selectedTheme) return activeTab;
     const { layout } = parseThemeName(selectedTheme);
-    // TABS: ['All', '1line', '2line', 'Badges', 'Bars', 'Card']
+    // TABS is now dynamic
     const tabIndex = TABS.findIndex(t => t.toLowerCase() === layout.toLowerCase());
     return tabIndex > -1 ? tabIndex : 0;
   }, [activeTab, selectedTheme]);
@@ -159,6 +170,22 @@ export function ThemeSelector({ onBack }) {
         return;
       }
       exit();
+    }
+
+    // Easter Egg Listener
+    if (input && ['l', 's', 'd'].includes(input.toLowerCase())) {
+      const nextBuffer = [...keyBuffer, input.toLowerCase()].slice(-3);
+      setKeyBuffer(nextBuffer);
+
+      if (nextBuffer.join('') === 'lsd') {
+        setIsLsdUnlocked(prev => !prev);
+        setShowMessage(true);
+        setTimeout(() => setShowMessage(false), 2000);
+        setKeyBuffer([]); // Reset buffer
+        return; // Consume the key
+      }
+    } else if (input) {
+      setKeyBuffer([]); // Reset on other keys
     }
 
     // 탭 네비게이션 (Tab 키)
@@ -318,6 +345,20 @@ export function ThemeSelector({ onBack }) {
       e(Text, { color: 'magenta', bold: true }, 'Explore Themes'),
       e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
+
+    // [Toast Message]
+    showMessage ? e(Box, {
+      position: 'absolute',
+      top: 2,
+      left: 30,
+      borderStyle: 'double',
+      borderColor: isLsdUnlocked ? 'magenta' : 'gray',
+      paddingX: 2
+    },
+      e(Text, { color: isLsdUnlocked ? 'magenta' : 'gray', bold: true },
+        isLsdUnlocked ? '🌈 WHOA! LSD MODE UNLOCKED! 🍄' : '🔒 LSD Mode Locked'
+      )
+    ) : null,
 
     // [Tabs]
     e(Box, { flexDirection: 'row', marginBottom: 1, borderStyle: 'single', borderBottom: true, borderTop: false, borderLeft: false, borderRight: false, borderColor: 'gray', paddingX: 1 },
