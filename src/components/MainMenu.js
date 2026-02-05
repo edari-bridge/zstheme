@@ -18,17 +18,46 @@ export function MainMenu() {
     const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor'
     const [selectedIndex, setSelectedIndex] = useState(0);
 
+    // Easter Egg State
+    const [rightPressCount, setRightPressCount] = useState(0);
+    const [leftPressCount, setLeftPressCount] = useState(0);
+    const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
+    const [borderColor, setBorderColor] = useState('cyan');
+
+    React.useEffect(() => {
+        if (!isLsdUnlocked) {
+            setBorderColor('cyan');
+            return;
+        }
+
+        const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
+        let colorIndex = 0;
+
+        const timer = setInterval(() => {
+            colorIndex = (colorIndex + 1) % colors.length;
+            setBorderColor(colors[colorIndex]);
+        }, 100); // Fast cycle for "flashing" effect
+
+        return () => clearInterval(timer);
+    }, [isLsdUnlocked]);
+
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
 
+        // Quit
         if (input === 'q') exit();
 
+        // Menu Navigation
         if (key.upArrow) {
             setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
+            setRightPressCount(0);
+            setLeftPressCount(0);
         }
 
         if (key.downArrow) {
             setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
+            setRightPressCount(0);
+            setLeftPressCount(0);
         }
 
         if (key.return) {
@@ -36,21 +65,53 @@ export function MainMenu() {
             if (selected.id === 'exit') exit();
             else if (selected.id === 'themes') setActiveTab('themes');
             else if (selected.id === 'editor') setActiveTab('editor');
+
+            // Reset counts
+            setRightPressCount(0);
+            setLeftPressCount(0);
+        }
+
+        // Easter Egg Triggers
+        if (key.rightArrow) {
+            setLeftPressCount(0);
+            setRightPressCount(prev => {
+                const newCount = prev + 1;
+                if (newCount >= 3) {
+                    setIsLsdUnlocked(true);
+                    return 0; // Reset
+                }
+                return newCount;
+            });
+        }
+
+        if (key.leftArrow) {
+            setRightPressCount(0);
+            setLeftPressCount(prev => {
+                const newCount = prev + 1;
+                if (newCount >= 3) {
+                    setIsLsdUnlocked(false);
+                    return 0; // Reset
+                }
+                return newCount;
+            });
         }
     });
 
     if (activeTab === 'themes') {
-        return e(ThemeSelector, { onBack: () => setActiveTab('menu') });
+        return e(ThemeSelector, {
+            onBack: () => setActiveTab('menu'),
+            isLsdUnlocked: isLsdUnlocked
+        });
     }
 
     if (activeTab === 'editor') {
         return e(ColorEditor, { onBack: () => setActiveTab('menu') });
     }
 
-    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 90 },
+    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: borderColor, width: 90 },
         // Header Area
         e(Box, { justifyContent: 'space-between', paddingBottom: 1 },
-            e(Text, { color: 'magenta', bold: true }, 'zstheme'),
+            e(Text, { color: isLsdUnlocked ? 'magenta' : 'magenta', bold: true }, isLsdUnlocked ? 'zstheme (LSD Mode)' : 'zstheme'),
             e(Text, { dimColor: true }, 'v2.1.0')
         ),
 
@@ -77,8 +138,14 @@ export function MainMenu() {
             ),
 
             // Right Column: Hero/Logo
-            e(Box, { flexDirection: 'column', width: '65%', alignItems: 'center', justifyContent: 'center' },
-                e(Logo, null)
+            e(Box, {
+                flexDirection: 'column',
+                width: '65%',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 1
+            },
+                e(Logo, { lsdMode: isLsdUnlocked })
             )
         ),
 

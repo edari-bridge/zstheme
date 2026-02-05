@@ -3,7 +3,7 @@ import { PATHS } from './config.js';
 
 // 프리뷰용 Mock 데이터
 export const MOCK_DATA = {
-  MODEL: 'Claude Opus 4.5',
+  MODEL: 'Opus 4.5',
   DIR_NAME: 'my-project',
   CONTEXT_PCT: 35,
   SESSION_DURATION_MIN: 42,
@@ -52,6 +52,40 @@ export function renderThemePreview(themeName) {
 }
 
 /**
+ * 비동기 프리뷰 렌더링 (애니메이션용)
+ * @returns {Promise<string>}
+ */
+export function renderThemePreviewAsync(themeName) {
+  return new Promise((resolve) => {
+    const env = {
+      ...process.env,
+      ...Object.fromEntries(
+        Object.entries(MOCK_DATA).map(([k, v]) => [k, String(v)])
+      ),
+      THEME_NAME: themeName,
+    };
+
+    const script = `
+      source "${PATHS.modular}"
+      render
+    `;
+
+    import('child_process').then(({ exec }) => {
+      exec(`bash -c '${script}'`, {
+        env,
+        timeout: 2000,
+      }, (error, stdout, stderr) => {
+        if (error) {
+          resolve(`[Preview error: ${error.message}]`);
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    });
+  });
+}
+
+/**
  * 간단한 인라인 프리뷰 (bash 호출 없이)
  */
 export function simplePreview(themeName, colors = null) {
@@ -87,7 +121,7 @@ export function simplePreview(themeName, colors = null) {
 
     case '2line':
       lines.push(`${fg(c.branch)}${icons.branch} main${RST}  ${fg(c.tree)}my-project${RST}  ${fg(c.dir)}project${RST}`);
-      lines.push(`${fg(c.model)}${icons.model} Claude Opus 4.5${RST}  ${fg(c.ctx)}35%${RST}`);
+      lines.push(`${fg(c.model)}${icons.model} Opus 4.5${RST}  ${fg(c.ctx)}35%${RST}`);
       break;
 
     case 'card':
@@ -117,6 +151,9 @@ function parseThemeForPreview(themeName) {
   if (name.startsWith('mono-')) { result.color = 'mono'; name = name.slice(5); }
   if (name.startsWith('lsd-')) { result.animation = 'lsd'; name = name.slice(4); }
   else if (name.startsWith('rainbow-')) { result.animation = 'rainbow'; name = name.slice(8); }
+  else if (name.startsWith('plasma-')) { result.animation = 'plasma'; name = name.slice(7); }
+  else if (name.startsWith('neon-')) { result.animation = 'neon'; name = name.slice(5); }
+  else if (name.startsWith('noise-')) { result.animation = 'noise'; name = name.slice(6); }
   if (name.endsWith('-nerd')) { result.icon = 'nerd'; name = name.slice(0, -5); }
 
   if (['1line', '2line', 'card', 'bars', 'badges'].includes(name)) {
