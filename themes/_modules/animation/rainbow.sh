@@ -14,11 +14,13 @@ RAINBOW_COLORS=("200;250;158" "205;253;150" "210;254;142" "216;254;135" "221;253
 # 모노 레인보우 (Smooth Grayscale: Base 192, Amplitude 63)
 MONO_CYCLE=("192;192;192" "198;198;198" "204;204;204" "210;210;210" "216;216;216" "222;222;222" "227;227;227" "232;232;232" "237;237;237" "241;241;241" "245;245;245" "248;248;248" "250;250;250" "252;252;252" "254;254;254" "254;254;254" "254;254;254" "254;254;254" "253;253;253" "251;251;251" "249;249;249" "246;246;246" "242;242;242" "238;238;238" "234;234;234" "229;229;229" "224;224;224" "218;218;218" "213;213;213" "207;207;207" "200;200;200" "194;194;194" "188;188;188" "182;182;182" "175;175;175" "169;169;169" "164;164;164" "158;158;158" "153;153;153" "148;148;148" "144;144;144" "140;140;140" "137;137;137" "134;134;134" "132;132;132" "130;130;130" "129;129;129" "129;129;129" "129;129;129" "130;130;130" "131;131;131" "133;133;133" "136;136;136" "139;139;139" "143;143;143" "147;147;147" "152;152;152" "157;157;157" "162;162;162" "168;168;168")
 
-# 시간 기반 오프셋 (0.1초 단위 - 빠른 변화)
-COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) % 60))
+# Chaotic Offset (Fast & Random) - LSD Dynamics matched
+# Multiplying by prime to create pseudo-random jumps while still cycling
+# 0.1s check -> large jumps
+COLOR_OFFSET=$(($(date +%s%N | cut -c1-10) * 17 % 60))
 
-# 배경색 오프셋 (bars용 - 3가지 순환)
-BG_OFFSET=$(($(date +%s%N | cut -c1-10) % 3))
+# 배경색 오프셋 (Also chaotic, using full spectrum)
+BG_OFFSET=$(($(date +%s%N | cut -c1-10) * 13 % 60))
 
 # ============================================================
 # 색상 순환 함수
@@ -35,14 +37,17 @@ get_animated_color() {
     fi
 }
 
-# 배경색 순환 (bars 레이아웃용)
+# 배경색 순환 (bars 레이아웃용 - Full Spectrum Flash)
 get_animated_bg() {
-    local chip_idx="$1"  # 0=loc, 1=git, 2=ses
-    local actual_idx=$(( (chip_idx + BG_OFFSET) % 3 ))
+    local chip_idx="$1"
+    # Stride of 10 to make chips distinct
+    local actual_idx=$(( (chip_idx * 10 + BG_OFFSET) % 60 ))
 
-    # 배경색도 순환
-    local bgs=("$C_BG_LOC" "$C_BG_GIT" "$C_BG_SES")
-    echo "${bgs[$actual_idx]}"
+    if [[ "$COLOR_MODE" == "mono" ]]; then
+        echo "\033[48;2;${MONO_CYCLE[$actual_idx]}m"
+    else
+        echo "\033[48;2;${RAINBOW_COLORS[$actual_idx]}m"
+    fi
 }
 
 # 배터리 색상 순환 (card 레이아웃용)
@@ -53,5 +58,18 @@ get_animated_battery_color() {
     else
         local idx=$(( ($(date +%s%N | cut -c1-10) % 60) ))
         echo "\033[48;2;${RAINBOW_COLORS[$idx]}m"
+    fi
+}
+
+# 배경색 순환 (badges 레이아웃용 - Full Spectrum Flash)
+get_animated_badge_bg() {
+    local element_idx="$1"
+    # Stride of 5
+    local actual_idx=$(( (element_idx * 5 + BG_OFFSET) % 60 ))
+
+    if [[ "$COLOR_MODE" == "mono" ]]; then
+        echo "\033[48;2;${MONO_CYCLE[$actual_idx]}m"
+    else
+        echo "\033[48;2;${RAINBOW_COLORS[$actual_idx]}m"
     fi
 }

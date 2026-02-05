@@ -53,9 +53,9 @@ render() {
         bg_ctx="$C_BG_CTX"
     fi
 
-    # lsd 모드: 배경색 순환, 글자색은 기존 유지
+    # lsd/rainbow 모드: 배경색 순환, 글자색은 기존 유지
     local bg_branch bg_tree bg_dir bg_status bg_sync bg_model
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
         bg_branch=$(get_animated_badge_bg 0)
         bg_tree=$(get_animated_badge_bg 1)
         bg_dir=$(get_animated_badge_bg 2)
