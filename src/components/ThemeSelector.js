@@ -22,6 +22,27 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [preview, setPreview] = useState('');
   const [showMessage, setShowMessage] = useState(false);
 
+  // LSD Visuals
+  const [borderColor, setBorderColor] = useState('cyan');
+
+  useEffect(() => {
+    if (!isLsdUnlocked) {
+      setBorderColor('cyan');
+      return;
+    }
+
+    const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
+    let colorIndex = 0;
+
+    // Slight offset from MainMenu to create variety or keep same speed
+    const timer = setInterval(() => {
+      colorIndex = (colorIndex + 1) % colors.length;
+      setBorderColor(colors[colorIndex]);
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [isLsdUnlocked]);
+
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
   const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked)), [isLsdUnlocked]);
 
@@ -335,10 +356,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     return e(Box, { flexDirection: 'column', minHeight: 7 }, ...renderedRows);
   };
 
-  return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: 'cyan', width: 110 },
+  return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width: 110 },
     // [Header Area]
     e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },
-      e(Text, { color: 'magenta', bold: true }, 'Explore Themes'),
+      e(Text, { color: isLsdUnlocked ? borderColor : 'magenta', bold: true }, isLsdUnlocked ? '✨ Explore Themes (LSD Active) ✨' : 'Explore Themes'),
       e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
 
