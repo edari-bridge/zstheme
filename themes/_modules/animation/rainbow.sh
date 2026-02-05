@@ -73,3 +73,32 @@ get_animated_badge_bg() {
         echo "\033[48;2;${RAINBOW_COLORS[$actual_idx]}m"
     fi
 }
+
+# 문자열을 글자 단위로 배경색 적용 (Spatial Gradient Background)
+# Usage: colorize_bg "text" offset [fg_color]
+colorize_bg() {
+    local text="$1"
+    local start_idx="${2:-0}"
+    local fg_color="${3:-\033[30m}" # Default Black foreground for legibility
+    local result=""
+    local i=0
+
+    # UTF-8 char loop
+    while IFS= read -r char; do
+        # Stride 7 for detail
+        local color_idx=$(( (start_idx + (i * 7) + COLOR_OFFSET) % 60 ))
+        
+        # Background Color Code
+        local bg_code
+        if [[ "$COLOR_MODE" == "mono" ]]; then
+            bg_code="\033[48;2;${MONO_CYCLE[$color_idx]}m"
+        else
+            bg_code="\033[48;2;${RAINBOW_COLORS[$color_idx]}m"
+        fi
+        
+        result+="${bg_code}${fg_color}${char}"
+        ((i++))
+    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
+
+    echo -e "${result}\033[0m"
+}

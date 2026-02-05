@@ -75,25 +75,25 @@ render() {
     local chip_branch chip_tree chip_dir chip_status chip_sync chip_ctx
 
     # 브랜치 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c0=$(echo -e "$(get_animated_color 0)")
-        chip_branch="$(make_chip "$bg_branch" "${c0}${ICON_BRANCH} ${BRANCH:-branch}")"
+    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+        local raw_branch=" ${ICON_BRANCH} ${BRANCH:-branch} "
+        chip_branch=$(colorize_bg "$raw_branch" 0 "\033[30m")
     else
         chip_branch="$(make_chip "$bg_branch" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
     fi
 
     # 워크트리 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c1=$(echo -e "$(get_animated_color 1)")
-        chip_tree="$(make_chip "$bg_tree" "${c1}${ICON_TREE} ${WORKTREE:-worktree}")"
+    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+        local raw_tree=" ${ICON_TREE} ${WORKTREE:-worktree} "
+        chip_tree=$(colorize_bg "$raw_tree" 10 "\033[30m")
     else
         chip_tree="$(make_chip "$bg_tree" "${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}")"
     fi
 
     # 디렉토리 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c2=$(echo -e "$(get_animated_color 2)")
-        chip_dir="$(make_chip "$bg_dir" "${c2}${ICON_DIR} ${DIR_NAME}")"
+    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+        local raw_dir=" ${ICON_DIR} ${DIR_NAME} "
+        chip_dir=$(colorize_bg "$raw_dir" 20 "\033[30m")
     else
         chip_dir="$(make_chip "$bg_dir" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
     fi
@@ -101,22 +101,21 @@ render() {
     # Git 상태 칩
     if [[ "$IS_GIT_REPO" == "true" ]]; then
         local status_content sync_content
-        if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-            local c3=$(echo -e "$(get_animated_color 3)")
-            local c4=$(echo -e "$(get_animated_color 4)")
-            local c5=$(echo -e "$(get_animated_color 5)")
+        if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
             local add mod del
-            [[ "$GIT_ADDED" -gt 0 ]] && add="${c3}+${GIT_ADDED}" || add="${c3}+0"
-            [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${c4}~${GIT_MODIFIED}" || mod="${c4}~0"
-            [[ "$GIT_DELETED" -gt 0 ]] && del="${c5}-${GIT_DELETED}" || del="${c5}-0"
-            status_content="${C_STATUS}${ICON_GIT_STATUS}${add}  ${mod}  ${del}"
+            [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
+            [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
+            [[ "$GIT_DELETED" -gt 0 ]] && del="-${GIT_DELETED}" || del="-0"
+            
+            local raw_status=" ${ICON_GIT_STATUS} ${add} ${mod} ${del} "
+            chip_status=$(colorize_bg "$raw_status" 30 "\033[30m")
 
-            local c6=$(echo -e "$(get_animated_color 6)")
-            local c7=$(echo -e "$(get_animated_color 7)")
             local ahead behind
-            [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${c6}↑ ${GIT_AHEAD}" || ahead="${c6}↑ 0"
-            [[ "$GIT_BEHIND" -gt 0 ]] && behind="${c7}↓ ${GIT_BEHIND}" || behind="${c7}↓ 0"
-            sync_content="${C_SYNC}${ICON_SYNC}${ahead}  ${behind}"
+            [[ "$GIT_AHEAD" -gt 0 ]] && ahead="↑ ${GIT_AHEAD}" || ahead="↑ 0"
+            [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
+            
+            local raw_sync=" ${ICON_SYNC} ${ahead} ${behind} "
+            chip_sync=$(colorize_bg "$raw_sync" 40 "\033[30m")
         else
             local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}" || add="${C_DIM_STATUS}+0"
@@ -128,9 +127,10 @@ render() {
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}" || ahead="${C_DIM_SYNC}↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}" || behind="${C_DIM_SYNC}↓ 0"
             sync_content="${C_I_SYNC}${ICON_SYNC}${ahead}  ${behind}"
+            
+            chip_status="$(make_chip "$bg_status" "$status_content")"
+            chip_sync="$(make_chip "$bg_sync" "$sync_content")"
         fi
-        chip_status="$(make_chip "$bg_status" "$status_content")"
-        chip_sync="$(make_chip "$bg_sync" "$sync_content")"
     else
         chip_status="$(make_chip "$bg_status" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---")"
         chip_sync="$(make_chip "$bg_sync" "${C_DIM_SYNC}${ICON_SYNC} ---")"
@@ -150,9 +150,9 @@ render() {
     local chip_model chip_rate chip_time chip_burn chip_theme
 
     # 모델 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c9=$(echo -e "$(get_animated_color 9)")
-        chip_model="$(make_chip "$bg_model" "${c9}${ICON_MODEL} ${MODEL}")"
+    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+         local raw_model=" ${ICON_MODEL} ${MODEL} "
+         chip_model=$(colorize_bg "$raw_model" 50 "\033[30m")
     else
         chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
     fi
@@ -175,10 +175,9 @@ render() {
         chip_burn=""
     fi
 
-    # 테마 (배경 없음)
-    if [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c0=$(echo -e "$(get_animated_color 0)")
-        chip_theme="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
+    # 테마 (배경 없음, 텍스트 그라데이션)
+    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+        chip_theme=$(colorize_text "${ICON_THEME} ${THEME_NAME}")
     else
         chip_theme="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
