@@ -75,25 +75,40 @@ render() {
     local chip_branch chip_tree chip_dir chip_status chip_sync chip_ctx
 
     # 브랜치 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
         local raw_branch=" ${ICON_BRANCH} ${BRANCH:-branch} "
-        chip_branch=$(colorize_bg "$raw_branch" 0 "\033[30m")
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_branch=$(colorize_bg_lsd "$raw_branch" 0 "\033[30m")
+        else
+            # Branch (Purple) -> Highlight Magenta
+            chip_branch=$(colorize_bg_rainbow "$raw_branch" "$C_BG_BRANCH" "\033[105m" 0 "\033[30m")
+        fi
     else
         chip_branch="$(make_chip "$bg_branch" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
     fi
 
     # 워크트리 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
         local raw_tree=" ${ICON_TREE} ${WORKTREE:-worktree} "
-        chip_tree=$(colorize_bg "$raw_tree" 10 "\033[30m")
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_tree=$(colorize_bg_lsd "$raw_tree" 10 "\033[30m")
+        else
+            # Tree (Green) -> Highlight Bright Green
+            chip_tree=$(colorize_bg_rainbow "$raw_tree" "$C_BG_TREE" "\033[102m" 10 "\033[30m")
+        fi
     else
         chip_tree="$(make_chip "$bg_tree" "${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}")"
     fi
 
     # 디렉토리 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
         local raw_dir=" ${ICON_DIR} ${DIR_NAME} "
-        chip_dir=$(colorize_bg "$raw_dir" 20 "\033[30m")
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_dir=$(colorize_bg_lsd "$raw_dir" 20 "\033[30m")
+        else
+            # Dir (Blue) -> Highlight Cyan
+            chip_dir=$(colorize_bg_rainbow "$raw_dir" "$C_BG_DIR" "\033[46m" 20 "\033[30m")
+        fi
     else
         chip_dir="$(make_chip "$bg_dir" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
     fi
@@ -101,21 +116,33 @@ render() {
     # Git 상태 칩
     if [[ "$IS_GIT_REPO" == "true" ]]; then
         local status_content sync_content
-        if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
             local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
             [[ "$GIT_DELETED" -gt 0 ]] && del="-${GIT_DELETED}" || del="-0"
             
             local raw_status=" ${ICON_GIT_STATUS} ${add} ${mod} ${del} "
-            chip_status=$(colorize_bg "$raw_status" 30 "\033[30m")
+            
+            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                 chip_status=$(colorize_bg_lsd "$raw_status" 30 "\033[30m")
+            else
+                 # Status (Yellow) -> Highlight Bright Yellow
+                 chip_status=$(colorize_bg_rainbow "$raw_status" "$C_BG_STATUS" "\033[103m" 30 "\033[30m")
+            fi
 
             local ahead behind
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="↑ ${GIT_AHEAD}" || ahead="↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
             
             local raw_sync=" ${ICON_SYNC} ${ahead} ${behind} "
-            chip_sync=$(colorize_bg "$raw_sync" 40 "\033[30m")
+            
+            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                chip_sync=$(colorize_bg_lsd "$raw_sync" 40 "\033[30m")
+            else
+                # Sync (Cyan) -> Highlight Bright Cyan
+                chip_sync=$(colorize_bg_rainbow "$raw_sync" "$C_BG_SYNC" "\033[106m" 40 "\033[30m")
+            fi
         else
             local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}" || add="${C_DIM_STATUS}+0"
@@ -150,9 +177,14 @@ render() {
     local chip_model chip_rate chip_time chip_burn chip_theme
 
     # 모델 칩
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
          local raw_model=" ${ICON_MODEL} ${MODEL} "
-         chip_model=$(colorize_bg "$raw_model" 50 "\033[30m")
+         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+             chip_model=$(colorize_bg_lsd "$raw_model" 50 "\033[30m")
+         else
+             # Model (White/Purple) -> Highlight Magenta
+             chip_model=$(colorize_bg_rainbow "$raw_model" "$C_BG_MODEL" "\033[105m" 50 "\033[30m")
+         fi
     else
         chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
     fi
