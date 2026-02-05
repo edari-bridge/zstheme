@@ -143,7 +143,7 @@ export function ThemeSelector({ onBack }) {
         const itemIndex = rowIndex * COLUMNS + c;
         // 범위를 벗어나면 빈 박스만 채움 (레이아웃 유지)
         if (itemIndex >= filteredThemes.length && filteredThemes.length > 0) {
-          rowItems.push(e(Box, { key: `${r}-${c}`, flexGrow: 1, flexBasis: 0, paddingX: 1 }));
+          rowItems.push(e(Box, { key: `${r}-${c}`, width: '33%', paddingX: 1 }));
           continue;
         }
         if (filteredThemes.length === 0) break;
@@ -156,9 +156,7 @@ export function ThemeSelector({ onBack }) {
         rowItems.push(
           e(Box, {
             key: `${r}-${c}`,
-            // width: '33%', // Removed fixed width
-            flexGrow: 1,      // Ensure equal distribution
-            flexBasis: 0,
+            width: '33%', // 3 columns fixed width for alignment
             paddingX: 1
           },
             e(Text, {
@@ -174,7 +172,7 @@ export function ThemeSelector({ onBack }) {
       }
 
       gridRows.push(
-        e(Box, { key: `row-${r}`, flexDirection: 'row', marginBottom: 0, justifyContent: 'space-between' },
+        e(Box, { key: `row-${r}`, flexDirection: 'row', marginBottom: 0 },
           ...rowItems
         )
       );
@@ -211,7 +209,8 @@ export function ThemeSelector({ onBack }) {
       marginBottom: 1,
       borderStyle: 'single',
       borderColor: 'gray',
-      padding: 1
+      padding: 1,
+      flexGrow: 1 // Ensure container takes full width
     },
       renderGrid()
     ),
