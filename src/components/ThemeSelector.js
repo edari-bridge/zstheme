@@ -7,7 +7,8 @@ import { saveThemeToShellConfig } from '../utils/shell.js';
 
 const e = React.createElement;
 
-const TABS = ['All', '2line', '1line', 'Card', 'Bars', 'Badges'];
+// User Requested Order: 1line, 2line, Badges, Bars, Card
+const TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
 const COLUMNS = 3;
 const VISIBLE_ROWS = 6;
 
@@ -38,9 +39,7 @@ export function ThemeSelector({ onBack }) {
   const visualActiveTab = useMemo(() => {
     if (activeTab !== 0 || !selectedTheme) return activeTab;
     const { layout } = parseThemeName(selectedTheme);
-    // 1line, 2line, card -> Card (Title Case mapping needs care)
-    // TABS: ['All', '2line', '1line', 'Card', 'Bars', 'Badges']
-    // Layouts: '1line', '2line', 'card', 'bars', 'badges'
+    // TABS: ['All', '1line', '2line', 'Badges', 'Bars', 'Card']
     const tabIndex = TABS.findIndex(t => t.toLowerCase() === layout.toLowerCase());
     return tabIndex > -1 ? tabIndex : 0;
   }, [activeTab, selectedTheme]);
@@ -68,7 +67,7 @@ export function ThemeSelector({ onBack }) {
         }
         // Add Divider
         // Capitalize layout name for display
-        const label = layout === '1line' || layout === '2line' ? layout : layout.charAt(0).toUpperCase() + layout.slice(1);
+        const label = layout.charAt(0).toUpperCase() + layout.slice(1);
         rows.push({ type: 'divider', label });
         lastLayout = layout;
       }
@@ -139,7 +138,13 @@ export function ThemeSelector({ onBack }) {
 
     // 탭 네비게이션 (Tab 키)
     if (key.tab) {
-      setActiveTab(prev => (prev < TABS.length - 1 ? prev + 1 : 0));
+      if (key.shift) {
+        // Shift+Tab: Previous Tab
+        setActiveTab(prev => (prev > 0 ? prev - 1 : TABS.length - 1));
+      } else {
+        // Tab: Next Tab
+        setActiveTab(prev => (prev < TABS.length - 1 ? prev + 1 : 0));
+      }
       return;
     }
 
