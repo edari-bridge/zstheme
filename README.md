@@ -92,6 +92,7 @@ zstheme --list       # List all 60 theme combinations
 zstheme --preview    # Preview sample themes
 zstheme --preview-all # Preview all themes
 zstheme --edit       # Launch color editor
+zstheme --stats      # Show Claude Code usage statistics
 zstheme --help       # Show help
 zstheme --version    # Show version
 ```
