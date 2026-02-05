@@ -44,6 +44,15 @@ parse_theme_name() {
     elif [[ "$theme_name" == rainbow-* ]]; then
         ANIMATION_MODE="rainbow"
         theme_name="${theme_name#rainbow-}"
+    elif [[ "$theme_name" == plasma-* ]]; then
+        ANIMATION_MODE="plasma"
+        theme_name="${theme_name#plasma-}"
+    elif [[ "$theme_name" == neon-* ]]; then
+        ANIMATION_MODE="neon"
+        theme_name="${theme_name#neon-}"
+    elif [[ "$theme_name" == noise-* ]]; then
+        ANIMATION_MODE="noise"
+        theme_name="${theme_name#noise-}"
     fi
 
     # 4. -nerd 접미사 확인
