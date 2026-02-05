@@ -135,17 +135,35 @@ render() {
 
     # Rate limit 정보
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        local rate_color=$(get_rate_color)
-        line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
+        # Animated Rate Color if needed
+        local rate_part="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${C_RATE}${RATE_LIMIT_PCT}%"
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+             rate_part=$(colorize_text "${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%" 10)
+        fi
+        line2_parts+=("${rate_part}${RST}")
     elif [[ -n "$RATE_LIMIT_PCT" ]]; then
-        line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_LIMIT_PCT}%${RST}")
+        local rate_part="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_LIMIT_PCT}%"
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+             rate_part=$(colorize_text "${ICON_TIME} ${RATE_LIMIT_PCT}%" 10)
+        fi
+        line2_parts+=("${rate_part}${RST}")
     fi
 
     # 세션 시간
-    line2_parts+=("${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}")
+    local sess_part="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m"
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+         sess_part=$(colorize_text "${ICON_SESSION} ${SESSION_DURATION_MIN}m" 20)
+    fi
+    line2_parts+=("${sess_part}${RST}")
 
     # 번레이트
-    [[ -n "$BURN_RATE" ]] && line2_parts+=("${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}")
+    if [[ -n "$BURN_RATE" ]]; then
+        local burn_part="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}"
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+             burn_part=$(colorize_text "${ICON_COST} ${BURN_RATE}" 30)
+        fi
+        line2_parts+=("${burn_part}${RST}")
+    fi
 
     # 현재 테마
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then

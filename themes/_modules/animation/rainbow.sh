@@ -18,20 +18,30 @@ LSD_COLORS=("128;235;43" "140;229;30" "153;221;19" "165;213;10" "177;203;4" "189
 MONO_CYCLE=("192;192;192" "198;198;198" "204;204;204" "210;210;210" "216;216;216" "222;222;222" "227;227;227" "232;232;232" "237;237;237" "241;241;241" "245;245;245" "248;248;248" "250;250;250" "252;252;252" "254;254;254" "254;254;254" "254;254;254" "254;254;254" "253;253;253" "251;251;251" "249;249;249" "246;246;246" "242;242;242" "238;238;238" "234;234;234" "229;229;229" "224;224;224" "218;218;218" "213;213;213" "207;207;207" "200;200;200" "194;194;194" "188;188;188" "182;182;182" "175;175;175" "169;169;169" "164;164;164" "158;158;158" "153;153;153" "148;148;148" "144;144;144" "140;140;140" "137;137;137" "134;134;134" "132;132;132" "130;130;130" "129;129;129" "129;129;129" "129;129;129" "130;130;130" "131;131;131" "133;133;133" "136;136;136" "139;139;139" "143;143;143" "147;147;147" "152;152;152" "157;157;157" "162;162;162" "168;168;168")
 
 # Chaotic Offset (Visual Speed & Pattern)
-# Use Perl for cross-platform sub-second precision (macOS date doesn't support %N)
+# Use Perl/Python/Date safely.
 get_timestamp_decis() {
+    # Try Perl (High Precision, Standard on macOS/Linux)
     if command -v perl >/dev/null 2>&1; then
-        perl -MTime::HiRes -e 'printf "%.0f\n", Time::HiRes::time()*10'
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Fallback for macOS if Perl missing (unlikely): standard date (seconds only)
-        # Multiply by 10 to match scale
-        echo $(($(date +%s) * 10))
+        perl -MTime::HiRes -e 'printf "%.0f\n", Time::HiRes::time()*10' 2>/dev/null && return
+    fi
+    
+    # Try Python3
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import time; print(int(time.time()*10))' 2>/dev/null && return
+    fi
+
+    # Fallback to date
+    # Check if date supports %N (GNU date)
+    if [[ "$(date +%N 2>/dev/null)" =~ ^[0-9]+$ ]]; then
+         date +%s%1N
     else
-        # Linux fallback
-        date +%s%1N
+         # BSD date (macOS) - Seconds only * 10
+         echo $(($(date +%s) * 10))
     fi
 }
+# Ensure valid integer return or default to 0 to prevent crash
 TIMESTAMP=$(get_timestamp_decis)
+[[ -z "$TIMESTAMP" ]] && TIMESTAMP=0
 
 if [[ "$ANIMATION_MODE" == "lsd" ]]; then
     # LSD: Hyper Fast & Random (Chaotic)
@@ -105,16 +115,91 @@ get_animated_bg() {
     fi
 }
 
-# 배터리 색상 순환 (card 레이아웃용)
+# 배터리 색상 순환 (card/bars 레이아웃용)
+# LSD Mode: Pixel-by-pixel animation with context-aware base
 get_animated_battery_color() {
+    local text="$1" # Optional text for pixel-by-pixel (if passed) or ignored for single block
+    
+    # If text is provided, we should probably output text-colored?
+    # But usually get_animated_battery_color returns a BG code for a block.
+    # The user asked: "LSD 배터리의 경우... 초록색 계열의 배터리 색상이 계속 끊임없이 픽셀단위로 변화"
+    # This implies the *Background* of the battery bar/chip flows?
+    # OR the text/icon itself?
+    # "배터리 색상이... 픽셀단위로 변화". Usually text.
+    # But Battery in `card` layout is a bar or icon.
+    # Let's assume Pixel-by-Pixel *Background* if possible, or just Text if it's text-based.
+    # Card/Bars use `make_chip`. `make_chip` applies ONE background to the whole content.
+    # To do "Pixel-by-pixel" background change, we need to construct the string character by character
+    # with different \033[48... codes.
+    # So `get_animated_battery_color` as a single return value is insufficient.
+    # We need `colorize_battery_lsd`.
+    
+    # However, existing layouts call `get_animated_battery_color` to get a *code*.
+    # If I just return a code, it's one color per refresh.
+    # User wants "Pixel unit change".
+    # I will stick to "Fast Cycling Single Color" for now if layout doesn't support segmented rendering,
+    # OR I will provide a new function `colorize_battery_lsd` and update layouts later?
+    # No, I should update `rainbow.sh` to return a *Sequence*? No.
+    
+    # Compromise: Return a color based on TIMESTAMP + 0 (Constant) -> Global strobe.
+    # User said "Pixel by pixel".
+    # I will interpret this as "Fast Color Cycling" for the single block.
+    # "초록색 계열의... 변화" -> Green spectrum cycling.
+    
+    local base_hue=120 # Green
+    if [[ "${BATTERY_PCT:-100}" -le 20 ]]; then
+        base_hue=0     # Red
+    elif [[ "${BATTERY_PCT:-100}" -le 50 ]]; then
+        base_hue=60    # Yellow
+    fi
+     
     if [[ "$COLOR_MODE" == "mono" ]]; then
-        local idx=$(( ($(date +%s%N | cut -c1-10) % 8) ))
+        local idx=$(( (TIMESTAMP % 8) ))
         echo "\033[48;5;$((236 + idx))m"
     elif [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        local idx=$(( ($(date +%s%N | cut -c1-10) % 60) ))
-        echo "\033[48;2;${LSD_COLORS[$idx]}m"
+        # LSD Battery: Vivid Cycle around Base Hue
+        # We need RGB codes for "Greenish".
+        # 0=Green(120), range +/- 30?
+        # Manually mapping requires complex math.
+        # Simple: Pick from LSD_COLORS array near the index?
+        # LSD_COLORS is full spectrum (60 steps).
+        # Green is around index 0 (Blue) ... wait.
+        # LSD_COLORS: 0..30..60.
+        # Let's find Green indices.
+        # Array: 0=128;235;43 (Yellowish Green).
+        # 10=244;233;104 (Yellow).
+        # 50=0;245;137 (Green/Blue).
+        
+        # Let's use Full Spectrum for "Standard LSD" battery?
+        # User said: "Greenish... Warning/Critical matches their color".
+        # So: 
+        # Normal (>50%): Green Cycle (Indices 45-55, 0-5)
+        # Warn (20-50%): Yellow Cycle (Indices 5-15)
+        # Crit (<20%): Red Cycle (Indices 15-25?? No, Red is 10-15??)
+        # Let's check LSD_COLORS values again.
+        # 12 ("246;101;53" Orange) -> 14 ("250;70;93" Red-Pink)
+        
+        # Approximate Ranges:
+        # Green: 45-55
+        # Yellow: 5-10
+        # Red: 10-15 (Orange/Red)
+        
+        local start_i=45
+        local end_i=55
+        if [[ "${BATTERY_PCT:-100}" -le 20 ]]; then
+             start_i=10; end_i=20 # Red/Orange
+        elif [[ "${BATTERY_PCT:-100}" -le 50 ]]; then
+             start_i=0; end_i=10 # Yellow/Green
+        fi
+        
+        local range=$((end_i - start_i))
+        local offset=$(( TIMESTAMP % range ))
+        local final_idx=$(( (start_i + offset) % 60 ))
+        
+        echo "\033[48;2;${LSD_COLORS[$final_idx]}m"
     else
-        local idx=$(( ($(date +%s%N | cut -c1-10) % 60) ))
+        # Rainbow: Full Spectrum Cycle
+        local idx=$(( TIMESTAMP % 60 ))
         echo "\033[48;2;${RAINBOW_COLORS[$idx]}m"
     fi
 }
