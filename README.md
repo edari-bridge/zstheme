@@ -97,21 +97,23 @@ zstheme --help       # Show help
 zstheme --version    # Show version
 ```
 
-### Claude Code Skill
+### Claude Code Skills
 
-Use `/dashboard` directly in Claude Code to view usage statistics:
+Use skills directly in Claude Code to view usage statistics:
 
 ```bash
 # In Claude Code, type:
-/dashboard
+/dashboard       # Usage dashboard
+/dashboard-full  # Full usage dashboard (same output)
 ```
 
-This skill executes `zstheme --stats` and displays the usage dashboard inline.
+These skills execute `zstheme --stats` and display the usage dashboard inline.
 
-To install the skill:
+To install the skills:
 ```bash
 mkdir -p ~/.claude/commands
 curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/commands/dashboard.md
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/commands/dashboard-full.md
 ```
 
 ## Color Editor
