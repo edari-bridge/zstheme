@@ -143,7 +143,7 @@ export function ThemeSelector({ onBack }) {
         const itemIndex = rowIndex * COLUMNS + c;
         // 범위를 벗어나면 빈 박스만 채움 (레이아웃 유지)
         if (itemIndex >= filteredThemes.length && filteredThemes.length > 0) {
-          rowItems.push(e(Box, { key: `${r}-${c}`, width: '33%', paddingX: 1 }));
+          rowItems.push(e(Box, { key: `${r}-${c}`, flexGrow: 1, flexBasis: 0, paddingX: 1 }));
           continue;
         }
         if (filteredThemes.length === 0) break;
@@ -156,7 +156,9 @@ export function ThemeSelector({ onBack }) {
         rowItems.push(
           e(Box, {
             key: `${r}-${c}`,
-            width: '33%', // 3 columns
+            // width: '33%', // Removed fixed width
+            flexGrow: 1,      // Ensure equal distribution
+            flexBasis: 0,
             paddingX: 1
           },
             e(Text, {
@@ -172,7 +174,7 @@ export function ThemeSelector({ onBack }) {
       }
 
       gridRows.push(
-        e(Box, { key: `row-${r}`, flexDirection: 'row', marginBottom: 0 },
+        e(Box, { key: `row-${r}`, flexDirection: 'row', marginBottom: 0, justifyContent: 'space-between' },
           ...rowItems
         )
       );
@@ -182,15 +184,15 @@ export function ThemeSelector({ onBack }) {
     return e(Box, { flexDirection: 'column', minHeight: 7 }, ...gridRows);
   };
 
-  return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: 'cyan', width: 110 },
+  return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: 'cyan', width: 110 },
     // [Header Area]
-    e(Box, { justifyContent: 'space-between', marginBottom: 1 },
+    e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },
       e(Text, { color: 'magenta', bold: true }, 'Explore Themes'),
       e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
 
     // [Tabs]
-    e(Box, { flexDirection: 'row', marginBottom: 1, borderStyle: 'single', borderBottom: true, borderTop: false, borderLeft: false, borderRight: false, borderColor: 'gray' },
+    e(Box, { flexDirection: 'row', marginBottom: 1, borderStyle: 'single', borderBottom: true, borderTop: false, borderLeft: false, borderRight: false, borderColor: 'gray', paddingX: 1 },
       ...TABS.map((tab, i) => {
         const isActive = i === activeTab;
         return e(Box, { key: tab, marginRight: 2, paddingBottom: 0 },
@@ -216,7 +218,7 @@ export function ThemeSelector({ onBack }) {
 
     // [Bottom: Info & Preview]
     // Theme Title & Desc
-    selectedTheme ? e(Box, { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 0 },
+    selectedTheme ? e(Box, { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 0, paddingX: 1 },
       e(Text, { bold: true, color: 'yellow' }, selectedTheme),
       e(Text, { italic: true, color: 'white' }, description || '')
     ) : null,
@@ -226,7 +228,8 @@ export function ThemeSelector({ onBack }) {
       flexDirection: 'column',
       // borderStyle: 'single',
       // borderColor: 'white',
-      padding: 1,
+      paddingY: 1,
+      paddingX: 2, // Indent content slightly to match border look
       marginTop: 0,
       minHeight: 10
     },
@@ -236,6 +239,7 @@ export function ThemeSelector({ onBack }) {
     // Footer
     e(Box, {
       marginTop: 1,
+      paddingX: 1
     },
       e(Text, { dimColor: true },
         'Use ',
