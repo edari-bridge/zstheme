@@ -129,18 +129,44 @@ render() {
 
     # 왼쪽 카드 내용
     local L1 L2 L3 L4 L5
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        L1="$(colorize_text "${ICON_BRANCH} ${BRANCH:-branch}" 0)"
-        L2="$(colorize_text "${ICON_TREE} ${WORKTREE:-worktree}" 3)"
-        L3="$(colorize_text "${ICON_DIR} ${DIR_NAME}" 6)"
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c0 c1 c2
-        c0=$(echo -e "$(get_animated_color 0)")
-        c1=$(echo -e "$(get_animated_color 1)")
-        c2=$(echo -e "$(get_animated_color 2)")
-        L1="${c0}${ICON_BRANCH} ${BRANCH:-branch}${RST}"
-        L2="${c1}${ICON_TREE} ${WORKTREE:-worktree}${RST}"
-        L3="${c2}${ICON_DIR} ${DIR_NAME}${RST}"
+    # 왼쪽 카드 내용
+    local L1 L2 L3 L4 L5
+    if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
+        local raw_branch="${ICON_BRANCH} ${BRANCH:-branch}"
+        local raw_tree="${ICON_TREE} ${WORKTREE:-worktree}"
+        local raw_dir="${ICON_DIR} ${DIR_NAME}"
+        
+        case "$ANIMATION_MODE" in
+            lsd)
+                L1="$(colorize_text "$raw_branch" 0)"
+                L2="$(colorize_text "$raw_tree" 3)"
+                L3="$(colorize_text "$raw_dir" 6)"
+                ;;
+            plasma)
+                L1="$(colorize_bg_plasma "$raw_branch" 0 "\033[30m")"
+                L2="$(colorize_bg_plasma "$raw_tree" 10 "\033[30m")"
+                L3="$(colorize_bg_plasma "$raw_dir" 20 "\033[30m")"
+                ;;
+            neon)
+                L1="$(colorize_bg_neon "$raw_branch" 0 "\033[97m")"
+                L2="$(colorize_bg_neon "$raw_tree" 10 "\033[30m")"
+                L3="$(colorize_bg_neon "$raw_dir" 20 "\033[97m")"
+                ;;
+            noise)
+                L1="$(colorize_bg_noise "$raw_branch")"
+                L2="$(colorize_bg_noise "$raw_tree")"
+                L3="$(colorize_bg_noise "$raw_dir")"
+                ;;
+            rainbow)
+                local c0 c1 c2
+                c0=$(echo -e "$(get_animated_color 0)")
+                c1=$(echo -e "$(get_animated_color 1)")
+                c2=$(echo -e "$(get_animated_color 2)")
+                L1="${c0}${raw_branch}${RST}"
+                L2="${c1}${raw_tree}${RST}"
+                L3="${c2}${raw_dir}${RST}"
+                ;;
+        esac
     else
         L1="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}"
         L2="${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}"
@@ -151,25 +177,39 @@ render() {
 
     # 오른쪽 카드 내용
     local R1 R2 R3 R4 R5
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        R1="$(colorize_text "${ICON_MODEL} ${MODEL}" 2)"
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c9
-        c9=$(echo -e "$(get_animated_color 9)")
-        R1="${c9}${ICON_MODEL} ${MODEL}${RST}"
+    # 오른쪽 카드 내용
+    local R1 R2 R3 R4 R5
+    if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
+        local raw_model="${ICON_MODEL} ${MODEL}"
+        local raw_theme="${ICON_THEME} ${THEME_NAME}"
+        
+        case "$ANIMATION_MODE" in
+             lsd)
+                 R1="$(colorize_text "$raw_model" 2)"
+                 R5="$(colorize_text "$raw_theme" 5)"
+                 ;;
+             plasma)
+                 R1="$(colorize_bg_plasma "$raw_model" 50 "\033[30m")"
+                 R5="$(colorize_bg_plasma "$raw_theme" 30 "\033[30m")"
+                 ;;
+             neon)
+                 R1="$(colorize_bg_neon "$raw_model" 50 "\033[30m")" # Neon Purple
+                 R5="$(colorize_bg_neon "$raw_theme" 30 "\033[97m")" # Neon Cyan
+                 ;;
+             noise)
+                 R1="$(colorize_bg_noise "$raw_model")"
+                 R5="$(colorize_bg_noise "$raw_theme")"
+                 ;;
+             rainbow)
+                 local c9 c0
+                 c9=$(echo -e "$(get_animated_color 9)")
+                 c0=$(echo -e "$(get_animated_color 0)")
+                 R1="${c9}${raw_model}${RST}"
+                 R5="${c0}${raw_theme}${RST}"
+                 ;;
+        esac
     else
         R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
-    fi
-    R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT:-0m} · ${RATE_RESET_TIME:-00:00}${RST}"
-    R3="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}"
-    R4="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE:-\$0/h}${RST}"
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        R5="$(colorize_text "${ICON_THEME} ${THEME_NAME}" 5)"
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c0
-        c0=$(echo -e "$(get_animated_color 0)")
-        R5="${c0}${ICON_THEME} ${THEME_NAME}${RST}"
-    else
         R5="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
 
