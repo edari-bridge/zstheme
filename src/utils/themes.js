@@ -121,6 +121,38 @@ export function filterThemes(themes, filters) {
 }
 
 /**
+ * 테마 정렬 (Smart Sorting)
+ * Layout -> Style (Rainbow/Mono) -> Icon
+ */
+export function sortThemes(themes) {
+  return themes.sort((a, b) => {
+    const infoA = parseThemeName(a);
+    const infoB = parseThemeName(b);
+
+    // 1. Layout Priority
+    const layoutA = LAYOUTS.indexOf(infoA.layout);
+    const layoutB = LAYOUTS.indexOf(infoB.layout);
+    if (layoutA !== layoutB) return layoutA - layoutB;
+
+    // 2. Style Priority (Default -> Rainbow -> Mono -> Others)
+    const getStyleRank = (info) => {
+      if (info.color === 'pastel' && info.animation === 'static') return 0;
+      if (info.animation === 'rainbow') return 1;
+      if (info.color === 'mono') return 2;
+      return 99;
+    };
+    const styleA = getStyleRank(infoA);
+    const styleB = getStyleRank(infoB);
+    if (styleA !== styleB) return styleA - styleB;
+
+    // 3. Icon Priority (Standard -> Nerd)
+    const iconA = infoA.icon === 'nerd' ? 1 : 0;
+    const iconB = infoB.icon === 'nerd' ? 1 : 0;
+    return iconA - iconB;
+  });
+}
+
+/**
  * 테마명 파싱
  */
 export function parseThemeName(themeName) {

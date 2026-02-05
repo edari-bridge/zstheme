@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import path from 'path';
-import { getAllThemes, getCurrentTheme, getThemeDescription } from '../utils/themes.js';
+import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes } from '../utils/themes.js';
 import { renderThemePreview } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 
@@ -11,7 +11,7 @@ const TABS = ['All', '2line', '1line', 'Card', 'Bars', 'Badges'];
 
 export function ThemeSelector({ onBack }) {
   const { exit } = useApp();
-  const allThemes = getAllThemes();
+  const allThemes = useMemo(() => sortThemes(getAllThemes()), []);
   const currentTheme = getCurrentTheme();
 
   // 상태
