@@ -21,6 +21,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [preview, setPreview] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [savedTheme, setSavedTheme] = useState(null);
+  const [backSelected, setBackSelected] = useState(false);
 
   // LSD Visuals
   const [borderColor, setBorderColor] = useState('cyan');
@@ -198,12 +199,14 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       exit();
     }
 
-    // Easter Egg Listener (Removed in favor of MainMenu trigger)
-    /*
-    if (input && ['l', 's', 'd'].includes(input.toLowerCase())) {
-      // ... (Old Logic Removed)
+    // Back 선택 상태에서 Enter
+    if (key.return && backSelected) {
+      if (onBack) {
+        onBack();
+        return;
+      }
+      exit();
     }
-    */
 
     // 탭 네비게이션 (Tab 키)
     if (key.tab) {
@@ -214,26 +217,27 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         // Tab: Next Tab
         setActiveTab(prev => (prev < TABS.length - 1 ? prev + 1 : 0));
       }
+      setBackSelected(false);
       return;
     }
 
     // 그리드 네비게이션 (Arrow Keys)
     if (key.leftArrow || input === 'h') {
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : filteredThemes.length - 1));
+      if (!backSelected) {
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : filteredThemes.length - 1));
+      }
     }
     if (key.rightArrow || input === 'l') {
-      setSelectedIndex(prev => (prev < filteredThemes.length - 1 ? prev + 1 : 0));
+      if (!backSelected) {
+        setSelectedIndex(prev => (prev < filteredThemes.length - 1 ? prev + 1 : 0));
+      }
     }
 
     if (key.upArrow || input === 'k') {
-      // Find previous theme row
-      // We are at currentVisualRowIndex. We want to move UP.
-      // - If we are at top row, wrap to bottom? Or stop? Let's stop at top for clarity or wrap.
-      // - To move up, we look at currentVisualRowIndex - 1.
-      // - If that is a divider, look at -2.
-      // - Logic: find closest 'theme' row going backwards, maintaining column index.
+      // Back 선택 상태면 무시 (이미 맨 위)
+      if (backSelected) return;
 
-      if (currentVisualRowIndex === -1) return; // Should not happen
+      if (currentVisualRowIndex === -1) return;
 
       const currentColumn = gridRows[currentVisualRowIndex].items.indexOf(selectedIndex);
       let targetRowIndex = currentVisualRowIndex - 1;
@@ -245,13 +249,21 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       if (targetRowIndex >= 0) {
         const targetRow = gridRows[targetRowIndex];
-        // If target row has fewer items (e.g. last row of previous section), clamp column
         const targetItemIndex = Math.min(currentColumn, targetRow.items.length - 1);
         setSelectedIndex(targetRow.items[targetItemIndex]);
+      } else {
+        // 맨 위에서 Up → Back 선택
+        setBackSelected(true);
       }
     }
 
     if (key.downArrow || input === 'j') {
+      // Back 선택 상태에서 Down → 그리드로 복귀
+      if (backSelected) {
+        setBackSelected(false);
+        return;
+      }
+
       // Find next theme row
       if (currentVisualRowIndex === -1) return;
 
@@ -358,7 +370,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width: 110 },
     // [Header Area]
     e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },
-      e(Text, { color: isLsdUnlocked ? borderColor : 'magenta', bold: true }, isLsdUnlocked ? '✨ Explore Themes (LSD Active) ✨' : 'Explore Themes'),
+      e(Box, null,
+        e(Text, { color: backSelected ? 'green' : 'gray', bold: backSelected }, backSelected ? '❯ ← Back to Menu  ' : '  ← Back to Menu  '),
+        e(Text, { color: isLsdUnlocked ? borderColor : 'magenta', bold: true }, isLsdUnlocked ? '✨ Explore Themes (LSD Active) ✨' : 'Explore Themes')
+      ),
       e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
 
