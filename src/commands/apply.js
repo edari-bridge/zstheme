@@ -7,16 +7,24 @@ export function cmdApply(theme) {
   if (!isValidTheme(theme)) {
     console.log(chalk.bold('Error:') + ` Theme '${theme}' not found.`);
     console.log('');
-    console.log('Theme format: [mono-|custom-][lsd-|rainbow-]{layout}[-nerd]');
+    console.log('Theme format: [mono-|custom-][lsd-|rainbow-|plasma-|neon-|noise-]{layout}[-nerd]');
     console.log('  Layouts: 1line, 2line, card, bars, badges');
-    console.log('  Examples: lsd-bars, mono-card-nerd, badges-nerd');
+    console.log('  Examples: lsd-bars, plasma-badges, mono-card-nerd');
     console.log('');
     console.log(`Run '${chalk.cyan('zstheme --list')}' to see all available themes.`);
     process.exit(1);
   }
 
-  // Save to shell config
-  const configPath = saveThemeToShellConfig(theme);
+  let configPath = '';
+  try {
+    configPath = saveThemeToShellConfig(theme);
+  } catch (error) {
+    console.log('');
+    console.log(chalk.red('Failed to save theme configuration.'));
+    console.log(chalk.dim(error.message));
+    console.log('');
+    process.exit(1);
+  }
   const configName = path.basename(configPath);
 
   console.log('');

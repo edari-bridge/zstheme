@@ -3,62 +3,8 @@
 # Line 1: Git 정보 + 컨텍스트
 # Line 2: 모델 + Rate limit + 세션
 
-# ============================================================
-# 공통 함수 (Git 상태)
-# ============================================================
-
-format_git_status() {
-    local add mod del
-
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # 글자 단위 그라데이션
-        local add_text mod_text del_text
-        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
-        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
-        add=$(colorize_text "$add_text" 3)
-        mod=$(colorize_text "$mod_text" 5)
-        del=$(colorize_text "$del_text" 7)
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local add_text mod_text del_text
-        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
-        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
-        add=$(colorize_text "$add_text" 3)
-        mod=$(colorize_text "$mod_text" 5)
-        del=$(colorize_text "$del_text" 7)
-    else
-        [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}${RST}" || add="${C_DIM_STATUS}+0${RST}"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}${RST}" || mod="${C_DIM_STATUS}~0${RST}"
-        [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
-    fi
-
-    echo "${C_I_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
-}
-
-format_git_sync() {
-    local ahead behind
-
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # 글자 단위 그라데이션
-        local ahead_text behind_text
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
-        ahead=$(colorize_text "$ahead_text" 0)
-        behind=$(colorize_text "$behind_text" 4)
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local ahead_text behind_text
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
-        ahead=$(colorize_text "$ahead_text" 0)
-        behind=$(colorize_text "$behind_text" 4)
-    else
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}" || ahead="${C_DIM_SYNC}↑ 0${RST}"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
-    fi
-
-    echo "${C_I_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
-}
+LAYOUT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LAYOUT_DIR/common.sh"
 
 # ============================================================
 # 렌더링 함수
@@ -93,19 +39,15 @@ render() {
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        line1_parts+=("$(format_git_status)")
-        line1_parts+=("$(format_git_sync)")
+        line1_parts+=("$(format_git_status_common "  ")")
+        line1_parts+=("$(format_git_sync_common "  ")")
     else
         line1_parts+=("${C_DIM_STATUS}${ICON_GIT_STATUS} status${RST}")
         line1_parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
     fi
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
-    if [[ "$ICON_MODE" == "nerd" ]]; then
-        line1_parts+=("${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    else
-        line1_parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    fi
+    line1_parts+=("$(format_context_common)")
 
     # Line 2: 세션 정보 + 테마
     local line2_parts=()
