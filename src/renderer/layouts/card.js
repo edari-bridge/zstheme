@@ -6,7 +6,7 @@ import { getRateColor } from '../colors.js';
 function padTo(text, targetWidth) {
   const plain = stripAnsi(text);
   // Emoji width correction (emojis take 2 columns)
-  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
   const emojiCount = (plain.match(emojiRe) || []).length;
   const actualWidth = [...plain].length + emojiCount;
   const pad = Math.max(0, targetWidth - actualWidth);
@@ -75,7 +75,7 @@ export function render(ctx) {
   } else {
     R1 = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}${RST}`;
     if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
-      const rateColor = getRateColor(data.rateLimitPct, colorMode);
+      const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
       R2 = `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)${RST}`;
     } else {
       R2 = '';
