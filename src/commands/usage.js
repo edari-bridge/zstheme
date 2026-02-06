@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
 
 function formatDuration(ms) {
@@ -49,9 +49,10 @@ function padLeft(str, len) {
 // ccusage에서 Rate Limit 정보 가져오기
 function getRateLimitInfo() {
   try {
-    const result = execSync('npx ccusage blocks --json 2>/dev/null', {
+    const result = execFileSync('npx', ['ccusage', 'blocks', '--json'], {
       encoding: 'utf-8',
       timeout: 10000,
+      stdio: ['pipe', 'pipe', 'ignore'],
     });
     const data = JSON.parse(result);
     const blocks = data.blocks || [];
@@ -105,7 +106,7 @@ function getRateLimitInfo() {
 function getCurrentSessionInfo() {
   try {
     // 현재 디렉토리 기반 프로젝트 경로 찾기
-    const cwd = process.cwd().replace(/\//g, '-').replace(/^-/, '-');
+    const cwd = process.cwd().replace(/\//g, '-').replace(/^-/, '');
     const projectsDir = join(homedir(), '.claude', 'projects');
 
     if (!existsSync(projectsDir)) return null;
@@ -243,8 +244,9 @@ export function cmdDashboard() {
   const BOT = '└' + '─'.repeat(W) + '┘';
 
   const row = (content) => {
-    const displayWidth = getDisplayWidth(content);
-    const pad = Math.max(0, W - displayWidth);
+    const stripped = content.replace(/\x1b\[[0-9;]*m/g, '');
+    const displayWidth = getDisplayWidth(stripped);
+    const pad = Math.max(0, W - displayWidth - 1);
     return '│ ' + content + ' '.repeat(pad) + '│';
   };
 
