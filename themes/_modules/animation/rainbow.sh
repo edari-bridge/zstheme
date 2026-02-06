@@ -344,3 +344,38 @@ colorize_bg_rainbow() {
     echo -e "${result}\033[0m"
 }
 
+# Experimental effects used by Lab themes.
+colorize_bg_plasma() {
+    local text="$1"
+    local start_idx="${2:-0}"
+    local fg_color="${3:-\033[30m}"
+    colorize_bg_lsd "$text" "$start_idx" "$fg_color"
+}
+
+colorize_bg_neon() {
+    local text="$1"
+    local start_idx="${2:-0}"
+    local fg_color="${3:-\033[97m}"
+    colorize_bg_rainbow "$text" "\033[45m" "\033[105m" "$start_idx" "$fg_color"
+}
+
+colorize_bg_noise() {
+    local text="$1"
+    local fg_color="${2:-\033[30m}"
+    local result=""
+    local i=0
+
+    while IFS= read -r char; do
+        local color_idx=$(( (COLOR_OFFSET + i * 13 + RANDOM) % 60 ))
+        local bg_code
+        if [[ "$COLOR_MODE" == "mono" ]]; then
+            bg_code="\033[48;2;${MONO_CYCLE[$color_idx]}m"
+        else
+            bg_code="\033[48;2;${RAINBOW_COLORS[$color_idx]}m"
+        fi
+        result+="${bg_code}${fg_color}${char}"
+        ((i++))
+    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
+
+    echo -e "${result}\033[0m"
+}
