@@ -15,25 +15,13 @@ render() {
     local parts=()
 
     # 브랜치
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        parts+=("${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)")
-    else
-        parts+=("${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}")
-    fi
+    parts+=("$(render_text "$C_I_BRANCH" "$ICON_BRANCH" "${BRANCH:-branch}" "$C_BRANCH" 0)")
 
     # 워크트리
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        parts+=("${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)")
-    else
-        parts+=("${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}")
-    fi
+    parts+=("$(render_text "$C_I_TREE" "$ICON_TREE" "${WORKTREE:-worktree}" "$C_TREE" 3)")
 
     # 디렉토리
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        parts+=("${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)")
-    else
-        parts+=("${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}")
-    fi
+    parts+=("$(render_text "$C_I_DIR" "$ICON_DIR" "${DIR_NAME}" "$C_DIR" 6)")
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
@@ -45,11 +33,7 @@ render() {
     fi
 
     # 모델
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        parts+=("${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)")
-    else
-        parts+=("${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}")
-    fi
+    parts+=("$(render_text "$C_I_MODEL" "$ICON_MODEL" "${MODEL}" "$C_MODEL" 9)")
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
     parts+=("$(format_context_common)")
