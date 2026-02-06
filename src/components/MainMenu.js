@@ -108,28 +108,48 @@ export function MainMenu() {
         return e(ColorEditor, { onBack: () => setActiveTab('menu') });
     }
 
-    return e(Box, { flexDirection: 'column', padding: 2, borderStyle: 'round', borderColor: borderColor, width: 90 },
-        // Header Area
-        e(Box, { justifyContent: 'space-between', paddingBottom: 1 },
-            e(Text, { color: isLsdUnlocked ? 'magenta' : 'magenta', bold: true }, isLsdUnlocked ? 'zstheme (LSD Mode)' : 'zstheme'),
-            e(Text, { dimColor: true }, 'v2.1.0')
+    // Get system info
+    const nodeVersion = process.version;
+    const platformRaw = process.platform;
+    let platform = platformRaw;
+
+    if (platformRaw === 'darwin') platform = 'macOS';
+    else if (platformRaw === 'win32') platform = 'Windows';
+    else if (platformRaw === 'linux') platform = 'Linux';
+
+    return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width: 80, height: 26 },
+        // 1. Header Area with dynamic spacing
+        e(Box, { justifyContent: 'space-between', paddingBottom: 1, borderStyle: 'single', borderTop: false, borderLeft: false, borderRight: false, borderBottom: true, borderColor: 'gray' },
+            e(Box, { flexDirection: 'column' },
+                e(Text, { color: isLsdUnlocked ? 'magenta' : 'cyan', bold: true }, isLsdUnlocked ? ' ZSTHEME [LSD]' : ' ZSTHEME'),
+                e(Text, { dimColor: true, italic: true }, '  Statusline Manager')
+            ),
+            e(Box, { borderStyle: 'round', borderColor: 'magenta', paddingX: 1 },
+                e(Text, { color: 'magenta' }, 'v2.1.0')
+            )
         ),
 
-        e(Box, { flexDirection: 'row' },
-            // Left Column: Menu
-            e(Box, { flexDirection: 'column', width: '35%', paddingRight: 2 },
-                e(Text, { bold: true, color: 'white', underline: true }, 'Menu'),
+        e(Box, { flexDirection: 'row', flexGrow: 1, marginTop: 1 },
+            // 2. Left Column: Menu
+            e(Box, { flexDirection: 'column', width: '40%', paddingRight: 2 },
+                e(Text, { bold: true, color: 'white', underline: false, dimColor: true }, ' NAVIGATE '),
                 e(Box, { height: 1 }),
                 ...MENU_ITEMS.map((item, index) => {
                     const isSelected = index === selectedIndex;
-                    return e(Box, { key: item.id, paddingLeft: 1 },
+                    return e(Box, {
+                        key: item.id,
+                        paddingX: 1,
+                        paddingY: 0,
+                        borderStyle: isSelected ? 'round' : undefined,
+                        borderColor: isSelected ? (isLsdUnlocked ? borderColor : 'green') : undefined,
+                        marginBottom: 1
+                    },
                         e(Text, { color: isSelected ? 'green' : 'gray' },
-                            isSelected ? '❯ ' : '  '
+                            isSelected ? '◉ ' : '○ '
                         ),
                         e(Text, {
                             color: isSelected ? 'white' : 'gray',
                             bold: isSelected,
-                            backgroundColor: isSelected ? '#333' : undefined
                         },
                             item.label
                         )
@@ -137,38 +157,42 @@ export function MainMenu() {
                 })
             ),
 
-            // Right Column: Hero/Logo
+            // 3. Right Column: Logo & Info
             e(Box, {
                 flexDirection: 'column',
-                width: '65%',
+                width: '60%',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: 1
+                // padding: 1
             },
-                e(Logo, { lsdMode: isLsdUnlocked })
+                e(Box, { marginBottom: 2 },
+                    e(Logo, { lsdMode: isLsdUnlocked })
+                ),
+                // System Status Panel
+                e(Box, { flexDirection: 'column', borderStyle: 'single', borderColor: 'gray', paddingX: 1, alignItems: 'center' },
+                    e(Text, { dimColor: true }, "SYSTEM"),
+                    e(Box, { flexDirection: 'row' },
+                        e(Text, { color: 'cyan' }, platform),
+                        e(Text, { color: 'gray' }, " | "),
+                        e(Text, { color: 'green' }, nodeVersion)
+                    )
+                )
             )
         ),
 
-        // Footer
+        // 4. Footer
         e(Box, {
-            marginTop: 1,
-            paddingTop: 1,
-            borderStyle: 'single',
-            borderTop: true,
-            borderBottom: false,
-            borderLeft: false,
-            borderRight: false,
-            borderColor: 'gray'
+            marginTop: 0,
+            justifyContent: 'center'
         },
-            e(Text, { dimColor: true },
-                'Use ',
-                e(Text, { color: 'yellow' }, '↑↓'),
-                ' to navigate, ',
-                e(Text, { color: 'yellow' }, 'Enter'),
-                ' to select, ',
-                e(Text, { color: 'red' }, 'q'),
-                ' to quit'
-            )
+            // Badge style keys
+            e(Text, { dimColor: true }, ' [ '),
+            e(Text, { color: 'yellow', bold: true }, 'UP/DOWN'),
+            e(Text, { dimColor: true }, ' Navigate ]  [ '),
+            e(Text, { color: 'green', bold: true }, 'ENTER'),
+            e(Text, { dimColor: true }, ' Select ]  [ '),
+            e(Text, { color: 'red', bold: true }, 'Q'),
+            e(Text, { dimColor: true }, ' Quit ]')
         )
     );
 }
