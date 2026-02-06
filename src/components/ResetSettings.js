@@ -6,7 +6,7 @@ import { uninstallAllSkills } from '../utils/skills.js';
 const e = React.createElement;
 
 const MENU_ITEMS = [
-  { id: 'back', label: '← Back' },
+  { id: 'back', label: '← Back to Menu' },
   { id: 'theme', label: 'Reset Theme' },
   { id: 'skills', label: 'Reset Skills' },
   { id: 'all', label: 'Reset All' },
