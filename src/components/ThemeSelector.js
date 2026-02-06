@@ -35,7 +35,6 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
     let colorIndex = 0;
 
-    // Slight offset from MainMenu to create variety or keep same speed
     const timer = setInterval(() => {
       colorIndex = (colorIndex + 1) % colors.length;
       setBorderColor(colors[colorIndex]);
@@ -367,7 +366,19 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     return e(Box, { flexDirection: 'column', minHeight: 7 }, ...renderedRows);
   };
 
-  return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width: 110 },
+  return e(Box, {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    padding: 1,
+    borderStyle: 'round',
+    borderColor: borderColor,
+    width: 110,
+    minWidth: 110,
+    maxWidth: 110,
+    height: 32,
+    minHeight: 32,
+    maxHeight: 32
+  },
     // [Header Area]
     e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },
       e(Box, null,
@@ -445,7 +456,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       paddingY: 1,
       paddingX: 2,
       marginTop: 0,
-      minHeight: 10
+      minHeight: 10,
+      width: '100%'
     },
       e(Text, null, preview)
     ),
