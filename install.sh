@@ -13,6 +13,13 @@ REPO_URL="https://github.com/edari-bridge/zstheme.git"
 INSTALL_DIR="$HOME/.zstheme"
 CLAUDE_DIR="$HOME/.claude"
 
+# Detect platform: Windows (Git Bash/MSYS/Cygwin) vs Unix
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    IS_WINDOWS=true
+else
+    IS_WINDOWS=false
+fi
+
 # Colors
 RST=$'\033[0m'
 BOLD=$'\033[1m'
@@ -131,6 +138,7 @@ echo "  ${CYAN}~/.claude/themes/${RST} -> $INSTALL_DIR/themes/"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 CONFIG_DIR="$HOME/.config/zstheme"
 BACKUP_FILE="$CONFIG_DIR/original-statusline.json"
+PARTIAL_BACKUP_SENTINEL='{"__zstheme_partial_backup__":true}'
 
 backup_original_statusline() {
     # Skip if backup already exists (first install only)
@@ -161,8 +169,9 @@ backup_original_statusline() {
     else
         # No jq: check if statusLine key exists
         if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
-            echo '{"command":"unknown (backup without jq)"}' > "$BACKUP_FILE"
-            echo "${YELLOW}Backed up statusline (partial - install jq for full backup)${RST}"
+            echo "$PARTIAL_BACKUP_SENTINEL" > "$BACKUP_FILE"
+            echo "${YELLOW}Detected existing statusLine but jq is missing.${RST}"
+            echo "${YELLOW}Saved partial-backup marker (original statusLine left untouched).${RST}"
         else
             echo "null" > "$BACKUP_FILE"
             echo "${BLUE}No previous statusline (saved to backup)${RST}"
@@ -173,6 +182,15 @@ backup_original_statusline() {
 backup_original_statusline
 
 configure_settings() {
+    # Select statusline command based on platform
+    local STATUSLINE_CMD
+    if [[ "$IS_WINDOWS" == true ]]; then
+        STATUSLINE_CMD="node \"$INSTALL_DIR/bin/statusline-node.js\""
+        echo "${BLUE}Windows detected: using Node.js statusline renderer${RST}"
+    else
+        STATUSLINE_CMD="~/.claude/statusline.sh"
+    fi
+
     if [[ -f "$SETTINGS_FILE" ]]; then
         # Check if statusLine is already configured
         if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
@@ -182,20 +200,20 @@ configure_settings() {
             # Use jq if available, otherwise warn
             if command -v jq &>/dev/null; then
                 local tmp=$(mktemp)
-                jq '. + {"statusLine": {"command": "~/.claude/statusline.sh"}}' "$SETTINGS_FILE" > "$tmp"
+                jq --arg cmd "$STATUSLINE_CMD" '. + {"statusLine": {"command": $cmd}}' "$SETTINGS_FILE" > "$tmp"
                 mv "$tmp" "$SETTINGS_FILE"
                 echo "${GREEN}Updated settings.json${RST}"
             else
                 echo "${YELLOW}Please add manually to $SETTINGS_FILE:${RST}"
-                echo '  "statusLine": { "command": "~/.claude/statusline.sh" }'
+                echo "  \"statusLine\": { \"command\": \"$STATUSLINE_CMD\" }"
             fi
         fi
     else
         echo "${GREEN}Creating settings.json...${RST}"
-        cat > "$SETTINGS_FILE" << 'EOF'
+        cat > "$SETTINGS_FILE" << EOF
 {
   "statusLine": {
-    "command": "~/.claude/statusline.sh"
+    "command": "$STATUSLINE_CMD"
   }
 }
 EOF

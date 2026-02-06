@@ -98,6 +98,28 @@ zstheme --help       # Show help
 zstheme --version    # Show version
 ```
 
+### Filter Options
+
+| Option | Description |
+|--------|-------------|
+| `--1line` | Show only 1line layout themes |
+| `--2line` | Show only 2line layout themes |
+| `--card` | Show only card layout themes |
+| `--bars` | Show only bars layout themes |
+| `--badges` | Show only badges layout themes |
+| `--mono` | Show only monochrome themes |
+| `--custom` | Show only custom color themes |
+| `--rainbow` | Show only rainbow animation themes |
+| `--lsd` | Show only LSD animation themes |
+| `--nerd` | Show only Nerd Font themes |
+
+### Statusline Toggle
+
+```bash
+zstheme --original   # Restore original statusline (before zstheme)
+zstheme --activate   # Re-activate zstheme statusline
+```
+
 ### Claude Code Skills
 
 Use skills directly in Claude Code:
@@ -140,7 +162,7 @@ Use with any layout: `export CLAUDE_THEME="custom-2line"`
 - **jq** (optional) - For automatic settings.json update
 - **ccusage** (optional) - For rate limit display
 
-### Install Steps
+### Install Steps (macOS / Linux)
 
 ```bash
 # Option 1: One-line install (recommended)
@@ -154,10 +176,24 @@ git clone https://github.com/edari-bridge/zstheme.git ~/.zstheme
 The installer will:
 1. Install npm dependencies
 2. Create symlinks in `~/.claude/`
-3. Configure `settings.json` if possible
-4. Add `zstheme` to your PATH
+3. Back up your original statusline config
+4. Configure `settings.json` with the Node.js renderer
+5. Add `zstheme` to your PATH
 
-### Manual Setup
+### Install Steps (Windows)
+
+```powershell
+# Option 1: One-line install (PowerShell)
+irm https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.ps1 | iex
+
+# Option 2: Clone and install
+git clone https://github.com/edari-bridge/zstheme.git $env:USERPROFILE\.zstheme
+& "$env:USERPROFILE\.zstheme\install.ps1"
+```
+
+The Windows installer uses the **Node.js renderer** (`statusline-node.js`) which works natively on Windows without requiring bash or WSL.
+
+### Manual Setup (macOS / Linux)
 
 If you prefer manual installation:
 
@@ -186,6 +222,34 @@ If you prefer manual installation:
 4. Set your theme in `~/.zshrc` or `~/.bashrc`:
    ```bash
    export CLAUDE_THEME="2line"
+   ```
+
+### Manual Setup (Windows)
+
+1. Clone and install dependencies:
+   ```powershell
+   git clone https://github.com/edari-bridge/zstheme.git
+   cd zstheme
+   npm install
+   ```
+
+2. Create a junction for themes:
+   ```powershell
+   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\themes" -Target "$(Get-Location)\themes"
+   ```
+
+3. Configure Claude Code (`~/.claude/settings.json`):
+   ```json
+   {
+     "statusLine": {
+       "command": "node \"C:\\Users\\YOU\\.zstheme\\bin\\statusline-node.js\""
+     }
+   }
+   ```
+
+4. Set your theme (PowerShell profile or environment variable):
+   ```powershell
+   $env:CLAUDE_THEME = "2line"
    ```
 
 ## Rate Limit Integration
@@ -217,12 +281,24 @@ Themes have access to these environment variables:
 
 ## Uninstall
 
+### macOS / Linux
+
 ```bash
 # Remove symlinks and CLI (keeps config)
 curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash
 
 # Complete removal (removes everything)
 curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash -s -- --purge
+```
+
+### Windows
+
+```powershell
+# Remove junction, restore statusline, clean PATH (keeps config)
+& "$env:USERPROFILE\.zstheme\uninstall.ps1"
+
+# Complete removal (removes everything)
+& "$env:USERPROFILE\.zstheme\uninstall.ps1" --purge
 ```
 
 ## License
