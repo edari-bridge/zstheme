@@ -51,10 +51,6 @@ export function renderStatusline(jsonInput, options = {}) {
     data: {
       ...data,
       themeName,
-      rateTimeLeft: data.rateTimeLeft || '',
-      rateResetTime: data.rateResetTime || '',
-      rateLimitPct: data.rateLimitPct || '',
-      burnRate: data.burnRate || '',
     },
     git: {
       isGitRepo: git.isGitRepo,

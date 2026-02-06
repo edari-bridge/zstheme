@@ -1,14 +1,7 @@
 // Badges layout (ported from badges.sh)
 import { colorizeText, colorizeBgLsd, getAnimatedBadgeBg } from '../animation.js';
-import { formatContext, isAnimated } from '../helpers.js';
+import { formatContext, isAnimated, makeChip } from '../helpers.js';
 import { getRateColor } from '../colors.js';
-
-function makeChip(bg, content, chipStyle, colors) {
-  if (chipStyle === 'pipe') {
-    return `${colors.C_CHIP}\u2503${colors.RST}${bg} ${content} ${colors.RST}${colors.C_CHIP}\u2503${colors.RST}`;
-  }
-  return `${bg} ${content} ${colors.RST}`;
-}
 
 export function render(ctx) {
   const { colors, data, git, animationMode, colorMode, colorOffset, bgOffset } = ctx;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stripAnsi, isAnimated, formatGitStatus, formatGitSync, formatContext, renderText } from '../src/renderer/helpers.js';
+import { stripAnsi, isAnimated, formatGitStatus, formatGitSync, formatContext, renderText, makeChip } from '../src/renderer/helpers.js';
 import { createMockCtx } from './fixtures.mjs';
 
 // --- stripAnsi ---
@@ -112,4 +112,22 @@ test('renderText animated mode produces RGB sequences', () => {
   assert.ok(/\x1b\[1;38;2;\d+;\d+;\d+m/.test(result), 'should contain RGB ANSI codes');
   const plain = stripAnsi(result);
   assert.ok(plain.includes('main'), 'should preserve text content');
+});
+
+// --- makeChip ---
+
+test('makeChip badge style wraps content with bg and reset', () => {
+  const colors = { RST: '\x1b[0m', C_CHIP: '\x1b[90m' };
+  const result = makeChip('\x1b[44m', 'hello', 'badge', colors);
+  assert.ok(result.includes('hello'), 'should contain content');
+  assert.ok(result.startsWith('\x1b[44m'), 'should start with bg');
+  assert.ok(result.endsWith('\x1b[0m'), 'should end with reset');
+});
+
+test('makeChip pipe style wraps content with pipe characters', () => {
+  const colors = { RST: '\x1b[0m', C_CHIP: '\x1b[90m' };
+  const result = makeChip('\x1b[44m', 'hello', 'pipe', colors);
+  const plain = stripAnsi(result);
+  assert.ok(plain.includes('\u2503'), 'should contain pipe character');
+  assert.ok(plain.includes('hello'), 'should contain content');
 });

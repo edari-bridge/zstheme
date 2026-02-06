@@ -65,20 +65,6 @@ export function colorizeBgLsd(text, startIdx = 0, colorOffset = 0, colorMode = '
   return result + `${ESC}[0m`;
 }
 
-// Per-character background shimmer (colorize_bg_rainbow in rainbow.sh)
-export function colorizeBgRainbow(text, baseBg, highlightBg, startIdx = 0, colorOffset = 0, fgColor = `${ESC}[30m`) {
-  const chars = [...text];
-  let result = '';
-
-  for (let i = 0; i < chars.length; i++) {
-    const wave = (startIdx + i + Math.floor(colorOffset / 2)) % 20;
-    const bgCode = wave < 5 ? highlightBg : baseBg;
-    result += `${bgCode}${fgColor}${chars[i]}`;
-  }
-
-  return result + `${ESC}[0m`;
-}
-
 // Animated foreground color for a single element (get_animated_color)
 export function getAnimatedColor(idx, colorOffset, animationMode, colorMode) {
   const palette = getPalette(animationMode, colorMode);

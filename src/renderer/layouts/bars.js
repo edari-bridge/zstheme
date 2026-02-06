@@ -1,14 +1,7 @@
 // Bars layout (ported from bars.sh)
-import { colorizeText, colorizeBgLsd, getAnimatedBg } from '../animation.js';
-import { formatContext, isAnimated } from '../helpers.js';
+import { colorizeText, colorizeBgLsd } from '../animation.js';
+import { formatContext, isAnimated, makeChip } from '../helpers.js';
 import { getRateColor } from '../colors.js';
-
-function makeChip(bg, content, chipStyle, colors) {
-  if (chipStyle === 'pipe') {
-    return `${colors.C_CHIP}\u2503${colors.RST}${bg} ${content} ${colors.RST}${colors.C_CHIP}\u2503${colors.RST}`;
-  }
-  return `${bg} ${content} ${colors.RST}`;
-}
 
 export function render(ctx) {
   const { colors, data, git, animationMode, colorMode, colorOffset, bgOffset } = ctx;

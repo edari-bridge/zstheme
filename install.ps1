@@ -78,10 +78,38 @@ if (-not (Test-Path $ClaudeDir)) {
 }
 
 # ============================================================
-# 4. Configure settings.json (Node.js renderer)
+# 4. Backup original statusline & Configure settings.json
 # ============================================================
 $SettingsFile = "$ClaudeDir\settings.json"
 $StatuslineCmd = "node `"$InstallDir\bin\statusline-node.js`""
+$ConfigDir = "$env:USERPROFILE\.config\zstheme"
+$BackupFile = "$ConfigDir\original-statusline.json"
+
+# Backup existing statusLine before overwriting
+if (-not (Test-Path $BackupFile)) {
+    if (-not (Test-Path $ConfigDir)) {
+        New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
+    }
+    if (Test-Path $SettingsFile) {
+        try {
+            $ExistingSettings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
+            if ($ExistingSettings.statusLine) {
+                $ExistingSettings.statusLine | ConvertTo-Json -Depth 10 | Set-Content $BackupFile -Encoding UTF8
+                Write-Host "Backed up original statusline config" -ForegroundColor Green
+            } else {
+                "null" | Set-Content $BackupFile -Encoding UTF8
+                Write-Host "No previous statusline (saved to backup)" -ForegroundColor Blue
+            }
+        } catch {
+            "null" | Set-Content $BackupFile -Encoding UTF8
+        }
+    } else {
+        "null" | Set-Content $BackupFile -Encoding UTF8
+        Write-Host "No previous statusline (saved to backup)" -ForegroundColor Blue
+    }
+} else {
+    Write-Host "Statusline backup already exists, skipping" -ForegroundColor Blue
+}
 
 if (Test-Path $SettingsFile) {
     $Settings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
