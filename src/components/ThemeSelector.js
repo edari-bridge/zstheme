@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
+import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
@@ -13,7 +13,14 @@ const VISIBLE_ROWS = 6;
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
+  const { stdout } = useStdout();
+  const columns = stdout?.columns || 120;
+  const rows = stdout?.rows || 40;
   const currentTheme = getCurrentTheme();
+
+  // Dynamic sizing (with minimums)
+  const width = Math.max(80, columns - 4);
+  const height = Math.max(28, rows - 4);
 
   // 상태
   const [activeTab, setActiveTab] = useState(0);
@@ -372,12 +379,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     padding: 1,
     borderStyle: 'round',
     borderColor: borderColor,
-    width: 110,
-    minWidth: 110,
-    maxWidth: 110,
-    height: 32,
-    minHeight: 32,
-    maxHeight: 32
+    width,
+    height
   },
     // [Header Area]
     e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },

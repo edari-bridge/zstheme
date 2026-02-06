@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
+import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { Logo } from './Logo.js';
 import { ThemeSelector } from './ThemeSelector.js';
 import { ColorEditor } from './ColorEditor.js';
@@ -19,8 +19,15 @@ const MENU_ITEMS = [
 
 export function MainMenu() {
     const { exit } = useApp();
+    const { stdout } = useStdout();
+    const columns = stdout?.columns || 120;
+    const rows = stdout?.rows || 40;
     const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor', 'dashboard', 'reset'
     const [selectedIndex, setSelectedIndex] = useState(0);
+
+    // Dynamic sizing (with minimums)
+    const width = Math.max(80, columns - 4);
+    const height = Math.max(28, rows - 4);
 
     // Easter Egg State
     const [rightPressCount, setRightPressCount] = useState(0);
@@ -131,7 +138,7 @@ export function MainMenu() {
     else if (platformRaw === 'win32') platform = 'Windows';
     else if (platformRaw === 'linux') platform = 'Linux';
 
-    return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width: 80, height: 26 },
+    return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width, height },
         // 1. Header Area with dynamic spacing
         e(Box, { justifyContent: 'space-between', paddingBottom: 1, borderStyle: 'single', borderTop: false, borderLeft: false, borderRight: false, borderBottom: true, borderColor: 'gray' },
             e(Box, { flexDirection: 'column' },
