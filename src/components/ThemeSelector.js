@@ -4,13 +4,15 @@ import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseTh
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { LAB_THEME_PRESETS } from '../utils/themeContract.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
+import { GRID_COLUMNS, GRID_VISIBLE_ROWS } from '../constants.js';
 
 const e = React.createElement;
 
 // User Requested Order: 1line, 2line, Badges, Bars, Card, Lab
 const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
-const COLUMNS = 3;
-const VISIBLE_ROWS = 6;
+const COLUMNS = GRID_COLUMNS;
+const VISIBLE_ROWS = GRID_VISIBLE_ROWS;
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -31,25 +33,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [savedTheme, setSavedTheme] = useState(null);
   const [backSelected, setBackSelected] = useState(false);
 
-  // LSD Visuals
-  const [borderColor, setBorderColor] = useState('cyan');
-
-  useEffect(() => {
-    if (!isLsdUnlocked) {
-      setBorderColor('cyan');
-      return;
-    }
-
-    const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
-    let colorIndex = 0;
-
-    const timer = setInterval(() => {
-      colorIndex = (colorIndex + 1) % colors.length;
-      setBorderColor(colors[colorIndex]);
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [isLsdUnlocked]);
+  // Border animation (extracted hook)
+  const borderColor = useLsdBorderAnimation(isLsdUnlocked);
 
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
   const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked), isLsdUnlocked), [isLsdUnlocked]);

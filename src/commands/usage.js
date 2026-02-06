@@ -3,22 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { execSync } from 'child_process';
-
-// Opus 4.5 가격 (USD per 1M tokens)
-const PRICING = {
-  input: 15,
-  output: 75,
-  cacheRead: 1.875,
-  cacheCreate: 18.75,
-};
-
-function formatNumber(num) {
-  return num.toLocaleString('en-US');
-}
-
-function formatCurrency(num) {
-  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { PRICING, formatNumber, formatCurrency } from '../constants.js';
 
 function formatDuration(ms) {
   const hours = Math.floor(ms / (1000 * 60 * 60));

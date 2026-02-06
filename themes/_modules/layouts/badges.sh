@@ -6,6 +6,9 @@
 #   badge (기본)   - 배경만 (가장 미니멀)
 #   pipe           - ┃ ┃
 
+LAYOUT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LAYOUT_DIR/common.sh"
+
 # ============================================================
 # 칩 스타일 설정
 # ============================================================
@@ -55,7 +58,7 @@ render() {
 
     # lsd/rainbow 모드: 배경색 순환, 글자색은 기존 유지
     local bg_branch bg_tree bg_dir bg_status bg_sync bg_model
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         bg_branch=$(get_animated_badge_bg 0)
         bg_tree=$(get_animated_badge_bg 1)
         bg_dir=$(get_animated_badge_bg 2)
@@ -75,7 +78,7 @@ render() {
     local chip_branch chip_tree chip_dir chip_status chip_sync chip_ctx
 
     # 브랜치 칩
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local raw_branch=" ${ICON_BRANCH} ${BRANCH:-branch} "
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_branch=$(colorize_bg_lsd "$raw_branch" 0 "\033[30m")
@@ -88,7 +91,7 @@ render() {
     fi
 
     # 워크트리 칩
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local raw_tree=" ${ICON_TREE} ${WORKTREE:-worktree} "
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_tree=$(colorize_bg_lsd "$raw_tree" 10 "\033[30m")
@@ -101,7 +104,7 @@ render() {
     fi
 
     # 디렉토리 칩
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local raw_dir=" ${ICON_DIR} ${DIR_NAME} "
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_dir=$(colorize_bg_lsd "$raw_dir" 20 "\033[30m")
@@ -116,7 +119,7 @@ render() {
     # Git 상태 칩
     if [[ "$IS_GIT_REPO" == "true" ]]; then
         local status_content sync_content
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        if is_animated; then
             local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
@@ -194,7 +197,7 @@ render() {
 
     # Rate limit 칩
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        if is_animated; then
             local raw_rate=" ${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%) "
             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                 chip_rate=$(colorize_bg_lsd "$raw_rate" 60 "\033[30m")
@@ -210,7 +213,7 @@ render() {
     fi
 
     # 세션 시간 칩
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local raw_time=" ${ICON_SESSION} ${SESSION_DURATION_MIN}m "
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
             chip_time=$(colorize_bg_lsd "$raw_time" 70 "\033[30m")
@@ -223,7 +226,7 @@ render() {
 
     # 번레이트 칩
     if [[ -n "$BURN_RATE" ]]; then
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        if is_animated; then
             local raw_burn=" ${ICON_COST} ${BURN_RATE} "
             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                 chip_burn=$(colorize_bg_lsd "$raw_burn" 80 "\033[30m")
@@ -238,7 +241,7 @@ render() {
     fi
 
     # 테마 (배경 없음, 텍스트 그라데이션)
-    if [[ "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "lsd" ]]; then
+    if is_animated; then
         chip_theme=$(colorize_text "${ICON_THEME} ${THEME_NAME}")
     else
         chip_theme="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"

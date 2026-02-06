@@ -2,11 +2,27 @@
 
 # Common formatting helpers shared by layout modules.
 
+# Animation mode check (shared by all layouts)
+is_animated() {
+    [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]
+}
+
+# Render text with animation or static color
+# Args: $1=icon_color $2=icon $3=text $4=color_var $5=offset
+render_text() {
+    local icon_color="$1" icon="$2" text="$3" color_var="$4" offset="$5"
+    if is_animated; then
+        echo "${icon_color}${icon}${RST} $(colorize_text "$text" "$offset")"
+    else
+        echo "${icon_color}${icon} ${color_var}${text}${RST}"
+    fi
+}
+
 format_git_status_common() {
     local separator="${1:- }"
     local add mod del
 
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local add_text mod_text del_text
         [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
         [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
@@ -27,7 +43,7 @@ format_git_sync_common() {
     local separator="${1:- }"
     local ahead behind
 
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         local ahead_text behind_text
         [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
         [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"

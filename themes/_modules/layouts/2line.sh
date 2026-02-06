@@ -17,25 +17,13 @@ render() {
     local line1_parts=()
 
     # 브랜치
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        line1_parts+=("${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)")
-    else
-        line1_parts+=("${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}")
-    fi
+    line1_parts+=("$(render_text "$C_I_BRANCH" "$ICON_BRANCH" "${BRANCH:-branch}" "$C_BRANCH" 0)")
 
     # 워크트리
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        line1_parts+=("${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)")
-    else
-        line1_parts+=("${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}")
-    fi
+    line1_parts+=("$(render_text "$C_I_TREE" "$ICON_TREE" "${WORKTREE:-worktree}" "$C_TREE" 3)")
 
     # 디렉토리
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        line1_parts+=("${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)")
-    else
-        line1_parts+=("${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}")
-    fi
+    line1_parts+=("$(render_text "$C_I_DIR" "$ICON_DIR" "${DIR_NAME}" "$C_DIR" 6)")
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
@@ -53,21 +41,17 @@ render() {
     local line2_parts=()
 
     # 모델
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        line2_parts+=("${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)")
-    else
-        line2_parts+=("${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}")
-    fi
+    line2_parts+=("$(render_text "$C_I_MODEL" "$ICON_MODEL" "${MODEL}" "$C_MODEL" 9)")
 
     # Rate limit 정보
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        if is_animated; then
              line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 10)")
         else
              line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
         fi
     elif [[ -n "$RATE_LIMIT_PCT" ]]; then
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        if is_animated; then
              line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "(${RATE_LIMIT_PCT}%)" 10)")
         else
              line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
@@ -75,27 +59,15 @@ render() {
     fi
 
     # 세션 시간
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-         line2_parts+=("${C_I_TIME}${ICON_SESSION}${RST} $(colorize_text "${SESSION_DURATION_MIN}m" 20)")
-    else
-         line2_parts+=("${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}")
-    fi
+    line2_parts+=("$(render_text "$C_I_TIME" "$ICON_SESSION" "${SESSION_DURATION_MIN}m" "$C_TIME" 20)")
 
     # 번레이트
     if [[ -n "$BURN_RATE" ]]; then
-        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-             line2_parts+=("${C_I_BURN}${ICON_COST}${RST} $(colorize_text "${BURN_RATE}" 30)")
-        else
-             line2_parts+=("${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}")
-        fi
+        line2_parts+=("$(render_text "$C_I_BURN" "$ICON_COST" "${BURN_RATE}" "$C_BURN" 30)")
     fi
 
     # 현재 테마
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-        line2_parts+=("${C_I_THEME}${ICON_THEME}${RST} $(colorize_text "${THEME_NAME}" 5)")
-    else
-        line2_parts+=("${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}")
-    fi
+    line2_parts+=("$(render_text "$C_I_THEME" "$ICON_THEME" "${THEME_NAME}" "$C_RATE" 5)")
 
     # 출력
     local line1="" line2=""
