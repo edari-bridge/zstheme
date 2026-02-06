@@ -6,7 +6,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 ## Features
 
-- **50+ Theme Combinations** - Mix layouts, colors, animations, and icons
+- **60+ Theme Combinations** - Mix layouts, colors, animations, and icons
 - **Interactive Selector** - Preview themes in real-time with arrow keys
 - **Color Editor** - Customize colors with tweakcc-style interface
 - **Git Integration** - Branch, worktree, file changes, push/pull status
@@ -28,15 +28,14 @@ zstheme
 ### Theme Format
 
 ```
-[mono-|custom-][lsd-|rainbow-|plasma-|neon-|noise-]{layout}[-nerd]
+[mono-|custom-][rainbow-]{layout}[-nerd]
 ```
 
 | Component | Options | Description |
 |-----------|---------|-------------|
 | **Layout** | `1line`, `2line`, `card`, `bars`, `badges` | Required - Visual layout |
 | **Color** | (none)=pastel, `mono-`, `custom-` | Color palette (pick one) |
-| **Animation** | (none)=static, `rainbow-` | Public animation |
-| **Animation (Lab)** | `lsd-`, `plasma-`, `neon-`, `noise-` | Experimental animation |
+| **Animation** | (none)=static, `rainbow-` | Animation effect |
 | **Icons** | (none), `-nerd` | Icon set (requires Nerd Font) |
 
 ### Examples
@@ -47,7 +46,6 @@ zstheme bars-nerd          # Grouped bars with Nerd Font
 zstheme mono-card          # Monochrome card style
 zstheme rainbow-badges-nerd # Rainbow animation with Nerd Font
 zstheme custom-2line       # Your custom colors + 2-line layout
-zstheme plasma-badges      # Experimental plasma animation
 ```
 
 ### Layout Previews
