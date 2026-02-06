@@ -1,7 +1,9 @@
 #!/bin/bash
 # 1-line Layout Module - 컴팩트 1줄 레이아웃
 # 모든 정보를 한 줄에 표시
-# format_git_status, format_git_sync, is_animated, render_text → helpers.sh
+
+LAYOUT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LAYOUT_DIR/common.sh"
 
 # ============================================================
 # 렌더링 함수
@@ -21,10 +23,10 @@ render() {
     # 디렉토리
     parts+=("$(render_text "$C_I_DIR" "$ICON_DIR" "${DIR_NAME}" "$C_DIR" 6)")
 
-    # Git 상태 (1line uses single-space separator)
+    # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        parts+=("$(format_git_status " ")")
-        parts+=("$(format_git_sync " ")")
+        parts+=("$(format_git_status_common " ")")
+        parts+=("$(format_git_sync_common " ")")
     else
         parts+=("${C_DIM_STATUS}${ICON_GIT_STATUS} status${RST}")
         parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
@@ -34,11 +36,7 @@ render() {
     parts+=("$(render_text "$C_I_MODEL" "$ICON_MODEL" "${MODEL}" "$C_MODEL" 9)")
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
-    if [[ "$ICON_MODE" == "nerd" ]]; then
-        parts+=("${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    else
-        parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    fi
+    parts+=("$(format_context_common)")
 
     # Rate limit (컴팩트)
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_LIMIT_PCT" ]]; then

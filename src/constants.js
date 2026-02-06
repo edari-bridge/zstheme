@@ -1,17 +1,14 @@
 // Centralized constants for zstheme
+
 // Re-export from config.js
 export { VERSION, LAYOUTS, PATHS } from './utils/config.js';
 
 // Icons (moved from colors.js)
 export { ICONS } from './utils/colors.js';
 
-// LSD animation colors (used in MainMenu, ThemeSelector)
+// UI animation
 export const LSD_COLORS = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
-
-// Animation interval in ms (used in MainMenu, ThemeSelector)
 export const ANIMATION_INTERVAL = 100;
-
-// Easter egg trigger count (MainMenu)
 export const EASTER_EGG_TRIGGER_COUNT = 3;
 
 // Grid constants (ThemeSelector)

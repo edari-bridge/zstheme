@@ -3,6 +3,8 @@ import { Box, Text, useInput, useStdout } from 'ink';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
 import { getUsageStats, getDashboardPreview } from '../utils/stats.js';
 
+const e = React.createElement;
+
 
 export function Dashboard({ onBack }) {
   const { stdout } = useStdout();
