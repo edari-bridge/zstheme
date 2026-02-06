@@ -9,40 +9,45 @@ import { VERSION } from '../constants.js';
 import { useEasterEgg } from '../hooks/useEasterEgg.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 import { isZsthemeActive, getOriginalStatusline, toggleStatusline } from '../utils/shell.js';
+import { getCurrentTheme } from '../utils/themes.js';
+import { getUsageStats } from '../utils/stats.js';
 
 const e = React.createElement;
 
 // Check if original statusline backup exists
 const hasBackup = getOriginalStatusline() !== undefined;
 
-// Base menu items (statusline toggle added dynamically if backup exists)
-const BASE_MENU_ITEMS = [
-    { id: 'themes', label: 'Explore Themes' },
-    { id: 'editor', label: 'Color Editor' },
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'reset', label: 'Reset Settings' },
-];
-
 export function MainMenu() {
     const { exit } = useApp();
     const { stdout } = useStdout();
     const columns = stdout?.columns || 120;
     const rows = stdout?.rows || 40;
-    const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor', 'dashboard', 'reset'
+
+    // States
+    const [activeTab, setActiveTab] = useState('menu');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [zsthemeActive, setZsthemeActive] = useState(() => isZsthemeActive());
 
-    // Build menu items dynamically
+    // Dynamic Data
+    const currentTheme = getCurrentTheme();
+    const stats = getUsageStats();
+
+    // Menu Definitions
     const MENU_ITEMS = [
-        ...BASE_MENU_ITEMS,
+        { id: 'themes', label: 'Explore Themes', icon: '🎨', desc: 'Browse & Apply Themes' },
+        { id: 'editor', label: 'Color Editor', icon: '✏️ ', desc: 'Customize Colors' },
+        { id: 'dashboard', label: 'Dashboard', icon: '📊', desc: 'Usage & Costs' },
+        { id: 'reset', label: 'Reset Settings', icon: '⚙️ ', desc: 'Factory Reset' },
         ...(hasBackup ? [{
             id: 'statusline-toggle',
-            label: zsthemeActive ? 'Statusline: zstheme \u2713' : 'Statusline: original',
+            label: zsthemeActive ? 'Statusline: Active' : 'Statusline: Inactive',
+            icon: zsthemeActive ? '✅' : '⏸️',
+            desc: 'Toggle Shell Integration'
         }] : []),
-        { id: 'exit', label: 'Exit' },
+        { id: 'exit', label: 'Exit', icon: '🚪', desc: 'Close Manager' },
     ];
 
-    // Dynamic sizing (with minimums)
+    // Dynamic sizing
     const width = Math.max(80, columns - 4);
     const height = Math.max(28, rows - 4);
 
@@ -87,51 +92,43 @@ export function MainMenu() {
         if (key.leftArrow) handleArrowKey('left');
     });
 
-    if (activeTab === 'themes') {
-        return e(ThemeSelector, {
-            onBack: () => setActiveTab('menu'),
-            isLsdUnlocked: isLsdUnlocked
-        });
-    }
+    // Sub-components rendering
+    if (activeTab === 'themes') return e(ThemeSelector, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
+    if (activeTab === 'editor') return e(ColorEditor, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
+    if (activeTab === 'dashboard') return e(Dashboard, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
+    if (activeTab === 'reset') return e(ResetSettings, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
 
-    if (activeTab === 'editor') {
-        return e(ColorEditor, { onBack: () => setActiveTab('menu') });
-    }
-
-    if (activeTab === 'dashboard') {
-        return e(Dashboard, { onBack: () => setActiveTab('menu') });
-    }
-
-    if (activeTab === 'reset') {
-        return e(ResetSettings, { onBack: () => setActiveTab('menu') });
-    }
-
-    // Get system info
-    const nodeVersion = process.version;
-    const platformRaw = process.platform;
-    let platform = platformRaw;
-
-    if (platformRaw === 'darwin') platform = 'macOS';
-    else if (platformRaw === 'win32') platform = 'Windows';
-    else if (platformRaw === 'linux') platform = 'Linux';
-
-    return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: borderColor, width, height },
-        // 1. Header Area with dynamic spacing
-        e(Box, { justifyContent: 'space-between', paddingBottom: 1, borderStyle: 'single', borderTop: false, borderLeft: false, borderRight: false, borderBottom: true, borderColor: 'gray' },
-            e(Box, { flexDirection: 'column' },
-                e(Text, { color: isLsdUnlocked ? 'magenta' : 'cyan', bold: true }, isLsdUnlocked ? ' ZSTHEME [LSD]' : ' ZSTHEME'),
-                e(Text, { dimColor: true, italic: true }, '  Statusline Manager')
-            ),
-            e(Box, { borderStyle: 'round', borderColor: 'magenta', paddingX: 1 },
-                e(Text, { color: 'magenta' }, `v${VERSION}`)
-            )
+    // --- Main Menu Render (Home Dashboard Style) ---
+    // Main Layout
+    return e(Box, {
+        flexDirection: 'column',
+        width: width,
+        height: height,
+        borderStyle: 'double',
+        borderColor: borderColor,
+        paddingX: 2,
+        paddingY: 1
+    },
+        // 1. Header (Simple Text Header)
+        e(Box, {
+            justifyContent: 'space-between',
+            marginBottom: 1,
+            borderStyle: 'single',
+            borderLeft: false, borderRight: false, borderTop: false,
+            borderColor: 'gray',
+            paddingBottom: 0
+        },
+            // Left: Title
+            e(Text, { color: isLsdUnlocked ? 'magenta' : 'cyan', bold: true }, isLsdUnlocked ? ' ZSTHEME [LSD]' : ' ZSTHEME'),
+            // Right: Version
+            e(Text, { dimColor: true }, `v${VERSION}`)
         ),
 
-        e(Box, { flexDirection: 'row', flexGrow: 1, marginTop: 1 },
+        // Content Grid
+        activeTab === 'menu' && e(Box, { flexDirection: 'row', flexGrow: 1, marginTop: 1 },
             // 2. Left Column: Menu
             e(Box, { flexDirection: 'column', width: '40%', paddingRight: 2 },
-                e(Text, { bold: true, color: 'white', underline: false, dimColor: true }, ' NAVIGATE '),
-                e(Box, { height: 1 }),
+                e(Text, { bold: true, color: 'white', underline: false, dimColor: true, marginBottom: 1 }, ' NAVIGATE '),
                 ...MENU_ITEMS.map((item, index) => {
                     const isSelected = index === selectedIndex;
                     return e(Box, {
@@ -149,10 +146,25 @@ export function MainMenu() {
                             color: isSelected ? 'white' : 'gray',
                             bold: isSelected,
                         },
-                            item.label
+                            ` ${item.label}`
                         )
                     );
-                })
+                }),
+
+                e(Box, { flexGrow: 1 }), // Spacer to push description to bottom
+
+                // Action Description Banner (Moved to Left Bottom)
+                e(Box, {
+                    marginTop: 1,
+                    width: '100%',
+                    borderStyle: 'single',
+                    borderColor: 'white',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingY: 0
+                },
+                    e(Text, { color: 'cyan', italic: true }, MENU_ITEMS[selectedIndex].desc)
+                )
             ),
 
             // 3. Right Column: Logo & Info
@@ -160,37 +172,62 @@ export function MainMenu() {
                 flexDirection: 'column',
                 width: '60%',
                 alignItems: 'center',
-                justifyContent: 'center',
-                // padding: 1
+                borderStyle: 'single',
+                borderLeft: true, borderTop: false, borderRight: false, borderBottom: false,
+                borderColor: 'gray',
+                paddingLeft: 2
             },
-                e(Box, { marginBottom: 2 },
-                    e(Logo, { lsdMode: isLsdUnlocked })
+                // A. Logo (Top)
+                e(Box, { marginBottom: 1, marginTop: 0 },
+                    e(Logo, { isLsdUnlocked: isLsdUnlocked })
                 ),
-                // System Status Panel
-                e(Box, { flexDirection: 'column', borderStyle: 'single', borderColor: 'gray', paddingX: 1, alignItems: 'center' },
-                    e(Text, { dimColor: true }, "SYSTEM"),
-                    e(Box, { flexDirection: 'row' },
-                        e(Text, { color: 'cyan' }, platform),
-                        e(Text, { color: 'gray' }, " | "),
-                        e(Text, { color: 'green' }, nodeVersion)
-                    )
-                )
-            )
-        ),
 
-        // 4. Footer
+                // B. System Status Card (Middle)
+                e(Box, {
+                    flexDirection: 'column',
+                    borderStyle: 'round',
+                    borderColor: 'gray',
+                    paddingX: 2,
+                    paddingY: 0,
+                    width: '90%',
+                    alignItems: 'center',
+                    marginBottom: 1
+                },
+                    e(Text, { color: 'green', bold: true, underline: false, marginBottom: 0 }, ' SYSTEM STATUS '),
+                    e(Box, { height: 1 }), // Spacer
+
+                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
+                        e(Text, { dimColor: true }, 'Theme:'),
+                        e(Text, { color: 'white', bold: true }, currentTheme)
+                    ),
+                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
+                        e(Text, { dimColor: true }, 'Shell:'),
+                        e(Text, { color: zsthemeActive ? 'green' : 'red' }, zsthemeActive ? 'Active' : 'Inactive')
+                    ),
+                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
+                        e(Text, { dimColor: true }, 'Node:'),
+                        e(Text, { color: 'cyan' }, process.version)
+                    )
+                ),
+
+                e(Box, { flexGrow: 1 }) // Spacer
+            )
+        ),     // Quick Stats
+
+        // 3. Footer
         e(Box, {
-            marginTop: 0,
-            justifyContent: 'center'
+            marginTop: 1,
+            borderStyle: 'single',
+            borderLeft: false, borderRight: false, borderBottom: false,
+            borderColor: borderColor,
+            justifyContent: 'center',
+            paddingTop: 0
         },
-            // Badge style keys
-            e(Text, { dimColor: true }, ' [ '),
-            e(Text, { color: 'yellow', bold: true }, 'UP/DOWN'),
-            e(Text, { dimColor: true }, ' Navigate ]  [ '),
-            e(Text, { color: 'green', bold: true }, 'ENTER'),
-            e(Text, { dimColor: true }, ' Select ]  [ '),
-            e(Text, { color: 'red', bold: true }, 'Q'),
-            e(Text, { dimColor: true }, ' Quit ]')
+            e(Text, { dimColor: true },
+                isLsdUnlocked
+                    ? '🌈 LSD MODE ACTIVE - EPILEPSY WARNING 🌈'
+                    : 'Use ↑/↓ to Navigate, Enter to Select, Q to Quit'
+            )
         )
     );
 }
