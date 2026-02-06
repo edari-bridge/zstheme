@@ -44,7 +44,7 @@ EOF
     fi
 
     # Strip ANSI codes before searching (animated themes insert codes per-character)
-    local_stripped=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/zstheme-smoke-status.out)
+    local_stripped=$(sed $'s/\x1b\\[[0-9;]*m//g' /tmp/zstheme-smoke-status.out)
     if ! echo "$local_stripped" | grep -qE "Opus|my-project|$theme"; then
         echo "statusline smoke output check failed for theme '$theme'."
         exit 1

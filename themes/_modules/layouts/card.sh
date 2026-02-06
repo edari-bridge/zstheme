@@ -12,7 +12,7 @@ source "$LAYOUT_DIR/common.sh"
 pad_to() {
     local text="$1"
     local target_width="$2"
-    local plain=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    local plain=$(echo -e "$text" | sed $'s/\x1b\\[[0-9;]*m//g')
     # 이모지 너비 보정 (이모지는 2칸 차지)
     local emoji_count=$(echo "$plain" | grep -oE '[🔱🌿📂💾🔮🔋🔥🪫🧠⏳💰💬🎨]' 2>/dev/null | wc -l | tr -d ' ')
     local char_count=${#plain}
