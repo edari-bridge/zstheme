@@ -32,6 +32,7 @@ export function ColorEditor({ onBack }) {
   const [focusArea, setFocusArea] = useState(2);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [modified, setModified] = useState(false);
+  const [backSelected, setBackSelected] = useState(false);
 
   // 색상 키 배열
   const fgKeys = Object.keys(FG_DEFAULTS);
@@ -73,6 +74,19 @@ export function ColorEditor({ onBack }) {
       return;
     }
 
+    // Back 선택 상태에서 Enter
+    if (key.return && backSelected) {
+      if (modified) {
+        console.log('\n\x1b[33mUnsaved changes discarded.\x1b[0m');
+      }
+      if (onBack) {
+        onBack();
+        return;
+      }
+      exit();
+      return;
+    }
+
     // 저장
     if (input === 's' || input === 'S') {
       const path = saveCustomColors(fgColors, bgBadgesColors, bgBarsColors);
@@ -100,6 +114,7 @@ export function ColorEditor({ onBack }) {
 
     // Tab: 영역 순환 (Layout → Icon → FG → BG → Layout...)
     if (key.tab) {
+      setBackSelected(false);
       setFocusArea(prev => {
         let next = (prev + 1) % 4;
         // BG 미지원 레이아웃이면 BG 건너뛰기
@@ -140,10 +155,21 @@ export function ColorEditor({ onBack }) {
     // Colors 영역 (focusArea === 2 또는 3)
     // 위/아래 이동
     if (key.upArrow || input === 'k') {
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : currentKeys.length - 1));
+      if (backSelected) return; // 이미 맨 위
+      if (selectedIndex === 0) {
+        // 맨 위에서 Up → Back 선택
+        setBackSelected(true);
+      } else {
+        setSelectedIndex(prev => prev - 1);
+      }
       return;
     }
     if (key.downArrow || input === 'j') {
+      if (backSelected) {
+        // Back에서 Down → 색상 목록으로 복귀
+        setBackSelected(false);
+        return;
+      }
       setSelectedIndex(prev => (prev < currentKeys.length - 1 ? prev + 1 : 0));
       return;
     }
@@ -351,6 +377,11 @@ export function ColorEditor({ onBack }) {
   };
 
   return e(Box, { flexDirection: 'column' },
+    e(Box, { marginBottom: 1 },
+      e(Text, { color: backSelected ? 'green' : 'gray', bold: backSelected },
+        backSelected ? '❯ ← Back to Menu' : '  ← Back to Menu'
+      )
+    ),
     e(Header, { title: 'zstheme Color Editor', subtitle: '', version: '2.2' }),
 
     // 레이아웃/아이콘 선택 (프리뷰 전용)
