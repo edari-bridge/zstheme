@@ -8,16 +8,19 @@ import { ResetSettings } from './ResetSettings.js';
 import { VERSION } from '../constants.js';
 import { useEasterEgg } from '../hooks/useEasterEgg.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
+import { isZsthemeActive, getOriginalStatusline, toggleStatusline } from '../utils/shell.js';
 
 const e = React.createElement;
 
-// Menu items definition
-const MENU_ITEMS = [
+// Check if original statusline backup exists
+const hasBackup = getOriginalStatusline() !== undefined;
+
+// Base menu items (statusline toggle added dynamically if backup exists)
+const BASE_MENU_ITEMS = [
     { id: 'themes', label: 'Explore Themes' },
     { id: 'editor', label: 'Color Editor' },
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'reset', label: 'Reset Settings' },
-    { id: 'exit', label: 'Exit' },
 ];
 
 export function MainMenu() {
@@ -27,6 +30,17 @@ export function MainMenu() {
     const rows = stdout?.rows || 40;
     const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor', 'dashboard', 'reset'
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [zsthemeActive, setZsthemeActive] = useState(() => isZsthemeActive());
+
+    // Build menu items dynamically
+    const MENU_ITEMS = [
+        ...BASE_MENU_ITEMS,
+        ...(hasBackup ? [{
+            id: 'statusline-toggle',
+            label: zsthemeActive ? 'Statusline: zstheme \u2713' : 'Statusline: original',
+        }] : []),
+        { id: 'exit', label: 'Exit' },
+    ];
 
     // Dynamic sizing (with minimums)
     const width = Math.max(80, columns - 4);
@@ -60,6 +74,11 @@ export function MainMenu() {
             else if (selected.id === 'editor') setActiveTab('editor');
             else if (selected.id === 'dashboard') setActiveTab('dashboard');
             else if (selected.id === 'reset') setActiveTab('reset');
+            else if (selected.id === 'statusline-toggle') {
+                const newMode = zsthemeActive ? 'original' : 'zstheme';
+                const result = toggleStatusline(newMode);
+                if (result.success) setZsthemeActive(!zsthemeActive);
+            }
             resetCounts();
         }
 

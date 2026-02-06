@@ -126,9 +126,51 @@ ln -s "$INSTALL_DIR/themes" "$CLAUDE_DIR/themes"
 echo "  ${CYAN}~/.claude/themes/${RST} -> $INSTALL_DIR/themes/"
 
 # ============================================================
-# 6. Configure settings.json
+# 6. Backup original statusline & Configure settings.json
 # ============================================================
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+CONFIG_DIR="$HOME/.config/zstheme"
+BACKUP_FILE="$CONFIG_DIR/original-statusline.json"
+
+backup_original_statusline() {
+    # Skip if backup already exists (first install only)
+    if [[ -f "$BACKUP_FILE" ]]; then
+        echo "${BLUE}Statusline backup already exists, skipping${RST}"
+        return
+    fi
+
+    mkdir -p "$CONFIG_DIR"
+
+    if [[ ! -f "$SETTINGS_FILE" ]]; then
+        # No settings.json = no previous statusline
+        echo "null" > "$BACKUP_FILE"
+        echo "${BLUE}No previous statusline (saved to backup)${RST}"
+        return
+    fi
+
+    if command -v jq &>/dev/null; then
+        # Extract statusLine with jq
+        local sl
+        sl=$(jq '.statusLine // null' "$SETTINGS_FILE" 2>/dev/null)
+        echo "$sl" > "$BACKUP_FILE"
+        if [[ "$sl" == "null" ]]; then
+            echo "${BLUE}No previous statusline (saved to backup)${RST}"
+        else
+            echo "${GREEN}Backed up original statusline config${RST}"
+        fi
+    else
+        # No jq: check if statusLine key exists
+        if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
+            echo '{"command":"unknown (backup without jq)"}' > "$BACKUP_FILE"
+            echo "${YELLOW}Backed up statusline (partial - install jq for full backup)${RST}"
+        else
+            echo "null" > "$BACKUP_FILE"
+            echo "${BLUE}No previous statusline (saved to backup)${RST}"
+        fi
+    fi
+}
+
+backup_original_statusline
 
 configure_settings() {
     if [[ -f "$SETTINGS_FILE" ]]; then

@@ -144,7 +144,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     const initial = selectedTheme ? renderThemePreview(selectedTheme) : '';
     setPreview(initial);
 
-    // Animation loop for Rainbow/LSD/Lab
+    // Animation loop for Rainbow/LSD
     const isAnimated = selectedTheme && (
       selectedTheme.includes('rainbow') ||
       selectedTheme.includes('lsd')

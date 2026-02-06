@@ -1,6 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { PATHS } from './config.js';
 
 export function getShellConfigPath() {
   const shell = process.env.SHELL || '/bin/zsh';
@@ -81,4 +82,59 @@ export function resetTheme() {
   }
 
   return { success: true };
+}
+
+export function isZsthemeActive() {
+  try {
+    if (!fs.existsSync(PATHS.claudeSettings)) return false;
+    const settings = JSON.parse(fs.readFileSync(PATHS.claudeSettings, 'utf8'));
+    const cmd = settings?.statusLine?.command || '';
+    return cmd.includes('statusline.sh');
+  } catch {
+    return false;
+  }
+}
+
+export function getOriginalStatusline() {
+  try {
+    if (!fs.existsSync(PATHS.originalStatusline)) return undefined;
+    const raw = fs.readFileSync(PATHS.originalStatusline, 'utf8').trim();
+    const parsed = JSON.parse(raw);
+    return parsed; // null (no previous) or object like {"command":"..."}
+  } catch {
+    return undefined;
+  }
+}
+
+export function toggleStatusline(mode) {
+  const settingsPath = PATHS.claudeSettings;
+
+  let settings = {};
+  if (fs.existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    } catch {
+      return { success: false, error: 'Failed to parse settings.json' };
+    }
+  }
+
+  if (mode === 'zstheme') {
+    settings.statusLine = { command: '~/.claude/statusline.sh' };
+  } else if (mode === 'original') {
+    const original = getOriginalStatusline();
+    if (original === undefined) {
+      return { success: false, error: 'No backup found. Run install.sh first.' };
+    }
+    if (original === null) {
+      // No previous statusline — remove the key
+      delete settings.statusLine;
+    } else {
+      settings.statusLine = original;
+    }
+  } else {
+    return { success: false, error: `Unknown mode: ${mode}` };
+  }
+
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+  return { success: true, mode };
 }
