@@ -173,7 +173,7 @@ render() {
     # R2: Rate limit, R3: Session duration, R4: Burn rate
     local raw_rate="" raw_session="" raw_burn=""
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        raw_rate="${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%"
+        raw_rate="${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
     fi
     raw_session="${ICON_SESSION} ${SESSION_DURATION_MIN}m"
     [[ -n "$BURN_RATE" ]] && raw_burn="${ICON_COST} ${BURN_RATE}"
@@ -187,7 +187,7 @@ render() {
                  # 아이콘은 고유 색상, 텍스트만 애니메이션
                  R1="${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)"
                  if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-                     R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%" 12)"
+                     R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 12)"
                  else
                      R2=""
                  fi
@@ -221,7 +221,7 @@ render() {
         R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
         if [[ -n "$raw_rate" ]]; then
             local rate_color=$(get_rate_color)
-            R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%${RST}"
+            R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)${RST}"
         else
             R2=""
         fi

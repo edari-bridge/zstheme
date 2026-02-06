@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useStdout } from 'ink';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
+import { cmdDashboard, cmdStats } from '../commands/usage.js';
 
 const e = React.createElement;
+
+// 대시보드 프리뷰 가져오기 (console.log 캡처)
+function getDashboardPreview(type = 'simple') {
+  try {
+    const logs = [];
+    const originalLog = console.log;
+    console.log = (...args) => logs.push(args.join(' '));
+
+    if (type === 'full') {
+      cmdStats();
+    } else {
+      cmdDashboard();
+    }
+
+    console.log = originalLog;
+    return logs.join('\n');
+  } catch (err) {
+    return `Failed to load: ${err.message}`;
+  }
+}
 
 // Opus 4.5 가격 (USD per 1M tokens)
 const PRICING = {
@@ -44,6 +65,8 @@ function getUsageStats() {
     const dailyActivity = stats.dailyActivity || [];
     const dates = dailyActivity.map(d => d.date).sort();
     const days = dates.length || 1;
+    const startDate = dates[0] || 'N/A';
+    const endDate = dates[dates.length - 1] || 'N/A';
 
     const inputCost = (inputTokens / 1_000_000) * PRICING.input;
     const outputCost = (outputTokens / 1_000_000) * PRICING.output;
@@ -52,6 +75,7 @@ function getUsageStats() {
     const totalCost = inputCost + outputCost + cacheReadCost + cacheCreateCost;
 
     const dailyAvgCost = totalCost / days;
+    const dailyAvgTokens = totalTokens / days;
     const estMonthly = dailyAvgCost * 30;
 
     const efficiency = totalCost > 0 ? Math.round(totalTokens / totalCost) : 0;
@@ -60,36 +84,72 @@ function getUsageStats() {
       ? ((cacheRead / (inputTokens + cacheCreate)) * 100).toFixed(1)
       : '0';
 
+    const totalSessions = stats.totalSessions || 0;
+    const totalMessages = stats.totalMessages || 0;
+
     return {
       totalCost,
       days,
+      startDate,
+      endDate,
       totalTokens,
       inputTokens,
       outputTokens,
+      cacheRead,
+      cacheCreate,
       cacheTotal,
+      inputCost,
+      outputCost,
+      cacheReadCost,
+      cacheCreateCost,
       efficiency,
       oiRatio,
       cacheHitRate,
       dailyAvgCost,
+      dailyAvgTokens,
       estMonthly,
+      totalSessions,
+      totalMessages,
     };
   } catch (e) {
     return null;
   }
 }
 
+
 export function Dashboard({ onBack }) {
+  const { stdout } = useStdout();
+  const columns = stdout?.columns || 120;
+  const rows = stdout?.rows || 40;
+
+  const width = Math.max(80, columns - 4);
+  const height = Math.max(28, rows - 4);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [skillsStatus, setSkillsStatus] = useState([]);
   const [message, setMessage] = useState(null);
+  const [dashboardType, setDashboardType] = useState('simple'); // 'simple' or 'full'
+  const [preview, setPreview] = useState('');
+  const [focusArea, setFocusArea] = useState('menu'); // 'menu' or 'preview'
+  const [scrollY, setScrollY] = useState(0);
   const stats = getUsageStats();
+
+  // 프리뷰 라인 수 계산
+  const previewLines = preview.split('\n');
+  const visibleLines = height - 8; // 헤더, 푸터 등 제외
+  const maxScroll = Math.max(0, previewLines.length - visibleLines);
 
   useEffect(() => {
     setSkillsStatus(getSkillsStatus());
-  }, []);
+    setPreview(getDashboardPreview(dashboardType));
+  }, [dashboardType]);
 
   const menuItems = [
     { id: 'back', label: '← Back to Menu' },
+    { id: 'divider1', label: '─── View ───', disabled: true },
+    { id: 'simple', label: `${dashboardType === 'simple' ? '◉' : '○'} Simple Dashboard` },
+    { id: 'full', label: `${dashboardType === 'full' ? '◉' : '○'} Full Dashboard` },
+    { id: 'divider2', label: '─── Skills ───', disabled: true },
     ...skillsStatus.map(skill => ({
       id: skill.name,
       label: `${skill.installed ? '✓' : '○'} ${skill.name}`,
@@ -103,20 +163,49 @@ export function Dashboard({ onBack }) {
       return;
     }
 
+    // Tab: 포커스 전환
+    if (key.tab) {
+      setFocusArea(prev => prev === 'menu' ? 'preview' : 'menu');
+      return;
+    }
+
+    // 포커스에 따른 Up/Down 동작
     if (key.upArrow) {
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : menuItems.length - 1));
-      setMessage(null);
+      if (focusArea === 'menu') {
+        let next = selectedIndex > 0 ? selectedIndex - 1 : menuItems.length - 1;
+        while (menuItems[next]?.disabled && next > 0) next--;
+        setSelectedIndex(next);
+        setMessage(null);
+      } else {
+        // 프리뷰 스크롤 (위로)
+        setScrollY(prev => Math.max(0, prev - 1));
+      }
     }
 
     if (key.downArrow) {
-      setSelectedIndex(prev => (prev < menuItems.length - 1 ? prev + 1 : 0));
-      setMessage(null);
+      if (focusArea === 'menu') {
+        let next = selectedIndex < menuItems.length - 1 ? selectedIndex + 1 : 0;
+        while (menuItems[next]?.disabled && next < menuItems.length - 1) next++;
+        setSelectedIndex(next);
+        setMessage(null);
+      } else {
+        // 프리뷰 스크롤 (아래로)
+        setScrollY(prev => Math.min(maxScroll, prev + 1));
+      }
     }
 
     if (key.return) {
       const selected = menuItems[selectedIndex];
+      if (selected.disabled) return;
+
       if (selected.id === 'back') {
         onBack();
+        return;
+      }
+
+      if (selected.id === 'simple' || selected.id === 'full') {
+        setDashboardType(selected.id);
+        setScrollY(0); // 스크롤 리셋
         return;
       }
 
@@ -138,82 +227,71 @@ export function Dashboard({ onBack }) {
           }
         }
         setSkillsStatus(getSkillsStatus());
-
-        // 2초 후 메시지 숨기기
         setTimeout(() => setMessage(null), 2000);
       }
     }
   });
 
-  return e(Box, { flexDirection: 'column', padding: 1 },
+  return e(Box, { flexDirection: 'column', padding: 1, borderStyle: 'round', borderColor: 'cyan', width, height },
     // Header
-    e(Box, { marginBottom: 1 },
-      e(Text, { bold: true, color: 'cyan' }, '📊 Dashboard')
+    e(Box, { justifyContent: 'space-between', marginBottom: 1, paddingX: 1 },
+      e(Text, { bold: true, color: 'cyan' }, `📊 Dashboard (${dashboardType === 'full' ? 'Full' : 'Simple'})`),
+      e(Text, { dimColor: true }, `${stats?.startDate || ''} ~ ${stats?.endDate || ''}`)
     ),
 
-    // Stats Section
-    stats ? e(Box, { flexDirection: 'column', borderStyle: 'round', borderColor: 'gray', padding: 1, marginBottom: 1 },
-      e(Text, { bold: true, color: 'white' }, '💰 Usage Summary'),
-      e(Box, { height: 1 }),
-      e(Box, { flexDirection: 'row', justifyContent: 'space-between' },
-        e(Text, {}, `Total Cost: `, e(Text, { color: 'yellow' }, formatCurrency(stats.totalCost))),
-        e(Text, {}, `Period: `, e(Text, { color: 'white' }, `${stats.days} days`)),
-      ),
-      e(Box, { flexDirection: 'row', justifyContent: 'space-between' },
-        e(Text, {}, `Total Tokens: `, e(Text, { color: 'white' }, formatNumber(stats.totalTokens))),
-        e(Text, {}, `Est. Monthly: `, e(Text, { color: 'yellow' }, formatCurrency(stats.estMonthly))),
-      ),
-      e(Box, { height: 1 }),
-      e(Box, { flexDirection: 'row', gap: 2 },
-        e(Text, { dimColor: true }, `Efficiency: ${formatNumber(stats.efficiency)} tok/$`),
-        e(Text, { dimColor: true }, `O/I: ${stats.oiRatio}:1`),
-        e(Text, { dimColor: true }, `Cache: ${stats.cacheHitRate}%`),
-      ),
-    ) : e(Box, { borderStyle: 'round', borderColor: 'yellow', padding: 1, marginBottom: 1 },
-      e(Text, { color: 'yellow' }, '⚠️  stats-cache.json not found'),
-      e(Text, { dimColor: true }, 'Run Claude Code to generate statistics.')
-    ),
+    // Main Content: Left Menu + Right Preview
+    e(Box, { flexDirection: 'row', flexGrow: 1 },
+      // Left: Menu
+      e(Box, { flexDirection: 'column', width: '25%', paddingRight: 1, borderStyle: 'single', borderColor: focusArea === 'menu' ? 'green' : 'gray', borderTop: false, borderBottom: false, borderLeft: false },
+        e(Text, { bold: true, color: focusArea === 'menu' ? 'green' : 'gray' }, ' MENU'),
+        e(Box, { height: 1 }),
+        ...menuItems.map((item, index) => {
+          const isSelected = index === selectedIndex;
+          if (item.disabled) {
+            return e(Box, { key: item.id, marginY: 0 },
+              e(Text, { dimColor: true }, `  ${item.label}`)
+            );
+          }
+          return e(Box, { key: item.id },
+            e(Text, { color: isSelected ? 'green' : 'gray' }, isSelected ? '❯ ' : '  '),
+            e(Text, {
+              color: isSelected ? 'white' : 'gray',
+              bold: isSelected,
+            }, item.label),
+          );
+        }),
 
-    // Skills Section
-    e(Box, { flexDirection: 'column', borderStyle: 'round', borderColor: 'gray', padding: 1 },
-      e(Text, { bold: true, color: 'white' }, '🔌 Claude Code Skills'),
-      e(Box, { height: 1 }),
-      ...menuItems.map((item, index) => {
-        const isSelected = index === selectedIndex;
-        return e(Box, { key: item.id },
-          e(Text, { color: isSelected ? 'green' : 'gray' }, isSelected ? '❯ ' : '  '),
-          e(Text, {
-            color: isSelected ? 'white' : 'gray',
-            bold: isSelected,
-          }, item.label),
-        );
-      }),
-    ),
+        // Toast Message
+        message && e(Box, { marginTop: 1 },
+          e(Text, { color: message.type === 'success' ? 'green' : 'red', bold: true },
+            message.text
+          )
+        ),
+      ),
 
-    // Toast Message
-    message && e(Box, { marginTop: 1, justifyContent: 'center' },
-      e(Box, {
-        borderStyle: 'round',
-        borderColor: message.type === 'success' ? 'green' : 'red',
-        paddingX: 2
-      },
-        e(Text, { color: message.type === 'success' ? 'green' : 'red', bold: true },
-          message.text
+      // Right: Dashboard Preview
+      e(Box, { flexDirection: 'column', width: '75%', paddingLeft: 1 },
+        e(Box, { justifyContent: 'space-between' },
+          e(Text, { bold: true, color: focusArea === 'preview' ? 'green' : 'gray' }, ' PREVIEW'),
+          maxScroll > 0 && e(Text, { dimColor: true }, `${scrollY + 1}/${previewLines.length}`)
+        ),
+        e(Box, { flexDirection: 'column', marginTop: 1 },
+          e(Text, {}, previewLines.slice(scrollY, scrollY + visibleLines).join('\n'))
         )
       )
     ),
 
     // Footer
-    e(Box, { marginTop: 1 },
-      e(Text, { dimColor: true },
-        'Use ',
-        e(Text, { color: 'yellow' }, '↑↓'),
-        ' to navigate, ',
-        e(Text, { color: 'yellow' }, 'Enter'),
-        ' to toggle, ',
-        e(Text, { color: 'red' }, 'q/Esc'),
-        ' to go back'
-      )
+    e(Box, { marginTop: 1, justifyContent: 'center' },
+      e(Text, { dimColor: true }, ' [ '),
+      e(Text, { color: 'magenta', bold: true }, 'TAB'),
+      e(Text, { dimColor: true }, ' Focus ]  [ '),
+      e(Text, { color: 'yellow', bold: true }, '↑↓'),
+      e(Text, { dimColor: true }, focusArea === 'menu' ? ' Navigate ]  [ ' : ' Scroll ]  [ '),
+      e(Text, { color: 'green', bold: true }, 'ENTER'),
+      e(Text, { dimColor: true }, ' Select ]  [ '),
+      e(Text, { color: 'red', bold: true }, 'Q'),
+      e(Text, { dimColor: true }, ' Back ]')
     )
   );
 }

@@ -149,7 +149,7 @@ render() {
         # Session Chip
         local ses_raw=" ${ICON_MODEL} ${MODEL}"
         if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-            ses_raw+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${RATE_LIMIT_PCT}"
+            ses_raw+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
         fi
         ses_raw+="     ${ICON_SESSION} ${SESSION_DURATION_MIN}m"
         [[ -n "$BURN_RATE" ]] && ses_raw+="     ${ICON_COST} ${BURN_RATE}"
@@ -248,7 +248,7 @@ render() {
 
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         local rate_color=$(get_rate_color)
-        ses_content="${ses_content}     ${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}"
+        ses_content="${ses_content}     ${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)"
     fi
 
     ses_content="${ses_content}     ${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m"

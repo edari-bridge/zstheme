@@ -120,15 +120,15 @@ render() {
     # Rate limit 정보
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-             line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%" 10)")
+             line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 10)")
         else
-             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${C_RATE}${RATE_LIMIT_PCT}%${RST}")
+             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
         fi
     elif [[ -n "$RATE_LIMIT_PCT" ]]; then
         if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-             line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_LIMIT_PCT}%" 10)")
+             line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "(${RATE_LIMIT_PCT}%)" 10)")
         else
-             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_LIMIT_PCT}%${RST}")
+             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
         fi
     fi
 

@@ -195,7 +195,7 @@ render() {
     # Rate limit 칩
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
-            local raw_rate=" ${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}% "
+            local raw_rate=" ${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%) "
             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
                 chip_rate=$(colorize_bg_lsd "$raw_rate" 60 "\033[30m")
             else
@@ -203,7 +203,7 @@ render() {
             fi
         else
             local rate_color=$(get_rate_color)
-            chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%")"
+            chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)")"
         fi
     else
         chip_rate=""
