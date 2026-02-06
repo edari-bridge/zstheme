@@ -1,5 +1,9 @@
 // Data collection (ported from statusline_engine.sh)
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+
+function gitArgs(dir, ...args) {
+  return dir ? ['-C', dir, ...args] : args;
+}
 
 function toInt(value, fallback = 0) {
   if (typeof value === 'number') return Math.round(value);
@@ -74,10 +78,11 @@ export function collectGitInfo(dir) {
     behind: 0,
   };
 
-  const gitCmd = dir ? `git -C "${dir}"` : 'git';
+  const opts = { stdio: 'pipe' };
+  const optsUtf = { encoding: 'utf-8', stdio: 'pipe' };
 
   try {
-    execSync(`${gitCmd} rev-parse --git-dir`, { stdio: 'pipe' });
+    execFileSync('git', gitArgs(dir, 'rev-parse', '--git-dir'), opts);
   } catch {
     return info;
   }
@@ -85,16 +90,16 @@ export function collectGitInfo(dir) {
   info.isGitRepo = true;
 
   try {
-    info.branch = execSync(`${gitCmd} branch --show-current`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    info.branch = execFileSync('git', gitArgs(dir, 'branch', '--show-current'), optsUtf).trim();
   } catch { /* empty */ }
 
   try {
-    const wtPath = execSync(`${gitCmd} rev-parse --show-toplevel`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const wtPath = execFileSync('git', gitArgs(dir, 'rev-parse', '--show-toplevel'), optsUtf).trim();
     info.worktree = wtPath.split(/[\\/]/).pop() || '';
   } catch { /* empty */ }
 
   try {
-    const status = execSync(`${gitCmd} status --porcelain`, { encoding: 'utf-8', stdio: 'pipe' });
+    const status = execFileSync('git', gitArgs(dir, 'status', '--porcelain'), optsUtf);
     for (const line of status.split('\n')) {
       if (!line) continue;
       const xy = line.substring(0, 2);
@@ -105,10 +110,10 @@ export function collectGitInfo(dir) {
   } catch { /* empty */ }
 
   try {
-    const upstream = execSync(`${gitCmd} rev-parse --abbrev-ref --symbolic-full-name @{u}`, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const upstream = execFileSync('git', gitArgs(dir, 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'), optsUtf).trim();
     if (upstream) {
-      info.ahead = toInt(execSync(`${gitCmd} rev-list --count @{u}..HEAD`, { encoding: 'utf-8', stdio: 'pipe' }).trim(), 0);
-      info.behind = toInt(execSync(`${gitCmd} rev-list --count HEAD..@{u}`, { encoding: 'utf-8', stdio: 'pipe' }).trim(), 0);
+      info.ahead = toInt(execFileSync('git', gitArgs(dir, 'rev-list', '--count', '@{u}..HEAD'), optsUtf).trim(), 0);
+      info.behind = toInt(execFileSync('git', gitArgs(dir, 'rev-list', '--count', 'HEAD..@{u}'), optsUtf).trim(), 0);
     }
   } catch { /* empty */ }
 

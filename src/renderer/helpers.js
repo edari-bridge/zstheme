@@ -53,6 +53,13 @@ export function formatGitSync(separator, ctx) {
   return `${colors.C_I_SYNC}${colors.icons.SYNC}${colors.RST} ${ahead}${separator}${behind}`;
 }
 
+export function makeChip(bg, content, chipStyle, colors) {
+  if (chipStyle === 'pipe') {
+    return `${colors.C_CHIP}\u2503${colors.RST}${bg} ${content} ${colors.RST}${colors.C_CHIP}\u2503${colors.RST}`;
+  }
+  return `${bg} ${content} ${colors.RST}`;
+}
+
 export function formatContext(ctx) {
   const { colors } = ctx;
   if (ctx.iconMode === 'nerd') {

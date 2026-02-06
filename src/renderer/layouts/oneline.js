@@ -1,5 +1,5 @@
 // 1line layout (ported from 1line.sh)
-import { renderText, formatGitStatus, formatGitSync, formatContext, isAnimated } from '../helpers.js';
+import { renderText, formatGitStatus, formatGitSync, formatContext } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
 export function render(ctx) {
@@ -21,7 +21,7 @@ export function render(ctx) {
   parts.push(renderText(colors.C_I_MODEL, colors.icons.MODEL, data.model, colors.C_MODEL, 9, ctx));
   parts.push(formatContext(ctx));
 
-  if (data.rateTimeLeft && data.rateLimitPct) {
+  if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
     const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
     parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} (${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
   }
