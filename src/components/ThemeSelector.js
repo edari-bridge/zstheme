@@ -373,7 +373,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         paddingX: 2
       },
         e(Text, { color: 'green', bold: true },
-          `✓ Theme '${savedTheme}' saved! Run: source ~/.zshrc`
+          `✓ Theme '${savedTheme}' saved!`
         )
       )
     ) : null,
