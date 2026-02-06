@@ -7,7 +7,7 @@ export function cmdList(filters = {}) {
   const hasFilters = filters.layout || filters.color || filters.animation || filters.icon;
 
   // 숨겨진 애니메이션 필터 사용 시 숨겨진 테마 포함
-  const hiddenAnimations = new Set(['lsd', 'plasma', 'neon', 'noise']);
+  const hiddenAnimations = new Set(['lsd']);
   const includeHidden = hiddenAnimations.has(filters.animation);
   let themes = getAllThemes(includeHidden);
 
@@ -24,7 +24,7 @@ export function cmdList(filters = {}) {
 
   console.log('');
   console.log(chalk.bold(`Available themes (${themes.length}):`));
-  console.log(chalk.dim('Format: [mono-|custom-][lsd-|rainbow-|plasma-|neon-|noise-]{layout}[-nerd]'));
+  console.log(chalk.dim('Format: [mono-|custom-][lsd-|rainbow-]{layout}[-nerd]'));
   console.log('');
 
   // 레이아웃별 그룹핑

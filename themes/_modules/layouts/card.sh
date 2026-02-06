@@ -82,29 +82,10 @@ render() {
         local raw_tree="${ICON_TREE} ${WORKTREE:-worktree}"
         local raw_dir="${ICON_DIR} ${DIR_NAME}"
 
-        case "$ANIMATION_MODE" in
-            lsd|rainbow)
-                # 아이콘은 고유 색상, 텍스트만 애니메이션
-                L1="${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)"
-                L2="${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)"
-                L3="${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)"
-                ;;
-            plasma)
-                L1="$(colorize_bg_plasma "$raw_branch" 0 "\033[30m")"
-                L2="$(colorize_bg_plasma "$raw_tree" 10 "\033[30m")"
-                L3="$(colorize_bg_plasma "$raw_dir" 20 "\033[30m")"
-                ;;
-            neon)
-                L1="$(colorize_bg_neon "$raw_branch" 0 "\033[97m")"
-                L2="$(colorize_bg_neon "$raw_tree" 10 "\033[30m")"
-                L3="$(colorize_bg_neon "$raw_dir" 20 "\033[97m")"
-                ;;
-            noise)
-                L1="$(colorize_bg_noise "$raw_branch")"
-                L2="$(colorize_bg_noise "$raw_tree")"
-                L3="$(colorize_bg_noise "$raw_dir")"
-                ;;
-        esac
+        # 아이콘은 고유 색상, 텍스트만 애니메이션
+        L1="${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)"
+        L2="${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)"
+        L3="${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)"
     else
         L1="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}"
         L2="${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}"
@@ -128,41 +109,16 @@ render() {
         local raw_model="${ICON_MODEL} ${MODEL}"
         local raw_theme="${ICON_THEME} ${THEME_NAME}"
 
-        case "$ANIMATION_MODE" in
-             lsd|rainbow)
-                 # 아이콘은 고유 색상, 텍스트만 애니메이션
-                 R1="${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)"
-                 if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-                     R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 12)"
-                 else
-                     R2=""
-                 fi
-                 R3="${C_I_TIME}${ICON_SESSION}${RST} $(colorize_text "${SESSION_DURATION_MIN}m" 22)"
-                 [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST}${RST} $(colorize_text "${BURN_RATE}" 32)" || R4=""
-                 R5="${C_I_THEME}${ICON_THEME}${RST} $(colorize_text "${THEME_NAME}" 5)"
-                 ;;
-             plasma)
-                 R1="$(colorize_bg_plasma "$raw_model" 50 "\033[30m")"
-                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_plasma "$raw_rate" 60 "\033[30m")" || R2=""
-                 R3="$(colorize_bg_plasma "$raw_session" 70 "\033[30m")"
-                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_plasma "$raw_burn" 80 "\033[30m")" || R4=""
-                 R5="$(colorize_bg_plasma "$raw_theme" 30 "\033[30m")"
-                 ;;
-             neon)
-                 R1="$(colorize_bg_neon "$raw_model" 50 "\033[30m")"
-                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_neon "$raw_rate" 60 "\033[97m")" || R2=""
-                 R3="$(colorize_bg_neon "$raw_session" 70 "\033[30m")"
-                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_neon "$raw_burn" 80 "\033[97m")" || R4=""
-                 R5="$(colorize_bg_neon "$raw_theme" 30 "\033[97m")"
-                 ;;
-             noise)
-                 R1="$(colorize_bg_noise "$raw_model")"
-                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_noise "$raw_rate")" || R2=""
-                 R3="$(colorize_bg_noise "$raw_session")"
-                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_noise "$raw_burn")" || R4=""
-                 R5="$(colorize_bg_noise "$raw_theme")"
-                 ;;
-        esac
+        # 아이콘은 고유 색상, 텍스트만 애니메이션
+        R1="${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)"
+        if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+            R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 12)"
+        else
+            R2=""
+        fi
+        R3="${C_I_TIME}${ICON_SESSION}${RST} $(colorize_text "${SESSION_DURATION_MIN}m" 22)"
+        [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST}${RST} $(colorize_text "${BURN_RATE}" 32)" || R4=""
+        R5="${C_I_THEME}${ICON_THEME}${RST} $(colorize_text "${THEME_NAME}" 5)"
     else
         R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
         if [[ -n "$raw_rate" ]]; then

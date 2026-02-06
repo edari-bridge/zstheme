@@ -3,14 +3,13 @@ import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
-import { LAB_THEME_PRESETS } from '../utils/themeContract.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 import { GRID_COLUMNS, GRID_VISIBLE_ROWS } from '../constants.js';
 
 const e = React.createElement;
 
 // User Requested Order: 1line, 2line, Badges, Bars, Card, Lab
-const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
+const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
 const COLUMNS = GRID_COLUMNS;
 const VISIBLE_ROWS = GRID_VISIBLE_ROWS;
 
@@ -47,9 +46,6 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const currentTabName = TABS[activeTab] || TABS[0];
 
   const filteredThemes = useMemo(() => {
-    if (currentTabName === 'Lab') {
-      return LAB_THEME_PRESETS;
-    }
     if (activeTab === 0) return allThemes;
     const filterKey = currentTabName.toLowerCase();
     return allThemes.filter(theme => theme.includes(filterKey));
@@ -153,10 +149,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     // Animation loop for Rainbow/LSD/Lab
     const isAnimated = selectedTheme && (
       selectedTheme.includes('rainbow') ||
-      selectedTheme.includes('lsd') ||
-      selectedTheme.includes('plasma') ||
-      selectedTheme.includes('neon') ||
-      selectedTheme.includes('noise')
+      selectedTheme.includes('lsd')
     );
 
     if (isAnimated) {

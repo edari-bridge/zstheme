@@ -2,10 +2,8 @@ export const LAYOUTS = ['1line', '2line', 'card', 'bars', 'badges'];
 
 export const COLOR_MODES = ['', 'mono-', 'custom-'];
 export const ANIMATION_MODES = ['', 'rainbow-'];
-export const HIDDEN_ANIMATION_MODES = ['lsd-', 'plasma-', 'neon-', 'noise-'];
+export const HIDDEN_ANIMATION_MODES = ['lsd-'];
 export const ICON_MODES = ['', '-nerd'];
-
-export const LAB_THEME_PRESETS = ['plasma-badges', 'neon-badges', 'noise-badges'];
 
 const ALL_ANIMATIONS = [...ANIMATION_MODES, ...HIDDEN_ANIMATION_MODES];
 
@@ -16,7 +14,7 @@ function stripColorPrefix(themeName) {
 }
 
 function stripAnimationPrefix(themeName) {
-  const prefixes = ['lsd-', 'rainbow-', 'plasma-', 'neon-', 'noise-'];
+  const prefixes = ['lsd-', 'rainbow-'];
   for (const prefix of prefixes) {
     if (themeName.startsWith(prefix)) {
       return { animation: prefix.slice(0, -1), rest: themeName.slice(prefix.length) };
