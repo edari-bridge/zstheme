@@ -123,8 +123,8 @@ export function filterThemes(themes, filters) {
  */
 export function sortThemes(themes, isLsdMode = false) {
   const layoutOrder = ['1line', '2line', 'badges', 'bars', 'card'];
-  const normalOrder = ['static', 'rainbow', 'lsd', 'plasma', 'neon', 'noise'];
-  const lsdOrder = ['lsd', 'static', 'rainbow', 'plasma', 'neon', 'noise'];
+  const normalOrder = ['static', 'rainbow', 'lsd'];
+  const lsdOrder = ['lsd', 'static', 'rainbow'];
 
   const getAnimationWeight = (animation) => {
     const order = isLsdMode ? lsdOrder : normalOrder;

@@ -84,7 +84,7 @@ colorize_text() {
         ((i++))
     done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
 
-    echo -e "${result}\033[0m"
+    echo -e "${result}\033[22;39m"
 }
 
 get_animated_color() {
@@ -116,86 +116,33 @@ get_animated_bg() {
 }
 
 # 배터리 색상 순환 (card/bars 레이아웃용)
-# LSD Mode: Pixel-by-pixel animation with context-aware base
+# Flash 효과 (2% 확률 white flicker) + LSD 고대비 빠른 사이클
 get_animated_battery_color() {
-    local text="$1" # Optional text for pixel-by-pixel (if passed) or ignored for single block
-    
-    # If text is provided, we should probably output text-colored?
-    # But usually get_animated_battery_color returns a BG code for a block.
-    # The user asked: "LSD 배터리의 경우... 초록색 계열의 배터리 색상이 계속 끊임없이 픽셀단위로 변화"
-    # This implies the *Background* of the battery bar/chip flows?
-    # OR the text/icon itself?
-    # "배터리 색상이... 픽셀단위로 변화". Usually text.
-    # But Battery in `card` layout is a bar or icon.
-    # Let's assume Pixel-by-Pixel *Background* if possible, or just Text if it's text-based.
-    # Card/Bars use `make_chip`. `make_chip` applies ONE background to the whole content.
-    # To do "Pixel-by-pixel" background change, we need to construct the string character by character
-    # with different \033[48... codes.
-    # So `get_animated_battery_color` as a single return value is insufficient.
-    # We need `colorize_battery_lsd`.
-    
-    # However, existing layouts call `get_animated_battery_color` to get a *code*.
-    # If I just return a code, it's one color per refresh.
-    # User wants "Pixel unit change".
-    # I will stick to "Fast Cycling Single Color" for now if layout doesn't support segmented rendering,
-    # OR I will provide a new function `colorize_battery_lsd` and update layouts later?
-    # No, I should update `rainbow.sh` to return a *Sequence*? No.
-    
-    # Compromise: Return a color based on TIMESTAMP + 0 (Constant) -> Global strobe.
-    # User said "Pixel by pixel".
-    # I will interpret this as "Fast Color Cycling" for the single block.
-    # "초록색 계열의... 변화" -> Green spectrum cycling.
-    
-    local base_hue=120 # Green
-    if [[ "${BATTERY_PCT:-100}" -le 20 ]]; then
-        base_hue=0     # Red
-    elif [[ "${BATTERY_PCT:-100}" -le 50 ]]; then
-        base_hue=60    # Yellow
+    # Flash: 2% 확률 white (Logo.js 패턴)
+    if (( RANDOM % 50 < 1 )); then
+        echo "\033[48;2;255;255;255m"
+        return
     fi
-     
+
     if [[ "$COLOR_MODE" == "mono" ]]; then
         local idx=$(( (TIMESTAMP % 8) ))
         echo "\033[48;5;$((236 + idx))m"
     elif [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # LSD Battery: Vivid Cycle around Base Hue
-        # We need RGB codes for "Greenish".
-        # 0=Green(120), range +/- 30?
-        # Manually mapping requires complex math.
-        # Simple: Pick from LSD_COLORS array near the index?
-        # LSD_COLORS is full spectrum (60 steps).
-        # Green is around index 0 (Blue) ... wait.
-        # LSD_COLORS: 0..30..60.
-        # Let's find Green indices.
-        # Array: 0=128;235;43 (Yellowish Green).
-        # 10=244;233;104 (Yellow).
-        # 50=0;245;137 (Green/Blue).
-        
-        # Let's use Full Spectrum for "Standard LSD" battery?
-        # User said: "Greenish... Warning/Critical matches their color".
-        # So: 
-        # Normal (>50%): Green Cycle (Indices 45-55, 0-5)
-        # Warn (20-50%): Yellow Cycle (Indices 5-15)
-        # Crit (<20%): Red Cycle (Indices 15-25?? No, Red is 10-15??)
-        # Let's check LSD_COLORS values again.
-        # 12 ("246;101;53" Orange) -> 14 ("250;70;93" Red-Pink)
-        
-        # Approximate Ranges:
-        # Green: 45-55
-        # Yellow: 5-10
-        # Red: 10-15 (Orange/Red)
-        
-        local start_i=45
-        local end_i=55
+        # LSD Battery: 넓은 범위 + 빠른 사이클(3x) + RANDOM 섭동
+        # Normal(>50%): Green  indices 40-59 (range 20)
+        # Warn(20-50%): Yellow indices 0-15  (range 16)
+        # Crit(<20%):   Red    indices 5-25  (range 21)
+        local start_i=40
+        local range=20
         if [[ "${BATTERY_PCT:-100}" -le 20 ]]; then
-             start_i=10; end_i=20 # Red/Orange
+             start_i=5; range=21
         elif [[ "${BATTERY_PCT:-100}" -le 50 ]]; then
-             start_i=0; end_i=10 # Yellow/Green
+             start_i=0; range=16
         fi
-        
-        local range=$((end_i - start_i))
-        local offset=$(( TIMESTAMP % range ))
+
+        local offset=$(( (TIMESTAMP * 3 + RANDOM % 10) % range ))
         local final_idx=$(( (start_i + offset) % 60 ))
-        
+
         echo "\033[48;2;${LSD_COLORS[$final_idx]}m"
     else
         # Rainbow: Full Spectrum Cycle
@@ -258,65 +205,6 @@ colorize_bg_lsd() {
 # ============================================================
 # Rainbow Effect: Shimmering (기존 색상 유지 + 명도 물결)
 # ============================================================
-# Usage: colorize_bg_rainbow "text" "base_bg_color_code" offset
-# base_bg_code example: "\033[48;2;0;0;255m" or "\033[44m"
-# NOTE: For simplicity in shell, we might just overlay a white/black wave
-# or use a pre-defined lighter variant if possible.
-#
-# BUT, since we have RGB values for badges in variables like C_BG_DIR,
-# extracting RGB dynamically in bash is hard.
-#
-# ALTERNATIVE: Use the same Rainbow Palette but strictly limited to a range?
-# NO, user said "Keep original badge color".
-#
-# To achieve "Shimmer" on *any* base color in pure Bash without complex parsing:
-# We can't easily modify the brightness of an arbitrary ANSI escape code.
-#
-# COMPROMISE Plan:
-# Rainbow mode in Bars/Badges will NOT use the random rainbow palette.
-# It will use the *Specific* badge color (e.g. Blue for Dir) but we need it to shimmer.
-# distinct colors are defined in `themes/_modules/colors/*.sh`.
-#
-# Since I cannot parse arbitrary RGB codes easily here to lighten them,
-# I will implement a "Pulse" effect using the standard 60-step rainbow BUT
-# tailored to specific hues? No that's too complex.
-#
-# Let's try "White/Black Overlay" using opacity? No transparency in terminal.
-#
-# NEW APPROACH for Rainbow Shimmer:
-# Use the *LSD Gradient* logic but with a "Monochrome" or "Single Hue" palette
-# generated on the fly?
-#
-# Actually, the user wants "Previous Badge Colors" (e.g. Blue for Dir).
-# I will define `SHIMMER_BLUE`, `SHIMMER_GREEN` arrays? Too many.
-#
-# Let's look at `colorize_bg_rainbow` again.
-# If I can't easily shimmer the *configured* color, I will stick to the user's "Rainbow" request roughly:
-# "LSD Logic (Gradient) but on specific colors".
-#
-# Let's define a "Shimmer Map" for the standard badge types:
-# Branch (Purple), Tree (Green), Dir (Blue), etc.
-# And create small gradient arrays for them.
-#
-# FOR NOW: I will implement `colorize_bg_rainbow` to use a "Pastel White/Grey" shimmer
-# or simply map the known badge types to specific hue ranges of the rainbow.
-#
-# Let's use a "Soft Rainbow" (Pastel) for the Rainbow Mode as recently implemented,
-# BUT apply it *gently*?
-#
-# User said: "Rainbow: Shimmer / LSD: Full Spectrum".
-# "Rainbow Background: Keep original badge color, but shimmer (Lightness change)".
-#
-# IMPLEMENTATION:
-# I will accept a `hue_hint` argument (e.g., 'blue', 'green').
-# And generate a shimmer based on that.
-# Since we don't have dynamic generation, I'll rely on `colorize_bg_lsd` for LSD
-# and for Rainbow, I will temporarily use a "Pulse" logic that toggles between
-# the Base Color and a Lighter version based on offset.
-#
-# To do this efficiently, I'll assume the inputs are pre-defined RGB codes.
-# I'll just alternate between the provided BG code and a "Highlight" code.
-#
 colorize_bg_rainbow() {
     local text="$1"
     local base_bg="$2"      # The standard background color code
@@ -337,42 +225,6 @@ colorize_bg_rainbow() {
             bg_code="$highlight_bg"
         fi
         
-        result+="${bg_code}${fg_color}${char}"
-        ((i++))
-    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
-
-    echo -e "${result}\033[0m"
-}
-
-# Experimental effects used by Lab themes.
-colorize_bg_plasma() {
-    local text="$1"
-    local start_idx="${2:-0}"
-    local fg_color="${3:-\033[30m}"
-    colorize_bg_lsd "$text" "$start_idx" "$fg_color"
-}
-
-colorize_bg_neon() {
-    local text="$1"
-    local start_idx="${2:-0}"
-    local fg_color="${3:-\033[97m}"
-    colorize_bg_rainbow "$text" "\033[45m" "\033[105m" "$start_idx" "$fg_color"
-}
-
-colorize_bg_noise() {
-    local text="$1"
-    local fg_color="${2:-\033[30m}"
-    local result=""
-    local i=0
-
-    while IFS= read -r char; do
-        local color_idx=$(( (COLOR_OFFSET + i * 13 + RANDOM) % 60 ))
-        local bg_code
-        if [[ "$COLOR_MODE" == "mono" ]]; then
-            bg_code="\033[48;2;${MONO_CYCLE[$color_idx]}m"
-        else
-            bg_code="\033[48;2;${RAINBOW_COLORS[$color_idx]}m"
-        fi
         result+="${bg_code}${fg_color}${char}"
         ((i++))
     done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)

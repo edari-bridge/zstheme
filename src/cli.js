@@ -30,9 +30,6 @@ export function cli() {
     .option('--custom', 'Filter: custom color')
     .option('--lsd', 'Filter: lsd animation')
     .option('--rainbow', 'Filter: rainbow animation')
-    .option('--plasma', 'Filter: plasma animation')
-    .option('--neon', 'Filter: neon animation')
-    .option('--noise', 'Filter: noise animation')
     .option('--nerd', 'Filter: nerd font icons')
     .argument('[theme]', 'Apply a specific theme');
 
@@ -58,9 +55,6 @@ export function cli() {
   if (options.custom) filters.color = 'custom';
   if (options.lsd) filters.animation = 'lsd';
   if (options.rainbow) filters.animation = 'rainbow';
-  if (options.plasma) filters.animation = 'plasma';
-  if (options.neon) filters.animation = 'neon';
-  if (options.noise) filters.animation = 'noise';
   if (options.nerd) filters.icon = 'nerd';
 
   // 명령어 라우팅

@@ -6,7 +6,7 @@
 THEME_LAYOUTS=("1line" "2line" "card" "bars" "badges")
 THEME_COLOR_PREFIXES=("" "mono-" "custom-")
 THEME_ANIMATION_PUBLIC_PREFIXES=("" "rainbow-")
-THEME_ANIMATION_HIDDEN_PREFIXES=("lsd-" "plasma-" "neon-" "noise-")
+THEME_ANIMATION_HIDDEN_PREFIXES=("lsd-")
 THEME_ICON_SUFFIXES=("" "-nerd")
 
 all_theme_animation_prefixes() {
@@ -23,7 +23,7 @@ is_hidden_animation_prefix() {
 
 is_valid_theme_name() {
     local theme="$1"
-    [[ "$theme" =~ ^(mono-|custom-)?(lsd-|rainbow-|plasma-|neon-|noise-)?(1line|2line|card|bars|badges)(-nerd)?$ ]]
+    [[ "$theme" =~ ^(mono-|custom-)?(lsd-|rainbow-)?(1line|2line|card|bars|badges)(-nerd)?$ ]]
 }
 
 parse_theme_name_contract() {
@@ -48,15 +48,6 @@ parse_theme_name_contract() {
     elif [[ "$theme_name" == rainbow-* ]]; then
         ANIMATION_MODE="rainbow"
         theme_name="${theme_name#rainbow-}"
-    elif [[ "$theme_name" == plasma-* ]]; then
-        ANIMATION_MODE="plasma"
-        theme_name="${theme_name#plasma-}"
-    elif [[ "$theme_name" == neon-* ]]; then
-        ANIMATION_MODE="neon"
-        theme_name="${theme_name#neon-}"
-    elif [[ "$theme_name" == noise-* ]]; then
-        ANIMATION_MODE="noise"
-        theme_name="${theme_name#noise-}"
     fi
 
     if [[ "$theme_name" == *-nerd ]]; then

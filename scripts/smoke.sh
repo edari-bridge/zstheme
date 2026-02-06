@@ -27,9 +27,9 @@ EOF
 HOME="$TMP_HOME" node bin/zstheme.js --list >/dev/null
 HOME="$TMP_HOME" node bin/zstheme.js --preview >/dev/null
 HOME="$TMP_HOME" node bin/zstheme.js 2line >/dev/null
-HOME="$TMP_HOME" node bin/zstheme.js plasma-badges >/dev/null
+HOME="$TMP_HOME" node bin/zstheme.js rainbow-badges >/dev/null
 
-themes=("2line" "custom-2line" "plasma-badges")
+themes=("2line" "custom-2line" "rainbow-badges")
 for theme in "${themes[@]}"; do
     cat > "$TMP_HOME/.claude/theme-config.sh" <<EOF
 CLAUDE_THEME="$theme"
@@ -43,7 +43,9 @@ EOF
         exit 1
     fi
 
-    if ! rg -q "Opus|my-project|$theme" /tmp/zstheme-smoke-status.out; then
+    # Strip ANSI codes before searching (animated themes insert codes per-character)
+    local_stripped=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/zstheme-smoke-status.out)
+    if ! echo "$local_stripped" | grep -qE "Opus|my-project|$theme"; then
         echo "statusline smoke output check failed for theme '$theme'."
         exit 1
     fi
