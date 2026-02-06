@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
-import path from 'path';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
@@ -21,6 +20,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [preview, setPreview] = useState('');
   const [showMessage, setShowMessage] = useState(false);
+  const [savedTheme, setSavedTheme] = useState(null);
 
   // LSD Visuals
   const [borderColor, setBorderColor] = useState('cyan');
@@ -281,16 +281,15 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     if (key.return) {
       if (!selectedTheme) return;
 
-      const configPath = saveThemeToShellConfig(selectedTheme);
-      const configName = path.basename(configPath);
+      saveThemeToShellConfig(selectedTheme);
+      setSavedTheme(selectedTheme);
+      setShowMessage(true);
 
-      console.log('');
-      console.log(`\x1b[32mTheme '\x1b[1m${selectedTheme}\x1b[22m' saved to ~/${configName}\x1b[0m`);
-      console.log('');
-      console.log('To apply now, run:');
-      console.log(`  \x1b[36msource ~/${configName}\x1b[0m`);
-      console.log('');
-      exit();
+      // 2초 후 메시지 숨기기
+      setTimeout(() => {
+        setShowMessage(false);
+        setSavedTheme(null);
+      }, 2000);
     }
   });
 
@@ -363,17 +362,19 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       e(Text, { dimColor: true }, `${selectedIndex + 1}/${filteredThemes.length} (Tab: Category)`)
     ),
 
-    // [Toast Message]
-    showMessage ? e(Box, {
-      position: 'absolute',
-      top: 2,
-      left: 30,
-      borderStyle: 'double',
-      borderColor: isLsdUnlocked ? 'magenta' : 'gray',
-      paddingX: 2
+    // [Toast Message - Theme Saved]
+    showMessage && savedTheme ? e(Box, {
+      justifyContent: 'center',
+      marginBottom: 1
     },
-      e(Text, { color: isLsdUnlocked ? 'magenta' : 'gray', bold: true },
-        isLsdUnlocked ? '🌈 WHOA! LSD MODE UNLOCKED! 🍄' : '🔒 LSD Mode Locked'
+      e(Box, {
+        borderStyle: 'round',
+        borderColor: 'green',
+        paddingX: 2
+      },
+        e(Text, { color: 'green', bold: true },
+          `✓ Theme '${savedTheme}' saved! Run: source ~/.zshrc`
+        )
       )
     ) : null,
 
