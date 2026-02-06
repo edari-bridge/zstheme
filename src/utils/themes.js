@@ -1,22 +1,26 @@
 import { readFileSync, existsSync } from 'fs';
-import { PATHS, LAYOUTS, COLOR_MODES, ANIMATION_MODES, HIDDEN_ANIMATION_MODES, ICON_MODES } from './config.js';
+import { PATHS } from './config.js';
+import {
+  LAYOUTS,
+  COLOR_MODES,
+  ICON_MODES,
+  getAllAnimations,
+  parseThemeContract,
+  isValidTheme as isValidThemeContract,
+} from './themeContract.js';
 
 /**
  * 모든 테마 조합 생성
- * @param {boolean} includeHidden - 숨겨진 테마(lsd) 포함 여부
+ * @param {boolean} includeHidden - 숨겨진 애니메이션 포함 여부
  */
 export function getAllThemes(includeHidden = false) {
   const themes = [];
-  const animations = includeHidden
-    ? [...ANIMATION_MODES, ...HIDDEN_ANIMATION_MODES]
-    : ANIMATION_MODES;
+  const animations = getAllAnimations(includeHidden);
 
   for (const color of COLOR_MODES) {
     for (const anim of animations) {
-      // custom 색상은 lsd/rainbow 애니메이션과 조합 불가
-      if (color === 'custom-' && (anim === 'lsd-' || anim === 'rainbow-')) {
-        continue;
-      }
+      // custom 색상은 static 조합만 허용
+      if (color === 'custom-' && anim !== '') continue;
 
       for (const layout of LAYOUTS) {
         for (const icon of ICON_MODES) {
@@ -32,10 +36,8 @@ export function getAllThemes(includeHidden = false) {
 /**
  * 테마 유효성 검사
  */
-export function isValidTheme(theme) {
-  // 색상 모드는 pastel(기본)/mono/custom 중 택일
-  const pattern = /^(custom-|mono-)?(lsd-|rainbow-)?(1line|2line|card|bars|badges)(-nerd)?$/;
-  return pattern.test(theme);
+export function isValidTheme(theme, options = {}) {
+  return isValidThemeContract(theme, options);
 }
 
 /**
@@ -59,26 +61,27 @@ export function getCurrentTheme() {
  * 테마 설명 생성
  */
 export function getThemeDescription(theme) {
+  const parsed = parseThemeName(theme);
   const parts = [];
 
-  // 레이아웃
-  if (theme.includes('1line')) parts.push('Compact');
-  else if (theme.includes('2line')) parts.push('Classic');
-  else if (theme.includes('card')) parts.push('Boxed');
-  else if (theme.includes('bars')) parts.push('Grouped bars');
-  else if (theme.includes('badges')) parts.push('Individual badges');
+  const layoutMap = {
+    '1line': 'Compact',
+    '2line': 'Classic',
+    card: 'Boxed',
+    bars: 'Grouped bars',
+    badges: 'Individual badges',
+  };
+  parts.push(layoutMap[parsed.layout] || parsed.layout);
 
-  // 색조 (pastel/mono/custom 중 택일)
-  if (theme.startsWith('mono-')) parts.push('mono');
-  else if (theme.startsWith('custom-')) parts.push('custom');
-  else parts.push('pastel');
+  parts.push(parsed.color);
 
-  // 애니메이션
-  if (theme.includes('lsd-')) parts.push('lsd');
-  else if (theme.includes('rainbow-')) parts.push('rainbow');
+  if (parsed.animation !== 'static') {
+    parts.push(parsed.animation);
+  }
 
-  // 아이콘
-  if (theme.endsWith('-nerd')) parts.push('(Nerd Font)');
+  if (parsed.icon === 'nerd') {
+    parts.push('(Nerd Font)');
+  }
 
   return parts.join(' ');
 }
@@ -86,14 +89,11 @@ export function getThemeDescription(theme) {
 /**
  * 테마를 레이아웃별로 그룹핑
  */
-export function getThemesByLayout() {
+export function getThemesByLayout(includeHidden = false) {
   const grouped = {};
 
   for (const layout of LAYOUTS) {
-    grouped[layout] = getAllThemes().filter(theme => {
-      const base = theme.replace(/^(custom-)?(mono-)?(lsd-|rainbow-)?/, '').replace(/-nerd$/, '');
-      return base === layout;
-    });
+    grouped[layout] = getAllThemes(includeHidden).filter(theme => parseThemeName(theme).layout === layout);
   }
 
   return grouped;
@@ -104,98 +104,55 @@ export function getThemesByLayout() {
  */
 export function filterThemes(themes, filters) {
   return themes.filter(theme => {
-    // 레이아웃 필터
-    if (filters.layout) {
-      const layoutMatch = theme.match(/(1line|2line|card|bars|badges)/);
-      if (!layoutMatch || layoutMatch[1] !== filters.layout) return false;
-    }
+    const parsed = parseThemeName(theme);
 
-    // 색상 필터
-    if (filters.color === 'mono' && !theme.startsWith('mono-')) return false;
-    if (filters.color === 'custom' && !theme.startsWith('custom-')) return false;
-
-    // 애니메이션 필터
-    if (filters.animation === 'lsd' && !theme.includes('lsd-')) return false;
-    if (filters.animation === 'rainbow' && !theme.includes('rainbow-')) return false;
-
-    // 아이콘 필터
-    if (filters.icon === 'nerd' && !theme.endsWith('-nerd')) return false;
+    if (filters.layout && parsed.layout !== filters.layout) return false;
+    if (filters.color && parsed.color !== filters.color) return false;
+    if (filters.animation && parsed.animation !== filters.animation) return false;
+    if (filters.icon && parsed.icon !== filters.icon) return false;
 
     return true;
   });
 }
 
-
-
 /**
  * 테마 정렬 (Smart Sorting)
- * Layout -> Style (Priority List) -> Icon
+ * Layout -> Style -> Icon
  * @param {string[]} themes - 테마 목록
  * @param {boolean} isLsdMode - LSD 모드 여부
- *
- * 정렬 순서:
- * - Normal: Default → Nerd → Rainbow → Mono
- * - LSD: LSD → Default → Nerd → Rainbow → Mono → Mono LSD
  */
 export function sortThemes(themes, isLsdMode = false) {
-  // User defined Layout Order: 1line, 2line, Badges, Bars, Card
-  const LAYOUT_ORDER = ['1line', '2line', 'badges', 'bars', 'card'];
+  const layoutOrder = ['1line', '2line', 'badges', 'bars', 'card'];
+  const normalOrder = ['static', 'rainbow', 'lsd', 'plasma', 'neon', 'noise'];
+  const lsdOrder = ['lsd', 'static', 'rainbow', 'plasma', 'neon', 'noise'];
 
-  return themes.sort((a, b) => {
+  const getAnimationWeight = (animation) => {
+    const order = isLsdMode ? lsdOrder : normalOrder;
+    const idx = order.indexOf(animation);
+    return idx === -1 ? 50 : idx;
+  };
+
+  return [...themes].sort((a, b) => {
     const infoA = parseThemeName(a);
     const infoB = parseThemeName(b);
 
-    // 1. Layout Priority
-    const layoutIdxA = LAYOUT_ORDER.indexOf(infoA.layout);
-    const layoutIdxB = LAYOUT_ORDER.indexOf(infoB.layout);
-
+    const layoutIdxA = layoutOrder.indexOf(infoA.layout);
+    const layoutIdxB = layoutOrder.indexOf(infoB.layout);
     const safeLayoutA = layoutIdxA === -1 ? 99 : layoutIdxA;
     const safeLayoutB = layoutIdxB === -1 ? 99 : layoutIdxB;
 
     if (safeLayoutA !== safeLayoutB) return safeLayoutA - safeLayoutB;
 
-    // 2. Style Priority (Mode-dependent)
-    const getStyleWeight = (info) => {
-      const isNerd = info.icon === 'nerd';
-      const nerdOffset = isNerd ? 0.5 : 0;
+    const colorWeightA = infoA.color === 'custom' ? 99 : (infoA.color === 'mono' ? 10 : 0);
+    const colorWeightB = infoB.color === 'custom' ? 99 : (infoB.color === 'mono' ? 10 : 0);
+    if (colorWeightA !== colorWeightB) return colorWeightA - colorWeightB;
 
-      if (info.color === 'custom') return 99;
+    const animationWeightA = getAnimationWeight(infoA.animation);
+    const animationWeightB = getAnimationWeight(infoB.animation);
+    if (animationWeightA !== animationWeightB) return animationWeightA - animationWeightB;
 
-      if (isLsdMode) {
-        // LSD Mode: LSD → Default → Nerd → Rainbow → Mono → Mono LSD
-        // 1. LSD (pastel + lsd)
-        if (info.color === 'pastel' && info.animation === 'lsd') return 0 + nerdOffset;
-        // 2. Default (pastel + static)
-        if (info.color === 'pastel' && info.animation === 'static') return 1 + nerdOffset;
-        // 3. Rainbow (pastel + rainbow)
-        if (info.color === 'pastel' && info.animation === 'rainbow') return 2 + nerdOffset;
-        // 4. Mono (mono + static)
-        if (info.color === 'mono' && info.animation === 'static') return 3 + nerdOffset;
-        // 5. Mono Rainbow (mono + rainbow)
-        if (info.color === 'mono' && info.animation === 'rainbow') return 4 + nerdOffset;
-        // 6. Mono LSD (mono + lsd) - 맨 뒤
-        if (info.color === 'mono' && info.animation === 'lsd') return 5 + nerdOffset;
-      } else {
-        // Normal Mode: Default → Nerd → Rainbow → Mono
-        // 1. Default (pastel + static)
-        if (info.color === 'pastel' && info.animation === 'static') return 0 + nerdOffset;
-        // 2. Rainbow (pastel + rainbow)
-        if (info.color === 'pastel' && info.animation === 'rainbow') return 1 + nerdOffset;
-        // 3. Mono (mono + static)
-        if (info.color === 'mono' && info.animation === 'static') return 2 + nerdOffset;
-        // 4. Mono Rainbow (mono + rainbow)
-        if (info.color === 'mono' && info.animation === 'rainbow') return 3 + nerdOffset;
-      }
+    if (infoA.icon !== infoB.icon) return infoA.icon === 'emoji' ? -1 : 1;
 
-      return 10;
-    };
-
-    const styleA = getStyleWeight(infoA);
-    const styleB = getStyleWeight(infoB);
-
-    if (styleA !== styleB) return styleA - styleB;
-
-    // 3. Tie breaker
     return a.localeCompare(b);
   });
 }
@@ -204,42 +161,12 @@ export function sortThemes(themes, isLsdMode = false) {
  * 테마명 파싱
  */
 export function parseThemeName(themeName) {
-  let name = themeName;
-  const result = {
-    color: 'pastel',
-    animation: 'static',
-    layout: '2line',
-    icon: 'emoji',
+  const parsed = parseThemeContract(themeName);
+
+  return {
+    color: parsed.color,
+    animation: parsed.animation,
+    layout: parsed.layout || '2line',
+    icon: parsed.icon,
   };
-
-  // 색상 모드 (pastel/mono/custom 중 택일)
-  if (name.startsWith('custom-')) {
-    result.color = 'custom';
-    name = name.slice(7);
-  } else if (name.startsWith('mono-')) {
-    result.color = 'mono';
-    name = name.slice(5);
-  }
-
-  // lsd- 또는 rainbow- 접두사
-  if (name.startsWith('lsd-')) {
-    result.animation = 'lsd';
-    name = name.slice(4);
-  } else if (name.startsWith('rainbow-')) {
-    result.animation = 'rainbow';
-    name = name.slice(8);
-  }
-
-  // -nerd 접미사
-  if (name.endsWith('-nerd')) {
-    result.icon = 'nerd';
-    name = name.slice(0, -5);
-  }
-
-  // 레이아웃
-  if (LAYOUTS.includes(name)) {
-    result.layout = name;
-  }
-
-  return result;
 }
