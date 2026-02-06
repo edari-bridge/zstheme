@@ -88,3 +88,23 @@ export function getSkillsStatus() {
     installed: isSkillInstalled(name),
   }));
 }
+
+/**
+ * 설치된 모든 스킬 제거
+ * @returns {{ success: boolean, count: number, error?: string }}
+ */
+export function uninstallAllSkills() {
+  try {
+    const skills = getSkillsStatus().filter(s => s.installed);
+    let count = 0;
+
+    for (const skill of skills) {
+      const result = uninstallSkill(skill.name);
+      if (result.success) count++;
+    }
+
+    return { success: true, count };
+  } catch (error) {
+    return { success: false, count: 0, error: error.message };
+  }
+}

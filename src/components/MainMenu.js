@@ -4,6 +4,7 @@ import { Logo } from './Logo.js';
 import { ThemeSelector } from './ThemeSelector.js';
 import { ColorEditor } from './ColorEditor.js';
 import { Dashboard } from './Dashboard.js';
+import { ResetSettings } from './ResetSettings.js';
 
 const e = React.createElement;
 
@@ -12,12 +13,13 @@ const MENU_ITEMS = [
     { id: 'themes', label: 'Explore Themes' },
     { id: 'editor', label: 'Color Editor' },
     { id: 'dashboard', label: 'Dashboard' },
+    { id: 'reset', label: 'Reset Settings' },
     { id: 'exit', label: 'Exit' },
 ];
 
 export function MainMenu() {
     const { exit } = useApp();
-    const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor', 'dashboard'
+    const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'themes', 'editor', 'dashboard', 'reset'
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     // Easter Egg State
@@ -68,6 +70,7 @@ export function MainMenu() {
             else if (selected.id === 'themes') setActiveTab('themes');
             else if (selected.id === 'editor') setActiveTab('editor');
             else if (selected.id === 'dashboard') setActiveTab('dashboard');
+            else if (selected.id === 'reset') setActiveTab('reset');
 
             // Reset counts
             setRightPressCount(0);
@@ -113,6 +116,10 @@ export function MainMenu() {
 
     if (activeTab === 'dashboard') {
         return e(Dashboard, { onBack: () => setActiveTab('menu') });
+    }
+
+    if (activeTab === 'reset') {
+        return e(ResetSettings, { onBack: () => setActiveTab('menu') });
     }
 
     // Get system info
