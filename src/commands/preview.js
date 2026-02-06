@@ -19,8 +19,9 @@ const SAMPLE_THEMES = [
 ];
 
 export function cmdPreview(showAll = false, filters = {}) {
-  // lsd 필터 사용 시 숨겨진 테마 포함
-  const includeHidden = filters.animation === 'lsd';
+  // 숨겨진 애니메이션 필터 사용 시 숨겨진 테마 포함
+  const hiddenAnimations = new Set(['lsd', 'plasma', 'neon', 'noise']);
+  const includeHidden = hiddenAnimations.has(filters.animation);
   let themes = showAll ? getAllThemes(includeHidden) : SAMPLE_THEMES;
 
   // 필터 적용

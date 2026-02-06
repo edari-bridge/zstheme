@@ -3,6 +3,7 @@ import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
+import { LAB_THEME_PRESETS } from '../utils/themeContract.js';
 
 const e = React.createElement;
 
@@ -62,7 +63,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
   const filteredThemes = useMemo(() => {
     if (currentTabName === 'Lab') {
-      return ['plasma-badges', 'neon-badges', 'noise-badges'];
+      return LAB_THEME_PRESETS;
     }
     if (activeTab === 0) return allThemes;
     const filterKey = currentTabName.toLowerCase();
