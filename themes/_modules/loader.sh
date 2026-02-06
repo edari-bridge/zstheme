@@ -119,7 +119,10 @@ load_modules() {
             ;;
     esac
 
-    # 4. 레이아웃 모듈 로드 (render 함수 포함)
+    # 4. 공통 헬퍼 로드 (레이아웃에서 사용)
+    source "$MODULES_DIR/helpers.sh"
+
+    # 5. 레이아웃 모듈 로드 (render 함수 포함)
     source "$MODULES_DIR/layouts/${LAYOUT_MODE}.sh"
 }
 

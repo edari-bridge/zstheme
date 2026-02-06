@@ -3,22 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { execSync } from 'child_process';
-
-// Opus 4.5 가격 (USD per 1M tokens)
-const PRICING = {
-  input: 15,
-  output: 75,
-  cacheRead: 1.875,
-  cacheCreate: 18.75,
-};
-
-function formatNumber(num) {
-  return num.toLocaleString('en-US');
-}
-
-function formatCurrency(num) {
-  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
 
 function formatDuration(ms) {
   const hours = Math.floor(ms / (1000 * 60 * 60));
@@ -211,7 +196,7 @@ export function cmdDashboard() {
   }
 
   // 데이터 추출
-  const modelUsage = stats.modelUsage?.['claude-opus-4-5-20251101'] || {};
+  const modelUsage = stats.modelUsage?.[MODEL_ID] || {};
   const inputTokens = modelUsage.inputTokens || 0;
   const outputTokens = modelUsage.outputTokens || 0;
   const cacheRead = modelUsage.cacheReadInputTokens || 0;
@@ -312,7 +297,7 @@ export function cmdStats() {
   }
 
   // 데이터 추출
-  const modelUsage = stats.modelUsage?.['claude-opus-4-5-20251101'] || {};
+  const modelUsage = stats.modelUsage?.[MODEL_ID] || {};
   const inputTokens = modelUsage.inputTokens || 0;
   const outputTokens = modelUsage.outputTokens || 0;
   const cacheRead = modelUsage.cacheReadInputTokens || 0;

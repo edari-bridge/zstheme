@@ -40,7 +40,7 @@ render() {
 
     # 배경색 가져오기 (lsd/rainbow일 때 순환)
     local bg_loc bg_git bg_ses
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         bg_loc=$(get_animated_bg 0)
         bg_git=$(get_animated_bg 1)
         bg_ses=$(get_animated_bg 2)
@@ -52,7 +52,7 @@ render() {
 
     # Line 1: 위치 칩 + Git 칩 + 컨텍스트
     local loc_content=""
-    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+    if is_animated; then
         # Define base colors for Rainbow Shimmer here (Hardcoded for now as vars are in C_BG_*)
         # We need to pass the ANSI codes.
         

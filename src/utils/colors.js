@@ -66,9 +66,6 @@ export const ICONS = {
   }
 };
 
-// 레이아웃 목록
-export const LAYOUTS = ['1line', '2line', 'card', 'bars', 'badges'];
-
 // 배경색이 필요한 레이아웃
 export const LAYOUTS_WITH_BG = ['bars', 'badges'];
 
@@ -126,8 +123,8 @@ export function loadCustomColors() {
           bgBars[key] = parseInt(match[1], 10);
         }
       }
-    } catch {
-      // 파싱 실패 시 기본값 사용
+    } catch (e) {
+      // 커스텀 색상 파일 파싱 실패 시 기본값 유지
     }
   }
 

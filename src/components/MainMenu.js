@@ -5,6 +5,9 @@ import { ThemeSelector } from './ThemeSelector.js';
 import { ColorEditor } from './ColorEditor.js';
 import { Dashboard } from './Dashboard.js';
 import { ResetSettings } from './ResetSettings.js';
+import { VERSION } from '../constants.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
+import { useEasterEgg } from '../hooks/useEasterEgg.js';
 
 const e = React.createElement;
 
@@ -29,28 +32,9 @@ export function MainMenu() {
     const width = Math.max(80, columns - 4);
     const height = Math.max(28, rows - 4);
 
-    // Easter Egg State
-    const [rightPressCount, setRightPressCount] = useState(0);
-    const [leftPressCount, setLeftPressCount] = useState(0);
-    const [isLsdUnlocked, setIsLsdUnlocked] = useState(false);
-    const [borderColor, setBorderColor] = useState('cyan');
-
-    React.useEffect(() => {
-        if (!isLsdUnlocked) {
-            setBorderColor('cyan');
-            return;
-        }
-
-        const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
-        let colorIndex = 0;
-
-        const timer = setInterval(() => {
-            colorIndex = (colorIndex + 1) % colors.length;
-            setBorderColor(colors[colorIndex]);
-        }, 100); // Fast cycle for "flashing" effect
-
-        return () => clearInterval(timer);
-    }, [isLsdUnlocked]);
+    // Easter Egg & LSD Animation
+    const { isLsdUnlocked, handleArrowKey, resetCounts } = useEasterEgg();
+    const borderColor = useLsdBorderAnimation(isLsdUnlocked);
 
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
@@ -61,14 +45,12 @@ export function MainMenu() {
         // Menu Navigation
         if (key.upArrow) {
             setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
-            setRightPressCount(0);
-            setLeftPressCount(0);
+            resetCounts();
         }
 
         if (key.downArrow) {
             setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
-            setRightPressCount(0);
-            setLeftPressCount(0);
+            resetCounts();
         }
 
         if (key.return) {
@@ -78,36 +60,12 @@ export function MainMenu() {
             else if (selected.id === 'editor') setActiveTab('editor');
             else if (selected.id === 'dashboard') setActiveTab('dashboard');
             else if (selected.id === 'reset') setActiveTab('reset');
-
-            // Reset counts
-            setRightPressCount(0);
-            setLeftPressCount(0);
+            resetCounts();
         }
 
         // Easter Egg Triggers
-        if (key.rightArrow) {
-            setLeftPressCount(0);
-            setRightPressCount(prev => {
-                const newCount = prev + 1;
-                if (newCount >= 3) {
-                    setIsLsdUnlocked(true);
-                    return 0; // Reset
-                }
-                return newCount;
-            });
-        }
-
-        if (key.leftArrow) {
-            setRightPressCount(0);
-            setLeftPressCount(prev => {
-                const newCount = prev + 1;
-                if (newCount >= 3) {
-                    setIsLsdUnlocked(false);
-                    return 0; // Reset
-                }
-                return newCount;
-            });
-        }
+        if (key.rightArrow) handleArrowKey('right');
+        if (key.leftArrow) handleArrowKey('left');
     });
 
     if (activeTab === 'themes') {
@@ -146,7 +104,7 @@ export function MainMenu() {
                 e(Text, { dimColor: true, italic: true }, '  Statusline Manager')
             ),
             e(Box, { borderStyle: 'round', borderColor: 'magenta', paddingX: 1 },
-                e(Text, { color: 'magenta' }, 'v2.1.0')
+                e(Text, { color: 'magenta' }, `v${VERSION}`)
             )
         ),
 

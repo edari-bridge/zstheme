@@ -7,13 +7,12 @@ import {
   FG_DEFAULTS,
   BG_BADGES_DEFAULTS,
   BG_BARS_DEFAULTS,
-  ICONS,
-  LAYOUTS,
   LAYOUTS_WITH_BG,
   loadCustomColors,
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
+import { VERSION, LAYOUTS, ICONS } from '../constants.js';
 
 const e = React.createElement;
 
@@ -235,25 +234,30 @@ export function ColorEditor({ onBack }) {
     const bgB = bgBadgesColors;
     const bgR = bgBarsColors;
     const ic = icons;
+    const RST = '\x1b[0m';
+    const fgText = (colorKey, icon, text) =>
+      `\x1b[38;5;${fg[colorKey]}m${ic[icon]}${text}${RST}`;
+    const bgFgText = (bgColors, bgKey, fgKey, icon, text) =>
+      `\x1b[48;5;${bgColors[bgKey]}m\x1b[38;5;${fg[fgKey]}m ${ic[icon]}${text} ${RST}`;
 
     switch (layout) {
       case '1line':
         return e(Box, { flexDirection: 'column' },
           e(Text, { dimColor: true }, `─ 1line-${iconType} ─`),
           e(Box, null,
-            e(Text, null, `\x1b[38;5;${fg.C_BRANCH}m${ic.BRANCH}main\x1b[0m`),
+            e(Text, null, fgText('C_BRANCH', 'BRANCH', 'main')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_TREE}m${ic.TREE}project\x1b[0m`),
+            e(Text, null, fgText('C_TREE', 'TREE', 'project')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_DIR}m${ic.DIR}src\x1b[0m`),
+            e(Text, null, fgText('C_DIR', 'DIR', 'src')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_STATUS}m${ic.STATUS}+3 ~2 -0\x1b[0m`),
+            e(Text, null, fgText('C_STATUS', 'STATUS', '+3 ~2 -0')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_SYNC}m${ic.SYNC}↑1 ↓0\x1b[0m`),
+            e(Text, null, fgText('C_SYNC', 'SYNC', '↑1 ↓0')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_MODEL}m${ic.MODEL}Opus\x1b[0m`),
+            e(Text, null, fgText('C_MODEL', 'MODEL', 'Opus')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_CTX}m${ic.CTX}35%\x1b[0m`)
+            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
           )
         );
 
@@ -261,28 +265,28 @@ export function ColorEditor({ onBack }) {
         return e(Box, { flexDirection: 'column' },
           e(Text, { dimColor: true }, `─ 2line-${iconType} ─`),
           e(Box, null,
-            e(Text, null, `\x1b[38;5;${fg.C_BRANCH}m${ic.BRANCH}main\x1b[0m`),
+            e(Text, null, fgText('C_BRANCH', 'BRANCH', 'main')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_TREE}m${ic.TREE}project\x1b[0m`),
+            e(Text, null, fgText('C_TREE', 'TREE', 'project')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_DIR}m${ic.DIR}src\x1b[0m`),
+            e(Text, null, fgText('C_DIR', 'DIR', 'src')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_STATUS}m${ic.STATUS}+3 ~2 -0\x1b[0m`),
+            e(Text, null, fgText('C_STATUS', 'STATUS', '+3 ~2 -0')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_SYNC}m${ic.SYNC}↑1 ↓0\x1b[0m`),
+            e(Text, null, fgText('C_SYNC', 'SYNC', '↑1 ↓0')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_CTX}m${ic.CTX}35%\x1b[0m`)
+            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
           ),
           e(Box, null,
-            e(Text, null, `\x1b[38;5;${fg.C_MODEL}m${ic.MODEL}Opus 4.5\x1b[0m`),
+            e(Text, null, fgText('C_MODEL', 'MODEL', 'Opus 4.5')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_RATE}m${ic.TIME}2h·04:00 42%\x1b[0m`),
+            e(Text, null, fgText('C_RATE', 'TIME', '2h·04:00 42%')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_TIME}m${ic.SESSION}42m\x1b[0m`),
+            e(Text, null, fgText('C_TIME', 'SESSION', '42m')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_BURN}m${ic.COST}$4.76/h\x1b[0m`),
+            e(Text, null, fgText('C_BURN', 'COST', '$4.76/h')),
             e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_RATE}m${ic.THEME}2line\x1b[0m`)
+            e(Text, null, fgText('C_RATE', 'THEME', '2line'))
           )
         );
 
@@ -346,28 +350,28 @@ export function ColorEditor({ onBack }) {
         return e(Box, { flexDirection: 'column' },
           e(Text, { dimColor: true }, `─ badges-${iconType} ─`),
           e(Box, null,
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_BRANCH}m\x1b[38;5;${fg.C_BRANCH}m ${ic.BRANCH}main \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_BRANCH', 'C_BRANCH', 'BRANCH', 'main')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_TREE}m\x1b[38;5;${fg.C_TREE}m ${ic.TREE}proj \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_TREE', 'C_TREE', 'TREE', 'proj')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_DIR}m\x1b[38;5;${fg.C_DIR}m ${ic.DIR}src \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_DIR', 'C_DIR', 'DIR', 'src')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_STATUS}m\x1b[38;5;${fg.C_STATUS}m ${ic.STATUS}+3 \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_STATUS', 'C_STATUS', 'STATUS', '+3')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_SYNC}m\x1b[38;5;${fg.C_SYNC}m ${ic.SYNC}↑1 \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_SYNC', 'C_SYNC', 'SYNC', '↑1')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[38;5;${fg.C_CTX}m${ic.CTX}35%\x1b[0m`)
+            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
           ),
           e(Box, null,
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_MODEL}m\x1b[38;5;${fg.C_MODEL}m ${ic.MODEL}Opus \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_MODEL', 'C_MODEL', 'MODEL', 'Opus')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_RATE}m\x1b[38;5;${fg.C_RATE}m ${ic.TIME}2h 42% \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_RATE', 'C_RATE', 'TIME', '2h 42%')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_TIME}m\x1b[38;5;${fg.C_TIME}m ${ic.SESSION}42m \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_TIME', 'C_TIME', 'SESSION', '42m')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[48;5;${bgB.C_BG_BURN}m\x1b[38;5;${fg.C_BURN}m ${ic.COST}$4/h \x1b[0m`),
+            e(Text, null, bgFgText(bgB, 'C_BG_BURN', 'C_BURN', 'COST', '$4/h')),
             e(Text, null, ' '),
-            e(Text, null, `\x1b[38;5;${fg.C_RATE}m${ic.THEME}badges\x1b[0m`)
+            e(Text, null, fgText('C_RATE', 'THEME', 'badges'))
           )
         );
 
@@ -382,7 +386,7 @@ export function ColorEditor({ onBack }) {
         backSelected ? '❯ ← Back to Menu' : '  ← Back to Menu'
       )
     ),
-    e(Header, { title: 'zstheme Color Editor', subtitle: '', version: '2.2' }),
+    e(Header, { title: 'zstheme Color Editor', subtitle: '', version: VERSION }),
 
     // 레이아웃/아이콘 선택 (프리뷰 전용)
     e(Box, { marginBottom: 1 },
