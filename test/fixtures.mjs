@@ -36,7 +36,7 @@ export function createMockData(overrides = {}) {
     sessionDurationMin: 3,
     linesAdded: 42,
     linesRemoved: 7,
-    themeName: 'pastel-2line',
+    themeName: '2line',
     burnRate: null,
     rateTimeLeft: null,
     rateResetTime: null,

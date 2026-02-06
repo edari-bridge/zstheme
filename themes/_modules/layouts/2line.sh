@@ -48,13 +48,15 @@ render() {
         if is_animated; then
              line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 10)")
         else
-             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
+             local rate_color=$(get_rate_color)
+             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
         fi
     elif [[ -n "$RATE_LIMIT_PCT" ]]; then
         if is_animated; then
              line2_parts+=("${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "(${RATE_LIMIT_PCT}%)" 10)")
         else
-             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}(${RATE_LIMIT_PCT}%)${RST}")
+             local rate_color=$(get_rate_color)
+             line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}(${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
         fi
     fi
 
