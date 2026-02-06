@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
@@ -32,8 +33,9 @@ export const PATHS = {
   claudeSkills: join(homedir(), '.claude', 'skills'),
 };
 
-// 버전
-export const VERSION = '2.1.0';
+// 버전 (package.json에서 동적 로딩)
+const pkg = JSON.parse(readFileSync(join(PROJECT_ROOT, 'package.json'), 'utf-8'));
+export const VERSION = pkg.version;
 export {
   LAYOUTS,
   COLOR_MODES,

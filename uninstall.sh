@@ -75,6 +75,7 @@ done
 # ============================================================
 BACKUP_FILE="$HOME/.config/zstheme/original-statusline.json"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+PARTIAL_BACKUP_MARKER="__zstheme_partial_backup__"
 
 restore_statusline() {
     if [[ ! -f "$BACKUP_FILE" ]]; then
@@ -93,6 +94,13 @@ restore_statusline() {
 
     local backup_content
     backup_content=$(cat "$BACKUP_FILE")
+
+    if echo "$backup_content" | grep -q "\"$PARTIAL_BACKUP_MARKER\"[[:space:]]*:[[:space:]]*true"; then
+        echo ""
+        echo "${YELLOW}Note:${RST} original statusLine was not fully backed up (install was run without jq)."
+        echo "Leaving current settings.json statusLine unchanged to avoid restoring invalid data."
+        return
+    fi
 
     if ! command -v jq &>/dev/null; then
         echo ""
