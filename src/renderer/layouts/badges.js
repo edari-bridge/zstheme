@@ -127,7 +127,7 @@ export function render(ctx) {
         chipRate = makeChip(colors.C_BG_RATE, `${colors.C_I_RATE}${colors.icons.TIME} ${colorizeText(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 60, colorOffset, animationMode, colorMode)}`, chipStyle, colors);
       }
     } else {
-      const rateColor = getRateColor(data.rateLimitPct, colorMode);
+      const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
       chipRate = makeChip(colors.C_BG_RATE, `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`, chipStyle, colors);
     }
   } else {

@@ -216,7 +216,7 @@ function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, b
   };
 }
 
-export function getRateColor(rateLimitPct, colorMode) {
+export function getRateColor(rateLimitPct, colorMode, colors) {
   if (colorMode === 'mono') {
     if (rateLimitPct >= 80) return fgBold(255);
     if (rateLimitPct >= 50) return fgBold(250);
@@ -224,5 +224,6 @@ export function getRateColor(rateLimitPct, colorMode) {
   }
   if (rateLimitPct >= 80) return `${ESC}[1;91m`;
   if (rateLimitPct >= 50) return fgBold(208);
+  if (colors?.C_RATE) return colors.C_RATE;
   return fg(229);
 }

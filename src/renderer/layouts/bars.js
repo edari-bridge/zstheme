@@ -112,7 +112,7 @@ export function render(ctx) {
 
   let sesContent = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}`;
   if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
-    const rateColor = getRateColor(data.rateLimitPct, colorMode);
+    const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
     sesContent += `     ${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`;
   }
   sesContent += `     ${colors.C_I_TIME}${colors.icons.SESSION} ${colors.C_TIME}${data.sessionDurationMin}m`;

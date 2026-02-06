@@ -49,7 +49,7 @@ battery_line() {
         esac
 
         local fill_color
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        if is_animated; then
             fill_color=$(get_animated_battery_color)
         else
             fill_color="$C_BAT_FILL"

@@ -10,7 +10,7 @@ $ClaudeDir = "$env:USERPROFILE\.claude"
 
 Write-Host ""
 Write-Host "  ╭──────────────────────────────────────╮" -ForegroundColor Magenta
-Write-Host "  │  zstheme - Windows Installation       │" -ForegroundColor Magenta
+Write-Host "  │  zstheme - Windows Installation      │" -ForegroundColor Magenta
 Write-Host "  ╰──────────────────────────────────────╯" -ForegroundColor Magenta
 Write-Host ""
 
