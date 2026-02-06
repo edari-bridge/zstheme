@@ -61,7 +61,7 @@ export function ColorEditor({ onBack }) {
   // 입력 처리
   useInput((input, key) => {
     // 종료
-    if (input === 'q' || input === 'Q') {
+    if (input === 'q' || input === 'Q' || key.escape) {
       if (modified) {
         console.log('\n\x1b[33mUnsaved changes discarded.\x1b[0m');
       }
