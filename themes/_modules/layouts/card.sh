@@ -77,13 +77,13 @@ format_git_status_card() {
         mod=$(colorize_text "$mod_text" 5)
         del=$(colorize_text "$del_text" 7)
     elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c1 c2 c3
-        c1=$(echo -e "$(get_animated_color 3)")
-        c2=$(echo -e "$(get_animated_color 4)")
-        c3=$(echo -e "$(get_animated_color 5)")
-        [[ "$GIT_ADDED" -gt 0 ]] && add="${c1}+${GIT_ADDED}${RST}" || add="${c1}+0${RST}"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${c2}~${GIT_MODIFIED}${RST}" || mod="${c2}~0${RST}"
-        [[ "$GIT_DELETED" -gt 0 ]] && del="${c3}-${GIT_DELETED}${RST}" || del="${c3}-0${RST}"
+        local add_text mod_text del_text
+        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
+        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
+        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
+        add=$(colorize_text "$add_text" 3)
+        mod=$(colorize_text "$mod_text" 5)
+        del=$(colorize_text "$del_text" 7)
     else
         [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}${RST}" || add="${C_DIM_STATUS}+0${RST}"
         [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}${RST}" || mod="${C_DIM_STATUS}~0${RST}"
@@ -104,11 +104,11 @@ format_git_sync_card() {
         ahead=$(colorize_text "$ahead_text" 0)
         behind=$(colorize_text "$behind_text" 4)
     elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local c1 c2
-        c1=$(echo -e "$(get_animated_color 6)")
-        c2=$(echo -e "$(get_animated_color 7)")
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${c1}↑ ${GIT_AHEAD}${RST}" || ahead="${c1}↑ 0${RST}"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind="${c2}↓ ${GIT_BEHIND}${RST}" || behind="${c2}↓ 0${RST}"
+        local ahead_text behind_text
+        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
+        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
+        ahead=$(colorize_text "$ahead_text" 0)
+        behind=$(colorize_text "$behind_text" 4)
     else
         [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}" || ahead="${C_DIM_SYNC}↑ 0${RST}"
         [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
@@ -135,12 +135,13 @@ render() {
         local raw_branch="${ICON_BRANCH} ${BRANCH:-branch}"
         local raw_tree="${ICON_TREE} ${WORKTREE:-worktree}"
         local raw_dir="${ICON_DIR} ${DIR_NAME}"
-        
+
         case "$ANIMATION_MODE" in
-            lsd)
-                L1="$(colorize_text "$raw_branch" 0)"
-                L2="$(colorize_text "$raw_tree" 3)"
-                L3="$(colorize_text "$raw_dir" 6)"
+            lsd|rainbow)
+                # 아이콘은 고유 색상, 텍스트만 애니메이션
+                L1="${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)"
+                L2="${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)"
+                L3="${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)"
                 ;;
             plasma)
                 L1="$(colorize_bg_plasma "$raw_branch" 0 "\033[30m")"
@@ -157,15 +158,6 @@ render() {
                 L2="$(colorize_bg_noise "$raw_tree")"
                 L3="$(colorize_bg_noise "$raw_dir")"
                 ;;
-            rainbow)
-                local c0 c1 c2
-                c0=$(echo -e "$(get_animated_color 0)")
-                c1=$(echo -e "$(get_animated_color 1)")
-                c2=$(echo -e "$(get_animated_color 2)")
-                L1="${c0}${raw_branch}${RST}"
-                L2="${c1}${raw_tree}${RST}"
-                L3="${c2}${raw_dir}${RST}"
-                ;;
         esac
     else
         L1="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}"
@@ -177,39 +169,64 @@ render() {
 
     # 오른쪽 카드 내용
     local R1 R2 R3 R4 R5
-    # 오른쪽 카드 내용
-    local R1 R2 R3 R4 R5
+
+    # R2: Rate limit, R3: Session duration, R4: Burn rate
+    local raw_rate="" raw_session="" raw_burn=""
+    if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+        raw_rate="${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%"
+    fi
+    raw_session="${ICON_SESSION} ${SESSION_DURATION_MIN}m"
+    [[ -n "$BURN_RATE" ]] && raw_burn="${ICON_COST} ${BURN_RATE}"
+
     if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
         local raw_model="${ICON_MODEL} ${MODEL}"
         local raw_theme="${ICON_THEME} ${THEME_NAME}"
-        
+
         case "$ANIMATION_MODE" in
-             lsd)
-                 R1="$(colorize_text "$raw_model" 2)"
-                 R5="$(colorize_text "$raw_theme" 5)"
+             lsd|rainbow)
+                 # 아이콘은 고유 색상, 텍스트만 애니메이션
+                 R1="${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)"
+                 if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+                     R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}%" 12)"
+                 else
+                     R2=""
+                 fi
+                 R3="${C_I_TIME}${ICON_SESSION}${RST} $(colorize_text "${SESSION_DURATION_MIN}m" 22)"
+                 [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST}${RST} $(colorize_text "${BURN_RATE}" 32)" || R4=""
+                 R5="${C_I_THEME}${ICON_THEME}${RST} $(colorize_text "${THEME_NAME}" 5)"
                  ;;
              plasma)
                  R1="$(colorize_bg_plasma "$raw_model" 50 "\033[30m")"
+                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_plasma "$raw_rate" 60 "\033[30m")" || R2=""
+                 R3="$(colorize_bg_plasma "$raw_session" 70 "\033[30m")"
+                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_plasma "$raw_burn" 80 "\033[30m")" || R4=""
                  R5="$(colorize_bg_plasma "$raw_theme" 30 "\033[30m")"
                  ;;
              neon)
-                 R1="$(colorize_bg_neon "$raw_model" 50 "\033[30m")" # Neon Purple
-                 R5="$(colorize_bg_neon "$raw_theme" 30 "\033[97m")" # Neon Cyan
+                 R1="$(colorize_bg_neon "$raw_model" 50 "\033[30m")"
+                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_neon "$raw_rate" 60 "\033[97m")" || R2=""
+                 R3="$(colorize_bg_neon "$raw_session" 70 "\033[30m")"
+                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_neon "$raw_burn" 80 "\033[97m")" || R4=""
+                 R5="$(colorize_bg_neon "$raw_theme" 30 "\033[97m")"
                  ;;
              noise)
                  R1="$(colorize_bg_noise "$raw_model")"
+                 [[ -n "$raw_rate" ]] && R2="$(colorize_bg_noise "$raw_rate")" || R2=""
+                 R3="$(colorize_bg_noise "$raw_session")"
+                 [[ -n "$raw_burn" ]] && R4="$(colorize_bg_noise "$raw_burn")" || R4=""
                  R5="$(colorize_bg_noise "$raw_theme")"
-                 ;;
-             rainbow)
-                 local c9 c0
-                 c9=$(echo -e "$(get_animated_color 9)")
-                 c0=$(echo -e "$(get_animated_color 0)")
-                 R1="${c9}${raw_model}${RST}"
-                 R5="${c0}${raw_theme}${RST}"
                  ;;
         esac
     else
         R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
+        if [[ -n "$raw_rate" ]]; then
+            local rate_color=$(get_rate_color)
+            R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%${RST}"
+        else
+            R2=""
+        fi
+        R3="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}"
+        [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}" || R4=""
         R5="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
 
