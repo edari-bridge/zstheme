@@ -3,13 +3,13 @@ import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { getAllThemes, getCurrentTheme, getThemeDescription, sortThemes, parseThemeName } from '../utils/themes.js';
 import { renderThemePreview, renderThemePreviewAsync } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
+import { GRID_COLUMNS, GRID_VISIBLE_ROWS } from '../constants.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
 // User Requested Order: 1line, 2line, Badges, Bars, Card, Lab
 const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
-const COLUMNS = 3;
-const VISIBLE_ROWS = 6;
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -31,24 +31,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [backSelected, setBackSelected] = useState(false);
 
   // LSD Visuals
-  const [borderColor, setBorderColor] = useState('cyan');
-
-  useEffect(() => {
-    if (!isLsdUnlocked) {
-      setBorderColor('cyan');
-      return;
-    }
-
-    const colors = ['red', 'yellow', 'green', 'blue', 'magenta', 'cyan'];
-    let colorIndex = 0;
-
-    const timer = setInterval(() => {
-      colorIndex = (colorIndex + 1) % colors.length;
-      setBorderColor(colors[colorIndex]);
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [isLsdUnlocked]);
+  const borderColor = useLsdBorderAnimation(isLsdUnlocked);
 
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
   const allThemes = useMemo(() => sortThemes(getAllThemes(isLsdUnlocked), isLsdUnlocked), [isLsdUnlocked]);
@@ -120,7 +103,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       currentRowItems.push(index);
 
       // If row full, push it
-      if (currentRowItems.length === COLUMNS) {
+      if (currentRowItems.length === GRID_COLUMNS) {
         rows.push({ type: 'theme', items: currentRowItems });
         currentRowItems = [];
       }
@@ -149,8 +132,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     // Keep selection in view
     if (currentVisualRowIndex < startRow) {
       setStartRow(currentVisualRowIndex);
-    } else if (currentVisualRowIndex >= startRow + VISIBLE_ROWS) {
-      setStartRow(currentVisualRowIndex - VISIBLE_ROWS + 1);
+    } else if (currentVisualRowIndex >= startRow + GRID_VISIBLE_ROWS) {
+      setStartRow(currentVisualRowIndex - GRID_VISIBLE_ROWS + 1);
     }
   }, [currentVisualRowIndex, startRow]);
 
@@ -290,10 +273,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
     if (key.pageUp) {
       // Simple approach: move index back by (COL * ROWS)
-      setSelectedIndex(prev => Math.max(0, prev - (COLUMNS * VISIBLE_ROWS)));
+      setSelectedIndex(prev => Math.max(0, prev - (GRID_COLUMNS * GRID_VISIBLE_ROWS)));
     }
     if (key.pageDown) {
-      setSelectedIndex(prev => Math.min(filteredThemes.length - 1, prev + (COLUMNS * VISIBLE_ROWS)));
+      setSelectedIndex(prev => Math.min(filteredThemes.length - 1, prev + (GRID_COLUMNS * GRID_VISIBLE_ROWS)));
     }
 
     if (key.return) {
@@ -314,13 +297,13 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   // Grid Rendering Helper
   const renderGrid = () => {
     if (gridRows.length === 0) {
-      return e(Box, { height: VISIBLE_ROWS + 2, justifyContent: 'center', alignItems: 'center' },
+      return e(Box, { height: GRID_VISIBLE_ROWS + 2, justifyContent: 'center', alignItems: 'center' },
         e(Text, { color: 'gray', italic: true }, 'No themes found')
       );
     }
 
     const renderedRows = [];
-    const visibleGridRows = gridRows.slice(startRow, startRow + VISIBLE_ROWS);
+    const visibleGridRows = gridRows.slice(startRow, startRow + GRID_VISIBLE_ROWS);
 
     // Padding for empty rows if filteredThemes is small logic is implicit via minHeight
 
@@ -358,7 +341,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         });
 
         // Fill empty columns if row is not full
-        while (rowItems.length < COLUMNS) {
+        while (rowItems.length < GRID_COLUMNS) {
           rowItems.push(e(Box, { key: `empty-${rowItems.length}`, width: '33%', paddingX: 1 }));
         }
 

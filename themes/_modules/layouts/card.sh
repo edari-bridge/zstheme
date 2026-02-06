@@ -10,10 +10,16 @@ pad_to() {
     local text="$1"
     local target_width="$2"
     local plain=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
-    # 이모지 너비 보정 (이모지는 2칸 차지)
-    local emoji_count=$(echo "$plain" | grep -oE '[🔱🌿📂💾🔮🔋🔥🪫🧠⏳💰💬🎨]' 2>/dev/null | wc -l | tr -d ' ')
-    local char_count=${#plain}
-    local actual_width=$((char_count + emoji_count))
+    # ANSI strip 후 wc 기반 너비 계산 (이모지 하드코딩 제거)
+    local actual_width=$(echo -n "$plain" | wc -m | tr -d ' ')
+    # 이모지 너비 보정: 이모지는 wc -m에서 1로 카운트되지만 실제 2칸 차지
+    # BMP 밖의 문자 (이모지 등)를 감지하여 보정
+    local byte_len=$(echo -n "$plain" | wc -c | tr -d ' ')
+    local char_len=$actual_width
+    # 4바이트 UTF-8 문자 = 이모지 (대략적 추정)
+    local emoji_approx=$(( (byte_len - char_len) / 3 ))
+    [[ $emoji_approx -lt 0 ]] && emoji_approx=0
+    actual_width=$((actual_width + emoji_approx))
     local pad=$((target_width - actual_width))
     [[ $pad -lt 0 ]] && pad=0
     printf "%s%*s" "$text" "$pad" ""
@@ -46,7 +52,7 @@ battery_line() {
         esac
 
         local fill_color
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        if is_animated; then
             fill_color=$(get_animated_battery_color)
         else
             fill_color="$C_BAT_FILL"
@@ -60,62 +66,7 @@ battery_line() {
     fi
 }
 
-# ============================================================
-# Git 상태 포맷팅
-# ============================================================
-
-format_git_status_card() {
-    local add mod del
-
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # 글자 단위 그라데이션
-        local add_text mod_text del_text
-        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
-        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
-        add=$(colorize_text "$add_text" 3)
-        mod=$(colorize_text "$mod_text" 5)
-        del=$(colorize_text "$del_text" 7)
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local add_text mod_text del_text
-        [[ "$GIT_ADDED" -gt 0 ]] && add_text="+${GIT_ADDED}" || add_text="+0"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod_text="~${GIT_MODIFIED}" || mod_text="~0"
-        [[ "$GIT_DELETED" -gt 0 ]] && del_text="-${GIT_DELETED}" || del_text="-0"
-        add=$(colorize_text "$add_text" 3)
-        mod=$(colorize_text "$mod_text" 5)
-        del=$(colorize_text "$del_text" 7)
-    else
-        [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}${RST}" || add="${C_DIM_STATUS}+0${RST}"
-        [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}${RST}" || mod="${C_DIM_STATUS}~0${RST}"
-        [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}${RST}" || del="${C_DIM_STATUS}-0${RST}"
-    fi
-
-    echo "${C_I_STATUS}${ICON_GIT_STATUS}${RST} ${add}  ${mod}  ${del}"
-}
-
-format_git_sync_card() {
-    local ahead behind
-
-    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # 글자 단위 그라데이션
-        local ahead_text behind_text
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
-        ahead=$(colorize_text "$ahead_text" 0)
-        behind=$(colorize_text "$behind_text" 4)
-    elif [[ "$ANIMATION_MODE" == "rainbow" ]]; then
-        local ahead_text behind_text
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead_text="↑ ${GIT_AHEAD}" || ahead_text="↑ 0"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind_text="↓ ${GIT_BEHIND}" || behind_text="↓ 0"
-        ahead=$(colorize_text "$ahead_text" 0)
-        behind=$(colorize_text "$behind_text" 4)
-    else
-        [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}${RST}" || ahead="${C_DIM_SYNC}↑ 0${RST}"
-        [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}${RST}" || behind="${C_DIM_SYNC}↓ 0${RST}"
-    fi
-
-    echo "${C_I_SYNC}${ICON_SYNC}${RST} ${ahead}  ${behind}"
-}
+# format_git_status, format_git_sync, is_animated, render_text → helpers.sh
 
 # ============================================================
 # 렌더링 함수
@@ -164,8 +115,8 @@ render() {
         L2="${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}"
         L3="${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}"
     fi
-    L4="$(format_git_status_card)"
-    L5="$(format_git_sync_card)"
+    L4="$(format_git_status)"
+    L5="$(format_git_sync)"
 
     # 오른쪽 카드 내용
     local R1 R2 R3 R4 R5
