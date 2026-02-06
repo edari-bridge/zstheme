@@ -1,92 +1,46 @@
-import { execSync } from 'child_process';
-import { PATHS } from './config.js';
+import { renderStatusline } from '../renderer/index.js';
 
-// 프리뷰용 Mock 데이터
+// 프리뷰용 Mock 입력(JSON)
 export const MOCK_DATA = {
-  MODEL: 'Opus 4.5',
-  DIR_NAME: 'my-project',
-  CONTEXT_PCT: 35,
-  SESSION_DURATION_MIN: 42,
-  IS_GIT_REPO: 'true',
-  BRANCH: 'main',
-  WORKTREE: 'my-project',
-  GIT_ADDED: 3,
-  GIT_MODIFIED: 2,
-  GIT_DELETED: 0,
-  GIT_AHEAD: 1,
-  GIT_BEHIND: 0,
-  RATE_TIME_LEFT: '2h 30m',
-  RATE_RESET_TIME: '04:00',
-  RATE_LIMIT_PCT: 42,
-  BURN_RATE: '$4.76/h',
+  model: { display_name: 'Opus 4.5' },
+  workspace: { current_dir: '/tmp/my-project' },
+  context_window: { used_percentage: 35 },
+  cost: {
+    total_duration_ms: 42 * 60 * 1000,
+    total_lines_added: 3,
+    total_lines_removed: 2,
+  },
+  rate: {
+    time_left: '2h 30m',
+    reset_time: '04:00',
+    limit_pct: 42,
+    burn_rate: '$4.76/h',
+  },
 };
 
+const MOCK_JSON_INPUT = JSON.stringify(MOCK_DATA);
+
 /**
- * bash 테마 렌더링 호출하여 프리뷰 문자열 반환
+ * Node.js renderer를 호출하여 프리뷰 문자열 반환
  */
 export function renderThemePreview(themeName) {
-  const env = {
-    ...process.env,
-    ...Object.fromEntries(
-      Object.entries(MOCK_DATA).map(([k, v]) => [k, String(v)])
-    ),
-    THEME_NAME: themeName,
-  };
-
   try {
-    const script = `
-      source "${PATHS.modular}"
-      render
-    `;
-
-    const result = execSync(`bash -c '${script}'`, {
-      env,
-      encoding: 'utf-8',
-      timeout: 5000,
-    });
-
-    return result.trim();
+    return renderStatusline(MOCK_JSON_INPUT, { themeName });
   } catch (error) {
     return `[Preview error: ${error.message}]`;
   }
 }
 
 /**
- * 비동기 프리뷰 렌더링 (애니메이션용)
+ * 비동기 프리뷰 렌더링 (애니메이션용, 인터페이스 호환)
  * @returns {Promise<string>}
  */
 export function renderThemePreviewAsync(themeName) {
-  return new Promise((resolve) => {
-    const env = {
-      ...process.env,
-      ...Object.fromEntries(
-        Object.entries(MOCK_DATA).map(([k, v]) => [k, String(v)])
-      ),
-      THEME_NAME: themeName,
-    };
-
-    const script = `
-      source "${PATHS.modular}"
-      render
-    `;
-
-    import('child_process').then(({ exec }) => {
-      exec(`bash -c '${script}'`, {
-        env,
-        timeout: 2000,
-      }, (error, stdout, stderr) => {
-        if (error) {
-          resolve(`[Preview error: ${error.message}]`);
-        } else {
-          resolve(stdout.trim());
-        }
-      });
-    });
-  });
+  return Promise.resolve(renderThemePreview(themeName));
 }
 
 /**
- * 간단한 인라인 프리뷰 (bash 호출 없이)
+ * 간단한 인라인 프리뷰 (renderer 호출 없이)
  */
 export function simplePreview(themeName, colors = null) {
   const parsed = parseThemeForPreview(themeName);

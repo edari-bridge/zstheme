@@ -61,6 +61,23 @@ test('parseInput floors sessionDurationMin', () => {
   assert.equal(result.sessionDurationMin, 1);
 });
 
+test('parseInput extracts optional rate-limit fields', () => {
+  const json = JSON.stringify({
+    rate: {
+      time_left: '2h 30m',
+      reset_time: '04:00',
+      limit_pct: '42',
+      burn_rate: '$4.76/h',
+    },
+  });
+
+  const result = parseInput(json);
+  assert.equal(result.rateTimeLeft, '2h 30m');
+  assert.equal(result.rateResetTime, '04:00');
+  assert.equal(result.rateLimitPct, 42);
+  assert.equal(result.burnRate, '$4.76/h');
+});
+
 // --- collectGitInfo ---
 
 test('collectGitInfo in current repo returns valid shape', () => {

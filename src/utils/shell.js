@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { PATHS } from './config.js';
+import { PATHS, PROJECT_ROOT } from './config.js';
 
 export function getShellConfigPath() {
   const shell = process.env.SHELL || '/bin/zsh';
@@ -22,6 +22,19 @@ export function getShellConfigPath() {
 
 export function getThemeConfigPath() {
   return path.join(os.homedir(), '.claude', 'theme-config.sh');
+}
+
+export function getZsthemeStatuslineCommand(platform = process.platform, projectRoot = PROJECT_ROOT) {
+  if (platform === 'win32') {
+    const rendererPath = path.join(projectRoot, 'bin', 'statusline-node.js');
+    return `node "${rendererPath}"`;
+  }
+  return '~/.claude/statusline.sh';
+}
+
+export function isZsthemeStatuslineCommand(command = '') {
+  if (typeof command !== 'string') return false;
+  return command.includes('statusline.sh') || command.includes('statusline-node.js');
 }
 
 export function saveThemeToShellConfig(theme) {
@@ -89,7 +102,7 @@ export function isZsthemeActive() {
     if (!fs.existsSync(PATHS.claudeSettings)) return false;
     const settings = JSON.parse(fs.readFileSync(PATHS.claudeSettings, 'utf8'));
     const cmd = settings?.statusLine?.command || '';
-    return cmd.includes('statusline.sh');
+    return isZsthemeStatuslineCommand(cmd);
   } catch {
     return false;
   }
@@ -119,7 +132,7 @@ export function toggleStatusline(mode) {
   }
 
   if (mode === 'zstheme') {
-    settings.statusLine = { command: '~/.claude/statusline.sh' };
+    settings.statusLine = { command: getZsthemeStatuslineCommand() };
   } else if (mode === 'original') {
     const original = getOriginalStatusline();
     if (original === undefined) {

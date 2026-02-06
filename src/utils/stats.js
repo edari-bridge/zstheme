@@ -6,9 +6,10 @@ import { cmdDashboard, cmdStats } from '../commands/usage.js';
 
 // console.log 캡처로 대시보드 프리뷰 가져오기
 export function getDashboardPreview(type = 'simple') {
+  const originalLog = console.log;
+
   try {
     const logs = [];
-    const originalLog = console.log;
     console.log = (...args) => logs.push(args.join(' '));
 
     if (type === 'full') {
@@ -17,10 +18,11 @@ export function getDashboardPreview(type = 'simple') {
       cmdDashboard();
     }
 
-    console.log = originalLog;
     return logs.join('\n');
   } catch (err) {
     return `Failed to load: ${err.message}`;
+  } finally {
+    console.log = originalLog;
   }
 }
 
