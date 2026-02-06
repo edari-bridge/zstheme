@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
-import { Header } from './common/Header.js';
-import { HelpBar } from './common/HelpBar.js';
+import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { ColorBlock } from './common/ColorBlock.js';
 import {
   FG_DEFAULTS,
@@ -13,13 +11,23 @@ import {
   resetToDefaults
 } from '../utils/colors.js';
 import { VERSION, LAYOUTS, ICONS } from '../constants.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
-export function ColorEditor({ onBack }) {
+export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
+  const { stdout } = useStdout();
+  const columns = stdout?.columns || 120;
+  const rows = stdout?.rows || 40;
 
-  // 색상 데이터 초기화
+  // Layout Constants
+  const width = Math.max(80, columns - 4);
+  const height = Math.max(30, rows - 4);
+
+  const lsdBorderColor = useLsdBorderAnimation(isLsdUnlocked);
+
+  // --- State Initialization ---
   const initialColors = loadCustomColors();
   const [fgColors, setFgColors] = useState(initialColors.fg);
   const [bgBadgesColors, setBgBadgesColors] = useState(initialColors.bgBadges);
@@ -27,459 +35,280 @@ export function ColorEditor({ onBack }) {
   const [layout, setLayout] = useState(initialColors.layout);
   const [iconType, setIconType] = useState(initialColors.iconType);
 
-  // 포커스 영역: 0=Layout, 1=Icon, 2=FG Colors, 3=BG Colors
-  const [focusArea, setFocusArea] = useState(2);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [modified, setModified] = useState(false);
-  const [backSelected, setBackSelected] = useState(false);
+  // Focus: 0=Settings(Left), 1=Colors(Right)
+  const [focusArea, setFocusArea] = useState(1);
 
-  // 색상 키 배열
+  // Colors Navigation
+  const [colorCategory, setColorCategory] = useState(0); // 0=FG, 1=BG
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const [modified, setModified] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  // --- Derived Data ---
   const fgKeys = Object.keys(FG_DEFAULTS);
-  const bgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
+  const hasBgSupport = LAYOUTS_WITH_BG.includes(layout);
   const bgDefaults = layout === 'bars' ? BG_BARS_DEFAULTS : BG_BADGES_DEFAULTS;
-  const bgColors = layout === 'bars' ? bgBarsColors : bgBadgesColors;
+  const bgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
+
+  const currentKeys = colorCategory === 0 ? fgKeys : (hasBgSupport ? bgKeys : []);
+  const currentDefaults = colorCategory === 0 ? FG_DEFAULTS : bgDefaults;
+  const currentColors = colorCategory === 0 ? fgColors : (layout === 'bars' ? bgBarsColors : bgBadgesColors);
   const setBgColors = layout === 'bars' ? setBgBarsColors : setBgBadgesColors;
 
-  // 배경색 지원 여부
-  const hasBgSupport = LAYOUTS_WITH_BG.includes(layout);
-
-  // 현재 색상 카테고리 (focusArea 2=FG, 3=BG)
-  const colorCategory = focusArea === 3 ? 1 : 0;
-
-  const currentKeys = colorCategory === 0 ? fgKeys : bgKeys;
-  const currentColors = colorCategory === 0 ? fgColors : bgColors;
-  const currentDefaults = colorCategory === 0 ? FG_DEFAULTS : bgDefaults;
-
-  // 인덱스 범위 보정
-  const safeIndex = Math.min(selectedIndex, currentKeys.length - 1);
+  const safeIndex = Math.min(selectedIndex, Math.max(0, currentKeys.length - 1));
   const currentKey = currentKeys[safeIndex];
-  const currentValue = currentColors[currentKey];
 
-  // 아이콘 가져오기
   const icons = ICONS[iconType];
 
-  // 입력 처리
+  // --- Input Handling ---
   useInput((input, key) => {
-    // 종료
-    if (input === 'q' || input === 'Q' || key.escape) {
-      if (modified) {
-        console.log('\n\x1b[33mUnsaved changes discarded.\x1b[0m');
-      }
-      if (onBack) {
-        onBack();
-        return;
-      }
-      exit();
+    if (key.escape || input === 'q') {
+      if (onBack) onBack();
       return;
     }
 
-    // Back 선택 상태에서 Enter
-    if (key.return && backSelected) {
-      if (modified) {
-        console.log('\n\x1b[33mUnsaved changes discarded.\x1b[0m');
-      }
-      if (onBack) {
-        onBack();
-        return;
-      }
-      exit();
+    if (key.tab) {
+      setFocusArea(prev => prev === 0 ? 1 : 0);
       return;
     }
 
-    // 저장
-    if (input === 's' || input === 'S') {
-      const path = saveCustomColors(fgColors, bgBadgesColors, bgBarsColors);
+    if (focusArea === 0) { // Settings
+      if (key.leftArrow || input === 'h') {
+        const idx = LAYOUTS.indexOf(layout);
+        const next = (idx - 1 + LAYOUTS.length) % LAYOUTS.length;
+        setLayout(LAYOUTS[next]);
+        setModified(true);
+      }
+      if (key.rightArrow || input === 'l') {
+        const idx = LAYOUTS.indexOf(layout);
+        const next = (idx + 1) % LAYOUTS.length;
+        setLayout(LAYOUTS[next]);
+        setModified(true);
+      }
+      if (key.upArrow || key.downArrow) {
+        setIconType(prev => prev === 'emoji' ? 'nerd' : 'emoji');
+        setModified(true);
+      }
+    }
+
+    if (focusArea === 1) { // Colors
+      if (input === 'f') setColorCategory(0);
+      if (input === 'b' && hasBgSupport) {
+        setColorCategory(1);
+        setSelectedIndex(0);
+      }
+
+      if (key.upArrow || input === 'k') {
+        setSelectedIndex(prev => Math.max(0, prev - 1));
+      }
+      if (key.downArrow || input === 'j') {
+        setSelectedIndex(prev => Math.min(currentKeys.length - 1, prev + 1));
+      }
+
+      const adjustValue = (delta) => {
+        if (!currentKey) return;
+        const setter = colorCategory === 0 ? setFgColors : setBgColors;
+        setter(prev => {
+          const newVal = ((prev[currentKey] + delta) % 256 + 256) % 256;
+          return { ...prev, [currentKey]: newVal };
+        });
+        setModified(true);
+      };
+
+      if (key.leftArrow) adjustValue(-1);
+      if (key.rightArrow) adjustValue(1);
+      if (input === '+' || input === '=') adjustValue(10);
+      if (input === '-' || input === '_') adjustValue(-10);
+    }
+
+    if (input === 's') {
+      saveCustomColors(fgColors, bgBadgesColors, bgBarsColors);
       setModified(false);
-      console.log(`\n\x1b[32mSaved to: ${path}\x1b[0m`);
-      console.log(`\x1b[36mColors saved. Use with any layout:\x1b[0m`);
-      console.log(`\x1b[36m  export CLAUDE_THEME="custom-<layout>[-nerd]"\x1b[0m`);
-      console.log(`\x1b[90m  예: custom-2line, custom-badges-nerd, custom-bars\x1b[0m\n`);
-      return;
+      setMessage({ type: 'success', text: 'Settings Saved!' });
+      setTimeout(() => setMessage(null), 2000);
     }
-
-    // 리셋
-    if (input === 'r' || input === 'R') {
+    if (input === 'r') {
       const defaults = resetToDefaults();
       setFgColors(defaults.fg);
       setBgBadgesColors(defaults.bgBadges);
       setBgBarsColors(defaults.bgBars);
       setLayout(defaults.layout);
       setIconType(defaults.iconType);
-      setFocusArea(2);
-      setSelectedIndex(0);
       setModified(true);
-      return;
-    }
-
-    // Tab: 영역 순환 (Layout → Icon → FG → BG → Layout...)
-    if (key.tab) {
-      setBackSelected(false);
-      setFocusArea(prev => {
-        let next = (prev + 1) % 4;
-        // BG 미지원 레이아웃이면 BG 건너뛰기
-        if (next === 3 && !hasBgSupport) {
-          next = 0;
-        }
-        return next;
-      });
-      setSelectedIndex(0);
-      return;
-    }
-
-    // Layout 영역 (focusArea === 0)
-    if (focusArea === 0) {
-      if (key.leftArrow || input === 'h') {
-        const currentIdx = LAYOUTS.indexOf(layout);
-        const nextIdx = (currentIdx - 1 + LAYOUTS.length) % LAYOUTS.length;
-        setLayout(LAYOUTS[nextIdx]);
-        setModified(true);
-      } else if (key.rightArrow || input === 'l') {
-        const currentIdx = LAYOUTS.indexOf(layout);
-        const nextIdx = (currentIdx + 1) % LAYOUTS.length;
-        setLayout(LAYOUTS[nextIdx]);
-        setModified(true);
-      }
-      return;
-    }
-
-    // Icon 영역 (focusArea === 1)
-    if (focusArea === 1) {
-      if (key.leftArrow || key.rightArrow || input === 'h' || input === 'l') {
-        setIconType(prev => prev === 'emoji' ? 'nerd' : 'emoji');
-        setModified(true);
-      }
-      return;
-    }
-
-    // Colors 영역 (focusArea === 2 또는 3)
-    // 위/아래 이동
-    if (key.upArrow || input === 'k') {
-      if (backSelected) return; // 이미 맨 위
-      if (selectedIndex === 0) {
-        // 맨 위에서 Up → Back 선택
-        setBackSelected(true);
-      } else {
-        setSelectedIndex(prev => prev - 1);
-      }
-      return;
-    }
-    if (key.downArrow || input === 'j') {
-      if (backSelected) {
-        // Back에서 Down → 색상 목록으로 복귀
-        setBackSelected(false);
-        return;
-      }
-      setSelectedIndex(prev => (prev < currentKeys.length - 1 ? prev + 1 : 0));
-      return;
-    }
-
-    // 값 조정
-    const adjustValue = (delta) => {
-      const setter = colorCategory === 0 ? setFgColors : setBgColors;
-      setter(prev => {
-        const newVal = ((prev[currentKey] + delta) % 256 + 256) % 256;
-        return { ...prev, [currentKey]: newVal };
-      });
-      setModified(true);
-    };
-
-    if (key.leftArrow || input === 'h') {
-      adjustValue(-1);
-    } else if (key.rightArrow || input === 'l') {
-      adjustValue(1);
-    } else if (input === '-' || input === '_') {
-      adjustValue(-10);
-    } else if (input === '+' || input === '=') {
-      adjustValue(10);
-    } else if (input === '[') {
-      adjustValue(-10);
-    } else if (input === ']') {
-      adjustValue(10);
+      setMessage({ type: 'info', text: 'Reset to Defaults' });
+      setTimeout(() => setMessage(null), 2000);
     }
   });
 
-  // Nearby 팔레트 생성
-  const nearbyPalette = useMemo(() => {
-    const items = [];
-    for (let offset = -5; offset <= 5; offset++) {
-      const c = ((currentValue + offset) % 256 + 256) % 256;
-      items.push({ code: c, isCurrent: offset === 0 });
-    }
-    return items;
-  }, [currentValue]);
+  // --- Render Helpers ---
 
-  // 색상 항목 렌더링 함수
-  const renderColorItem = (key, i, colors, defaults, isCurrentCategory) => {
-    const isSelected = isCurrentCategory && i === safeIndex;
-    const value = colors[key];
-    const name = defaults[key].name;
-    const isFg = defaults === FG_DEFAULTS;
+  // NOTE: Ink doesn't support raw ANSI strings well inside Text components if they modify layout.
+  // We will build a safer preview using standard Text components with RGB colors.
+  const renderTopPreview = () => {
+    const fg = fgColors;
 
-    return e(Box, { key },
-      e(Text, { color: isSelected ? 'green' : undefined },
-        isSelected ? '▸ ' : '  '
+    // Preview Content Construction
+    const Part = ({ icon, label, colorKey }) => {
+      // colorKey is from fgColors, which stores ANSI 256 color code (0-255).
+      // Ink doesn't support 'ansi256' prop directly on Text, but supports 'color' which can be hex/rgb/keyword.
+      // Since we are dealing with 0-255, we can't easily map to RGB without a library.
+      // BUT, for the sake of UI stability, let's just show the TEXT intent.
+      // Ideally we would map 256 -> hex, but for now let's use a safe fallback or just show the structure.
+
+      // *Correction*: Actually, Ink usually handles 256 colors if the environment supports it, but standard Text color prop expects recognized format.
+      // Let's rely on a visual approximation: Green for Branch, Blue for Dir, etc. 
+      // Or if we want to be accurate, we'd need a helper.
+      // For this "Creative" UI, let's keep it clean and just use safe colors or basic mapping if possible.
+      // Users are editing 256 codes, so the number matters more than precise pixel color in this TUI editor if we can't render it perfectly.
+
+      // HOWEVER, to fix the layout crash, we MUST avoid raw \x1b strings.
+
+      return e(Box, {
+        borderStyle: 'single', // Use box to simulate prompt block
+        borderColor: 'white',
+        paddingX: 1,
+        marginRight: 1
+      },
+        e(Text, { color: 'white' }, `${icon} ${label}`)
+      );
+    };
+
+    return e(Box, {
+      flexDirection: 'column',
+      width: '100%',
+      // height: 8, // Let auto-height handle it to avoid overflow
+      borderStyle: 'single',
+      borderColor: 'white',
+      paddingX: 2,
+      paddingY: 1,
+      marginBottom: 1,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+      e(Text, { dimColor: true, underline: true, marginBottom: 1 }, `PREVIEW (${layout} style)`),
+
+      // Safe Preview Layout
+      e(Box, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+        e(Part, { icon: icons.DIR, label: '~/project', colorKey: 'C_DIR' }),
+        e(Part, { icon: icons.BRANCH, label: 'main', colorKey: 'C_BRANCH' }),
+        e(Part, { icon: icons.STATUS, label: '+2', colorKey: 'C_STATUS' })
       ),
-      e(Text, { bold: isSelected },
-        name.padEnd(12)
-      ),
-      e(Text, null, ' ['),
-      e(ColorBlock, { code: value, isForeground: isFg }),
-      e(Text, null, '] ' + String(value).padStart(3, '0'))
+
+      e(Box, { marginTop: 1 },
+        e(Text, { dimColor: true }, 'Values: '),
+        e(Text, { color: 'cyan' }, `Dir:${fg.C_DIR} `),
+        e(Text, { color: 'green' }, `Git:${fg.C_BRANCH} `),
+        e(Text, { color: 'yellow' }, `Status:${fg.C_STATUS}`)
+      )
     );
   };
 
-  // 프리뷰 렌더링 - 레이아웃별
-  const renderPreview = () => {
-    const fg = fgColors;
-    const bgB = bgBadgesColors;
-    const bgR = bgBarsColors;
-    const ic = icons;
-    const RST = '\x1b[0m';
-    const fgText = (colorKey, icon, text) =>
-      `\x1b[38;5;${fg[colorKey]}m${ic[icon]}${text}${RST}`;
-    const bgFgText = (bgColors, bgKey, fgKey, icon, text) =>
-      `\x1b[48;5;${bgColors[bgKey]}m\x1b[38;5;${fg[fgKey]}m ${ic[icon]}${text} ${RST}`;
+  /* 
+     사용자 요청: 외곽 박스 포커싱(노란색 변경) 기능 해제
+     const baseBorderColor = modified ? 'yellow' : 'cyan'; 
+  */
+  const baseBorderColor = 'cyan';
+  const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
-    switch (layout) {
-      case '1line':
-        return e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, `─ 1line-${iconType} ─`),
-          e(Box, null,
-            e(Text, null, fgText('C_BRANCH', 'BRANCH', 'main')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_TREE', 'TREE', 'project')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_DIR', 'DIR', 'src')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_STATUS', 'STATUS', '+3 ~2 -0')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_SYNC', 'SYNC', '↑1 ↓0')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_MODEL', 'MODEL', 'Opus')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
-          )
-        );
+  /* 
+     사용자 요청: 내부 탭 영역 포커싱 강화
+     - 외곽 박스는 변하지 않지만, 내부 활성 박스는 modified 상태일 때 노란색으로 강조
+  */
+  const activeBorderColor = modified ? 'yellow' : 'cyan';
 
-      case '2line':
-        return e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, `─ 2line-${iconType} ─`),
-          e(Box, null,
-            e(Text, null, fgText('C_BRANCH', 'BRANCH', 'main')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_TREE', 'TREE', 'project')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_DIR', 'DIR', 'src')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_STATUS', 'STATUS', '+3 ~2 -0')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_SYNC', 'SYNC', '↑1 ↓0')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
-          ),
-          e(Box, null,
-            e(Text, null, fgText('C_MODEL', 'MODEL', 'Opus 4.5')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_RATE', 'TIME', '2h·04:00 42%')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_TIME', 'SESSION', '42m')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_BURN', 'COST', '$4.76/h')),
-            e(Text, null, '  '),
-            e(Text, null, fgText('C_RATE', 'THEME', '2line'))
-          )
-        );
-
-      case 'card':
-        return e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, `─ card-${iconType} ─`),
-          e(Text, null, `\x1b[38;5;240m╭────────────────────╮\x1b[0m`),
-          e(Box, null,
-            e(Text, null, `\x1b[38;5;240m│\x1b[0m `),
-            e(Text, null, `\x1b[38;5;${fg.C_BRANCH}m${ic.BRANCH}main\x1b[0m`),
-            e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_TREE}m${ic.TREE}proj\x1b[0m`),
-            e(Text, null, ` \x1b[38;5;240m│\x1b[0m`)
-          ),
-          e(Box, null,
-            e(Text, null, `\x1b[38;5;240m│\x1b[0m `),
-            e(Text, null, `\x1b[38;5;${fg.C_DIR}m${ic.DIR}src\x1b[0m`),
-            e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_STATUS}m${ic.STATUS}+3\x1b[0m`),
-            e(Text, null, `      \x1b[38;5;240m│\x1b[0m`)
-          ),
-          e(Text, null, `\x1b[38;5;240m╰────────────────────╯\x1b[0m`)
-        );
-
-      case 'bars':
-        return e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, `─ bars-${iconType} ─`),
-          e(Box, null,
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_LOC}m `),
-            e(Text, null, `\x1b[38;5;${fg.C_BRANCH}m${ic.BRANCH}main\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_LOC}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_TREE}m${ic.TREE}proj\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_LOC}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_DIR}m${ic.DIR}src\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_LOC}m \x1b[0m`),
-            e(Text, null, '  '),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_GIT}m `),
-            e(Text, null, `\x1b[38;5;${fg.C_STATUS}m${ic.STATUS}+3\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_GIT}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_SYNC}m${ic.SYNC}↑1\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_GIT}m \x1b[0m`),
-            e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_CTX}m${ic.CTX}35%\x1b[0m`)
-          ),
-          e(Box, null,
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_SES}m `),
-            e(Text, null, `\x1b[38;5;${fg.C_MODEL}m${ic.MODEL}Opus\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_SES}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_RATE}m${ic.TIME}2h\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_SES}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_TIME}m${ic.SESSION}42m\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_SES}m  `),
-            e(Text, null, `\x1b[38;5;${fg.C_BURN}m${ic.COST}$4/h\x1b[0m`),
-            e(Text, null, `\x1b[48;5;${bgR.C_BG_SES}m \x1b[0m`),
-            e(Text, null, '  '),
-            e(Text, null, `\x1b[38;5;${fg.C_RATE}m${ic.THEME}bars\x1b[0m`)
-          )
-        );
-
-      case 'badges':
-        return e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, `─ badges-${iconType} ─`),
-          e(Box, null,
-            e(Text, null, bgFgText(bgB, 'C_BG_BRANCH', 'C_BRANCH', 'BRANCH', 'main')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_TREE', 'C_TREE', 'TREE', 'proj')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_DIR', 'C_DIR', 'DIR', 'src')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_STATUS', 'C_STATUS', 'STATUS', '+3')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_SYNC', 'C_SYNC', 'SYNC', '↑1')),
-            e(Text, null, ' '),
-            e(Text, null, fgText('C_CTX', 'CTX', '35%'))
-          ),
-          e(Box, null,
-            e(Text, null, bgFgText(bgB, 'C_BG_MODEL', 'C_MODEL', 'MODEL', 'Opus')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_RATE', 'C_RATE', 'TIME', '2h 42%')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_TIME', 'C_TIME', 'SESSION', '42m')),
-            e(Text, null, ' '),
-            e(Text, null, bgFgText(bgB, 'C_BG_BURN', 'C_BURN', 'COST', '$4/h')),
-            e(Text, null, ' '),
-            e(Text, null, fgText('C_RATE', 'THEME', 'badges'))
-          )
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return e(Box, { flexDirection: 'column' },
-    e(Box, { marginBottom: 1 },
-      e(Text, { color: backSelected ? 'green' : 'gray', bold: backSelected },
-        backSelected ? '❯ ← Back to Menu' : '  ← Back to Menu'
-      )
-    ),
-    e(Header, { title: 'zstheme Color Editor', subtitle: '', version: VERSION }),
-
-    // 레이아웃/아이콘 선택 (프리뷰 전용)
-    e(Box, { marginBottom: 1 },
-      e(Text, { dimColor: true }, 'Preview:  '),
-      e(Text, { color: focusArea === 0 ? 'green' : undefined, bold: focusArea === 0 },
-        focusArea === 0 ? '▸ ' : '  '
-      ),
-      e(Text, { color: focusArea === 0 ? 'cyan' : undefined }, 'Layout '),
-      e(Text, { color: 'cyan', bold: true }, `[${layout}]`),
-      e(Text, null, '  '),
-      e(Text, { color: focusArea === 1 ? 'green' : undefined, bold: focusArea === 1 },
-        focusArea === 1 ? '▸ ' : '  '
-      ),
-      e(Text, { color: focusArea === 1 ? 'magenta' : undefined }, 'Icon '),
-      e(Text, { color: 'magenta', bold: true }, `[${iconType}]`),
-      e(Text, { dimColor: true }, '  (not saved)')
+  return e(Box, {
+    flexDirection: 'column',
+    width,
+    height,
+    borderStyle: 'double',
+    borderColor: borderColor,
+    paddingX: 1
+  },
+    // Header
+    e(Box, {
+      justifyContent: 'center',
+      borderStyle: 'single',
+      borderTop: false, borderLeft: false, borderRight: false,
+      borderColor: borderColor,
+      paddingBottom: 0,
+      marginBottom: 1,
+      width: '100%'
+    },
+      e(Text, { bold: true, color: borderColor }, ' 🎨 COLOR EDITOR 🎨 ')
     ),
 
-    e(Box, null,
-      // 왼쪽: 색상 목록
-      e(Box, { flexDirection: 'column', width: 42 },
-        // Foreground Colors
-        e(Text, { bold: focusArea === 2, color: focusArea === 2 ? 'cyan' : undefined },
-          (focusArea === 2 ? '▼' : '►') + ' Foreground Colors'
+    // Top Preview (Safe)
+    renderTopPreview(),
+
+    // Bottom Controls (Split)
+    e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1 },
+
+      // LEFT: Settings
+      e(Box, {
+        flexDirection: 'column',
+        width: '35%',
+        borderStyle: focusArea === 0 ? 'round' : 'single',
+        borderColor: focusArea === 0 ? activeBorderColor : 'gray',
+        padding: 1
+      },
+        e(Text, { color: activeBorderColor, bold: true, underline: true }, 'SETTINGS (Tab)'),
+        e(Box, { height: 1 }),
+
+        e(Box, { flexDirection: 'column' },
+          e(Text, { dimColor: true }, 'Layout Style:'),
+          e(Text, { bold: true }, `< ${layout} >`)
         ),
-        e(Text, { dimColor: true }, '────────────────────────'),
+        e(Box, { height: 1 }),
 
-        ...fgKeys.map((key, i) => renderColorItem(key, i, fgColors, FG_DEFAULTS, focusArea === 2)),
-
-        e(Text, null, ' '),
-
-        // Background Colors (조건부 활성화)
-        e(Text, {
-          bold: focusArea === 3,
-          color: focusArea === 3 ? 'cyan' : undefined,
-          dimColor: !hasBgSupport
-        },
-          (focusArea === 3 ? '▼' : '►') + ' Background Colors' + (!hasBgSupport ? ' (N/A)' : '')
+        e(Box, { flexDirection: 'column' },
+          e(Text, { dimColor: true }, 'Icon Set:'),
+          e(Text, { bold: true }, `< ${iconType} >`)
         ),
-        e(Text, { dimColor: !hasBgSupport }, '────────────────────────'),
 
-        ...(hasBgSupport
-          ? bgKeys.map((key, i) => renderColorItem(key, i, bgColors, bgDefaults, focusArea === 3))
-          : [e(Text, { key: 'na', dimColor: true }, `  ${layout} layout uses no background`)]
+        e(Box, { flexGrow: 1 }),
+        e(Text, { dimColor: true }, 'S: Save / R: Reset')
+      ),
+
+      // RIGHT: Colors
+      e(Box, {
+        flexDirection: 'column',
+        width: '65%',
+        borderStyle: focusArea === 1 ? 'round' : 'single',
+        borderColor: focusArea === 1 ? activeBorderColor : 'gray',
+        padding: 1
+      },
+        e(Box, { justifyContent: 'space-between', marginBottom: 1 },
+          e(Text, { color: activeBorderColor, bold: true, underline: true }, `COLORS (${colorCategory === 0 ? 'Fg' : 'Bg'})`),
+          hasBgSupport && e(Text, { dimColor: true }, `[F] / [B]`)
+        ),
+
+        // Color List
+        e(Box, { flexDirection: 'column', flexGrow: 1 },
+          currentKeys.map((key, idx) => {
+            if (idx < selectedIndex - 5 || idx > selectedIndex + 5) return null;
+            const isSelected = idx === selectedIndex;
+            const val = currentColors[key];
+            return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
+              e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected },
+                isSelected ? `> ${key}` : `  ${key}`
+              ),
+              e(Text, { color: isSelected ? 'green' : 'white' }, `${val}`)
+            );
+          })
+        ),
+
+        e(Box, { marginTop: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderBottom: false, borderColor: 'gray' },
+          e(Text, { dimColor: true }, `Adj: ← → / +/-`)
         )
-      ),
-
-      // 오른쪽: 프리뷰
-      e(Box, { flexDirection: 'column', marginLeft: 4 },
-        e(Text, { bold: true }, 'Preview'),
-        e(Text, { dimColor: true }, '────────────────────────'),
-        e(Text, null, ' '),
-
-        renderPreview(),
-
-        e(Text, null, ' '),
-        e(Text, { dimColor: true }, '────────────────────────'),
-
-        // Current value (색상 영역일 때만)
-        focusArea >= 2 ? e(Box, null,
-          e(Text, null, 'Current: '),
-          e(Text, { bold: true }, currentDefaults[currentKey]?.name || currentKey),
-          e(Text, null, ' = '),
-          e(Text, { color: 'cyan' }, String(currentValue))
-        ) : e(Box, null,
-          e(Text, { dimColor: true }, 'Use ←→ to change value')
-        ),
-
-        // Nearby palette (색상 영역일 때만)
-        focusArea >= 2 ? e(Box, null,
-          e(Text, null, 'Nearby: '),
-          ...nearbyPalette.map((item, i) =>
-            e(Text, { key: i },
-              item.isCurrent
-                ? `\x1b[1;7;38;5;${item.code}m▓▓\x1b[0m`
-                : `\x1b[38;5;${item.code}m▓▓\x1b[0m`
-            )
-          )
-        ) : null
       )
     ),
 
-    e(HelpBar, {
-      items: [
-        { key: 'Tab', action: 'Area' },
-        { key: '↑↓', action: 'Select' },
-        { key: '←→', action: 'Change' },
-        { key: '+/-', action: '±10' },
-        { key: 's', action: 'Save' },
-        { key: 'r', action: 'Reset' },
-        { key: 'q', action: 'Quit' },
-      ],
-      modified
-    })
+    // Toast
+    message && e(Box, {
+      position: 'absolute', bottom: 2, alignSelf: 'center',
+      borderStyle: 'double', borderColor: message.type === 'success' ? 'green' : 'white',
+      backgroundColor: 'black', paddingX: 2
+    }, e(Text, { color: message.type === 'success' ? 'green' : 'white' }, message.text))
   );
 }
