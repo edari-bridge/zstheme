@@ -8,7 +8,11 @@ import { computeOffsets } from './animation.js';
 import { renderLayout } from './layouts/index.js';
 import { parseThemeContract } from '../utils/themeContract.js';
 
-function loadThemeName() {
+function loadThemeName(themeNameOverride = '') {
+  if (typeof themeNameOverride === 'string' && themeNameOverride.trim()) {
+    return themeNameOverride.trim();
+  }
+
   const configFile = join(homedir(), '.claude', 'theme-config.sh');
   if (existsSync(configFile)) {
     try {
@@ -17,13 +21,13 @@ function loadThemeName() {
       if (match) return match[1];
     } catch { /* empty */ }
   }
-  return process.env.CLAUDE_THEME || 'badges';
+  return process.env.CLAUDE_THEME || '2line';
 }
 
-export function renderStatusline(jsonInput) {
+export function renderStatusline(jsonInput, options = {}) {
   const data = parseInput(jsonInput);
   const git = collectGitInfo(data.dir);
-  const themeName = loadThemeName();
+  const themeName = loadThemeName(options.themeName);
   const theme = parseThemeContract(themeName);
 
   if (!theme.layout) {

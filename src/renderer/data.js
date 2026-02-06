@@ -7,6 +7,11 @@ function toInt(value, fallback = 0) {
   return isNaN(n) ? fallback : n;
 }
 
+function toText(value, fallback = '') {
+  if (value === undefined || value === null) return fallback;
+  return String(value);
+}
+
 export function parseInput(jsonStr) {
   let json;
   try {
@@ -21,6 +26,10 @@ export function parseInput(jsonStr) {
       sessionDurationMin: 0,
       linesAdded: 0,
       linesRemoved: 0,
+      rateTimeLeft: '',
+      rateResetTime: '',
+      rateLimitPct: 0,
+      burnRate: '',
     };
   }
 
@@ -32,8 +41,25 @@ export function parseInput(jsonStr) {
   const sessionDurationMin = Math.floor(sessionDurationMs / 60000);
   const linesAdded = toInt(json?.cost?.total_lines_added, 0);
   const linesRemoved = toInt(json?.cost?.total_lines_removed, 0);
+  const rateTimeLeft = toText(json?.rate?.time_left ?? json?.rate?.timeLeft ?? json?.rateTimeLeft, '');
+  const rateResetTime = toText(json?.rate?.reset_time ?? json?.rate?.resetTime ?? json?.rateResetTime, '');
+  const rateLimitPct = toInt(json?.rate?.limit_pct ?? json?.rate?.limitPct ?? json?.rateLimitPct, 0);
+  const burnRate = toText(json?.rate?.burn_rate ?? json?.rate?.burnRate ?? json?.burnRate, '');
 
-  return { model, dir, dirName, contextPct, sessionDurationMs, sessionDurationMin, linesAdded, linesRemoved };
+  return {
+    model,
+    dir,
+    dirName,
+    contextPct,
+    sessionDurationMs,
+    sessionDurationMin,
+    linesAdded,
+    linesRemoved,
+    rateTimeLeft,
+    rateResetTime,
+    rateLimitPct,
+    burnRate,
+  };
 }
 
 export function collectGitInfo(dir) {

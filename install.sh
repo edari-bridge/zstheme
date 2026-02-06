@@ -138,6 +138,7 @@ echo "  ${CYAN}~/.claude/themes/${RST} -> $INSTALL_DIR/themes/"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 CONFIG_DIR="$HOME/.config/zstheme"
 BACKUP_FILE="$CONFIG_DIR/original-statusline.json"
+PARTIAL_BACKUP_SENTINEL='{"__zstheme_partial_backup__":true}'
 
 backup_original_statusline() {
     # Skip if backup already exists (first install only)
@@ -168,8 +169,9 @@ backup_original_statusline() {
     else
         # No jq: check if statusLine key exists
         if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
-            echo '{"command":"unknown (backup without jq)"}' > "$BACKUP_FILE"
-            echo "${YELLOW}Backed up statusline (partial - install jq for full backup)${RST}"
+            echo "$PARTIAL_BACKUP_SENTINEL" > "$BACKUP_FILE"
+            echo "${YELLOW}Detected existing statusLine but jq is missing.${RST}"
+            echo "${YELLOW}Saved partial-backup marker (original statusLine left untouched).${RST}"
         else
             echo "null" > "$BACKUP_FILE"
             echo "${BLUE}No previous statusline (saved to backup)${RST}"
