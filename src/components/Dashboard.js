@@ -3,16 +3,22 @@ import { Box, Text, useInput, useStdout } from 'ink';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
 import { getUsageStats, getDashboardPreview } from '../utils/stats.js';
 import { formatCurrency, formatNumber } from '../constants.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
-export function Dashboard({ onBack }) {
+export function Dashboard({ onBack, isLsdUnlocked = false }) {
   const { stdout } = useStdout();
   const columns = stdout?.columns || 120;
   const rows = stdout?.rows || 40;
 
-  const width = Math.min(100, Math.max(80, columns - 2));
-  const height = Math.min(40, Math.max(25, rows - 2));
+  // MainMenu/ThemeSelector와 동일한 크기 정책 사용
+  const width = Math.max(80, columns - 4);
+  const height = Math.max(28, rows - 4);
+
+  const lsdBorderColor = useLsdBorderAnimation(isLsdUnlocked);
+  const baseBorderColor = 'cyan';
+  const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [skillsStatus, setSkillsStatus] = useState([]);
@@ -117,12 +123,12 @@ export function Dashboard({ onBack }) {
   const Separator = () => e(Text, { dimColor: true }, ' │ ');
 
   const renderSimpleDashboard = () => {
-    return e(Box, { flexDirection: 'column', gap: 1 },
+    return e(Box, { flexDirection: 'column', gap: 1, width: '100%' },
       // Main Summary Box
-      e(Box, { borderStyle: 'round', borderColor: 'cyan', flexDirection: 'column', paddingX: 1, paddingY: 0 },
+      e(Box, { borderStyle: 'round', borderColor: borderColor, flexDirection: 'column', paddingX: 1, paddingY: 0, width: '100%' },
 
         // Title
-        e(Box, { marginBottom: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderTop: false, borderColor: 'gray' },
+        e(Box, { marginBottom: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderTop: false, borderColor: 'gray', width: '100%' },
           e(Text, { color: 'yellow', bold: true }, '💰 COST & USAGE SUMMARY')
         ),
 
@@ -166,7 +172,7 @@ export function Dashboard({ onBack }) {
       ),
 
       // Footer / Additional info
-      e(Box, { borderStyle: 'single', borderColor: 'gray', flexDirection: 'row', paddingX: 1, justifyContent: 'space-around' },
+      e(Box, { borderStyle: 'single', borderColor: 'gray', flexDirection: 'row', paddingX: 1, justifyContent: 'space-around', width: '100%' },
         e(Text, {}, `Sessions: ${formatNumber(stats.totalSessions || 0)}`),
         e(Text, {}, `Messages: ${formatNumber(stats.totalMessages || 0)}`),
         e(Text, { dimColor: true }, `${stats.startDate || ''} ~ ${stats.endDate || ''}`)

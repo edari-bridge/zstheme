@@ -95,15 +95,24 @@ export function MainMenu() {
     }
 
     if (activeTab === 'editor') {
-        return e(ColorEditor, { onBack: () => setActiveTab('menu') });
+        return e(ColorEditor, {
+            onBack: () => setActiveTab('menu'),
+            isLsdUnlocked
+        });
     }
 
     if (activeTab === 'dashboard') {
-        return e(Dashboard, { onBack: () => setActiveTab('menu') });
+        return e(Dashboard, {
+            onBack: () => setActiveTab('menu'),
+            isLsdUnlocked
+        });
     }
 
     if (activeTab === 'reset') {
-        return e(ResetSettings, { onBack: () => setActiveTab('menu') });
+        return e(ResetSettings, {
+            onBack: () => setActiveTab('menu'),
+            isLsdUnlocked
+        });
     }
 
     // Get system info
