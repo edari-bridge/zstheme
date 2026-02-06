@@ -1,6 +1,7 @@
 // 2line layout (ported from 2line.sh)
 import { renderText, formatGitStatus, formatGitSync, formatContext, isAnimated } from '../helpers.js';
 import { colorizeText } from '../animation.js';
+import { getRateColor } from '../colors.js';
 
 export function render(ctx) {
   const { colors, data, git } = ctx;
@@ -29,13 +30,15 @@ export function render(ctx) {
     if (isAnimated(ctx.animationMode)) {
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeText(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 10, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
     } else {
-      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} ${colors.C_RATE}(${data.rateLimitPct}%)${colors.RST}`);
+      const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
+      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
     }
   } else if (data.rateLimitPct) {
     if (isAnimated(ctx.animationMode)) {
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeText(`(${data.rateLimitPct}%)`, 10, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
     } else {
-      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}(${data.rateLimitPct}%)${colors.RST}`);
+      const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
+      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}(${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
     }
   }
 
