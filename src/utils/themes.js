@@ -13,6 +13,11 @@ export function getAllThemes(includeHidden = false) {
 
   for (const color of COLOR_MODES) {
     for (const anim of animations) {
+      // custom 색상은 lsd/rainbow 애니메이션과 조합 불가
+      if (color === 'custom-' && (anim === 'lsd-' || anim === 'rainbow-')) {
+        continue;
+      }
+
       for (const layout of LAYOUTS) {
         for (const icon of ICON_MODES) {
           themes.push(`${color}${anim}${layout}${icon}`);
@@ -125,8 +130,14 @@ export function filterThemes(themes, filters) {
 /**
  * 테마 정렬 (Smart Sorting)
  * Layout -> Style (Priority List) -> Icon
+ * @param {string[]} themes - 테마 목록
+ * @param {boolean} isLsdMode - LSD 모드 여부
+ *
+ * 정렬 순서:
+ * - Normal: Default → Nerd → Rainbow → Mono
+ * - LSD: LSD → Default → Nerd → Rainbow → Mono → Mono LSD
  */
-export function sortThemes(themes) {
+export function sortThemes(themes, isLsdMode = false) {
   // User defined Layout Order: 1line, 2line, Badges, Bars, Card
   const LAYOUT_ORDER = ['1line', '2line', 'badges', 'bars', 'card'];
 
@@ -138,44 +149,45 @@ export function sortThemes(themes) {
     const layoutIdxA = LAYOUT_ORDER.indexOf(infoA.layout);
     const layoutIdxB = LAYOUT_ORDER.indexOf(infoB.layout);
 
-    // If layout is not in the list (shouldn't happen for known layouts), put it at the end
     const safeLayoutA = layoutIdxA === -1 ? 99 : layoutIdxA;
     const safeLayoutB = layoutIdxB === -1 ? 99 : layoutIdxB;
 
     if (safeLayoutA !== safeLayoutB) return safeLayoutA - safeLayoutB;
 
-    // 2. Style Priority (Detailed User Request)
-    // Order: Default -> Nerd -> Mono -> Nerd Mono -> Rainbow -> Mono Rainbow -> Custom
+    // 2. Style Priority (Mode-dependent)
     const getStyleWeight = (info) => {
       const isNerd = info.icon === 'nerd';
+      const nerdOffset = isNerd ? 0.5 : 0;
 
-      if (info.color === 'custom') return 99; // Custom at the end
+      if (info.color === 'custom') return 99;
 
-      // 1. Default (Pastel, Static, Emoji)
-      if (info.color === 'pastel' && info.animation === 'static' && !isNerd) return 0;
-
-      // 2. Nerd (Pastel, Static, Nerd)
-      if (info.color === 'pastel' && info.animation === 'static' && isNerd) return 1;
-
-      // 3. Mono (Mono, Static, Emoji)
-      if (info.color === 'mono' && info.animation === 'static' && !isNerd) return 2;
-
-      // 4. Nerd Mono (Mono, Static, Nerd)
-      if (info.color === 'mono' && info.animation === 'static' && isNerd) return 3;
-
-      // 5. Rainbow (Rainbow, Emoji) - (Grouping Rainbow Nerd here too closely? User didn't specify rainbow nerd separately)
-      // Let's assume Rainbow generally.
-      if (info.animation === 'rainbow' && info.color === 'pastel') {
-        // If we want Rainbow Nerd after Rainbow Emoji, use decimal or sub-sort
-        return isNerd ? 4.5 : 4;
+      if (isLsdMode) {
+        // LSD Mode: LSD → Default → Nerd → Rainbow → Mono → Mono LSD
+        // 1. LSD (pastel + lsd)
+        if (info.color === 'pastel' && info.animation === 'lsd') return 0 + nerdOffset;
+        // 2. Default (pastel + static)
+        if (info.color === 'pastel' && info.animation === 'static') return 1 + nerdOffset;
+        // 3. Rainbow (pastel + rainbow)
+        if (info.color === 'pastel' && info.animation === 'rainbow') return 2 + nerdOffset;
+        // 4. Mono (mono + static)
+        if (info.color === 'mono' && info.animation === 'static') return 3 + nerdOffset;
+        // 5. Mono Rainbow (mono + rainbow)
+        if (info.color === 'mono' && info.animation === 'rainbow') return 4 + nerdOffset;
+        // 6. Mono LSD (mono + lsd) - 맨 뒤
+        if (info.color === 'mono' && info.animation === 'lsd') return 5 + nerdOffset;
+      } else {
+        // Normal Mode: Default → Nerd → Rainbow → Mono
+        // 1. Default (pastel + static)
+        if (info.color === 'pastel' && info.animation === 'static') return 0 + nerdOffset;
+        // 2. Rainbow (pastel + rainbow)
+        if (info.color === 'pastel' && info.animation === 'rainbow') return 1 + nerdOffset;
+        // 3. Mono (mono + static)
+        if (info.color === 'mono' && info.animation === 'static') return 2 + nerdOffset;
+        // 4. Mono Rainbow (mono + rainbow)
+        if (info.color === 'mono' && info.animation === 'rainbow') return 3 + nerdOffset;
       }
 
-      // 6. Mono Rainbow
-      if (info.animation === 'rainbow' && info.color === 'mono') {
-        return isNerd ? 5.5 : 5;
-      }
-
-      return 10; // Other variants
+      return 10;
     };
 
     const styleA = getStyleWeight(infoA);
@@ -183,7 +195,7 @@ export function sortThemes(themes) {
 
     if (styleA !== styleB) return styleA - styleB;
 
-    // 3. Tie breaker (shouldn't be reached if logic covers all)
+    // 3. Tie breaker
     return a.localeCompare(b);
   });
 }

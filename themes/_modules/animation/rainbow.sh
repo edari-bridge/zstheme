@@ -49,9 +49,9 @@ if [[ "$ANIMATION_MODE" == "lsd" ]]; then
     COLOR_OFFSET=$(( TIMESTAMP * 41 % 60 ))
     BG_OFFSET=$(( TIMESTAMP * 37 % 60 ))
 else
-    # Rainbow/Others: Smooth Wave (Time-based)
-    # 0.1s resolution (10Hz) for smooth animation
-    COLOR_OFFSET=$(( TIMESTAMP % 60 ))
+    # Rainbow: Fast Wave (Time-based)
+    # Multiplier 5 for faster color cycling
+    COLOR_OFFSET=$(( (TIMESTAMP * 5) % 60 ))
     # Background offset slightly shifted
     BG_OFFSET=$(( (COLOR_OFFSET + 30) % 60 ))
 fi
@@ -229,13 +229,25 @@ colorize_bg_lsd() {
     local result=""
     local i=0
 
+    # 각 요소마다 다른 stride로 패턴 차별화 (5-11 사이 변동)
+    local stride=$(( 5 + (start_idx % 7) ))
+    # 방향도 다르게 (홀수 start_idx는 역방향)
+    local direction=1
+    [[ $((start_idx % 20)) -ge 10 ]] && direction=-1
+
     while IFS= read -r char; do
-        # Stride 7 for detail
-        local color_idx=$(( (start_idx + (i * 7) + COLOR_OFFSET) % 60 ))
-        
-        # Always use Full Vivid Rainbow/LSD palette for LSD mode
-        local bg_code="\033[48;2;${RAINBOW_COLORS[$color_idx]}m"
-        
+        local color_idx=$(( (start_idx + (i * stride * direction) + COLOR_OFFSET) % 60 ))
+        # 음수 보정
+        [[ $color_idx -lt 0 ]] && color_idx=$((60 + color_idx))
+
+        # mono 모드면 회색톤, 아니면 파스텔톤
+        local bg_code
+        if [[ "$COLOR_MODE" == "mono" ]]; then
+            bg_code="\033[48;2;${MONO_CYCLE[$color_idx]}m"
+        else
+            bg_code="\033[48;2;${RAINBOW_COLORS[$color_idx]}m"
+        fi
+
         result+="${bg_code}${fg_color}${char}"
         ((i++))
     done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)

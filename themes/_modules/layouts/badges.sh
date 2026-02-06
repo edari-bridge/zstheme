@@ -194,18 +194,45 @@ render() {
 
     # Rate limit 칩
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-        local rate_color=$(get_rate_color)
-        chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%")"
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+            local raw_rate=" ${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${RATE_LIMIT_PCT}% "
+            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                chip_rate=$(colorize_bg_lsd "$raw_rate" 60 "\033[30m")
+            else
+                chip_rate=$(colorize_bg_rainbow "$raw_rate" "$C_BG_RATE" "\033[103m" 60 "\033[30m")
+            fi
+        else
+            local rate_color=$(get_rate_color)
+            chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}${RATE_LIMIT_PCT}%")"
+        fi
     else
         chip_rate=""
     fi
 
     # 세션 시간 칩
-    chip_time="$(make_chip "$C_BG_TIME" "${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m")"
+    if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+        local raw_time=" ${ICON_SESSION} ${SESSION_DURATION_MIN}m "
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_time=$(colorize_bg_lsd "$raw_time" 70 "\033[30m")
+        else
+            chip_time=$(colorize_bg_rainbow "$raw_time" "$C_BG_TIME" "\033[47m" 70 "\033[30m")
+        fi
+    else
+        chip_time="$(make_chip "$C_BG_TIME" "${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m")"
+    fi
 
     # 번레이트 칩
     if [[ -n "$BURN_RATE" ]]; then
-        chip_burn="$(make_chip "$C_BG_BURN" "${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}")"
+        if [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]; then
+            local raw_burn=" ${ICON_COST} ${BURN_RATE} "
+            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+                chip_burn=$(colorize_bg_lsd "$raw_burn" 80 "\033[30m")
+            else
+                chip_burn=$(colorize_bg_rainbow "$raw_burn" "$C_BG_BURN" "\033[43m" 80 "\033[30m")
+            fi
+        else
+            chip_burn="$(make_chip "$C_BG_BURN" "${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}")"
+        fi
     else
         chip_burn=""
     fi
