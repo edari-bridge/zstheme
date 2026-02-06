@@ -71,12 +71,58 @@ for bin_path in "$LOCAL_BIN" "$GLOBAL_BIN"; do
 done
 
 # ============================================================
-# 3. Note about settings.json
+# 3. Restore original statusline
 # ============================================================
-echo ""
-echo "${YELLOW}Note:${RST} statusLine config in ~/.claude/settings.json was not removed."
-echo "Remove manually if no longer needed:"
-echo "  ${CYAN}\"statusLine\": { \"command\": \"~/.claude/statusline.sh\" }${RST}"
+BACKUP_FILE="$HOME/.config/zstheme/original-statusline.json"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+
+restore_statusline() {
+    if [[ ! -f "$BACKUP_FILE" ]]; then
+        echo ""
+        echo "${YELLOW}Note:${RST} statusLine config in ~/.claude/settings.json was not removed."
+        echo "Remove manually if no longer needed:"
+        echo "  ${CYAN}\"statusLine\": { \"command\": \"~/.claude/statusline.sh\" }${RST}"
+        return
+    fi
+
+    if [[ ! -f "$SETTINGS_FILE" ]]; then
+        echo ""
+        echo "${BLUE}No settings.json found, nothing to restore${RST}"
+        return
+    fi
+
+    local backup_content
+    backup_content=$(cat "$BACKUP_FILE")
+
+    if ! command -v jq &>/dev/null; then
+        echo ""
+        echo "${YELLOW}Note:${RST} jq not found. Please restore statusLine manually in settings.json."
+        echo "Original backup saved at: ${CYAN}$BACKUP_FILE${RST}"
+        return
+    fi
+
+    if [[ "$backup_content" == "null" ]]; then
+        # No previous statusline — remove the key
+        echo ""
+        echo "${GREEN}Removing zstheme statusLine from settings.json (no previous config)...${RST}"
+        local tmp
+        tmp=$(mktemp)
+        jq 'del(.statusLine)' "$SETTINGS_FILE" > "$tmp"
+        mv "$tmp" "$SETTINGS_FILE"
+        echo "  ${GREEN}statusLine config removed${RST}"
+    else
+        # Restore original statusline
+        echo ""
+        echo "${GREEN}Restoring original statusLine config...${RST}"
+        local tmp
+        tmp=$(mktemp)
+        jq --argjson sl "$backup_content" '.statusLine = $sl' "$SETTINGS_FILE" > "$tmp"
+        mv "$tmp" "$SETTINGS_FILE"
+        echo "  ${GREEN}Original statusLine restored${RST}"
+    fi
+}
+
+restore_statusline
 
 # ============================================================
 # 4. Handle --purge (complete removal)
@@ -87,10 +133,10 @@ if [[ "$PURGE" == true ]]; then
     echo ""
     echo "${BOLD}Purging all zstheme files...${RST}"
 
-    # Remove custom colors
+    # Remove custom colors and statusline backup
     if [[ -d "$CUSTOM_DIR" ]]; then
         rm -rf "$CUSTOM_DIR"
-        echo "  ${GREEN}Removed: $CUSTOM_DIR${RST}"
+        echo "  ${GREEN}Removed: $CUSTOM_DIR (includes statusline backup)${RST}"
     fi
 
     # Remove installation directory

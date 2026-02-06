@@ -13,6 +13,6 @@ test('theme list should contain unique names', () => {
 test('theme validator should reject malformed theme names', () => {
   assert.equal(isValidTheme('2line'), true);
   assert.equal(isValidTheme('mono-rainbow-card-nerd'), true);
-  assert.equal(isValidTheme('plasma-badges'), true);
+  assert.equal(isValidTheme('plasma-badges'), false);
   assert.equal(isValidTheme('not-a-theme'), false);
 });

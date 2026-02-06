@@ -6,6 +6,7 @@ import { cmdApply } from './commands/apply.js';
 import { cmdInteractive } from './commands/interactive.js';
 import { cmdEdit } from './commands/edit.js';
 import { cmdStats, cmdDashboard } from './commands/usage.js';
+import { toggleStatusline } from './utils/shell.js';
 
 export function cli() {
   program
@@ -31,6 +32,9 @@ export function cli() {
     .option('--lsd', 'Filter: lsd animation')
     .option('--rainbow', 'Filter: rainbow animation')
     .option('--nerd', 'Filter: nerd font icons')
+    // statusline 전환
+    .option('--original', 'Switch to original statusline')
+    .option('--activate', 'Re-activate zstheme statusline')
     .argument('[theme]', 'Apply a specific theme');
 
   program.parse();
@@ -58,7 +62,25 @@ export function cli() {
   if (options.nerd) filters.icon = 'nerd';
 
   // 명령어 라우팅
-  if (options.list) {
+  if (options.original) {
+    const result = toggleStatusline('original');
+    if (result.success) {
+      console.log('\x1b[32m✓ Switched to original statusline\x1b[0m');
+    } else {
+      console.error(`\x1b[31m✗ ${result.error}\x1b[0m`);
+      process.exitCode = 1;
+    }
+    return;
+  } else if (options.activate) {
+    const result = toggleStatusline('zstheme');
+    if (result.success) {
+      console.log('\x1b[32m✓ zstheme statusline activated\x1b[0m');
+    } else {
+      console.error(`\x1b[31m✗ ${result.error}\x1b[0m`);
+      process.exitCode = 1;
+    }
+    return;
+  } else if (options.list) {
     cmdList(filters);
   } else if (options.previewAll) {
     cmdPreview(true, filters);
