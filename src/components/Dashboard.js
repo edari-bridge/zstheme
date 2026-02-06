@@ -125,19 +125,22 @@ export function Dashboard({ onBack }) {
         if (skill.installed) {
           const result = uninstallSkill(skill.name);
           if (result.success) {
-            setMessage({ type: 'success', text: `Skill '${skill.name}' disabled` });
+            setMessage({ type: 'success', text: `✓ Skill '${skill.name}' disabled` });
           } else {
             setMessage({ type: 'error', text: result.error });
           }
         } else {
           const result = installSkill(skill.name);
           if (result.success) {
-            setMessage({ type: 'success', text: `Skill '${skill.name}' enabled` });
+            setMessage({ type: 'success', text: `✓ Skill '${skill.name}' enabled` });
           } else {
             setMessage({ type: 'error', text: result.error });
           }
         }
         setSkillsStatus(getSkillsStatus());
+
+        // 2초 후 메시지 숨기기
+        setTimeout(() => setMessage(null), 2000);
       }
     }
   });
@@ -187,11 +190,16 @@ export function Dashboard({ onBack }) {
       }),
     ),
 
-    // Message
-    message && e(Box, { marginTop: 1 },
-      e(Text, { color: message.type === 'success' ? 'green' : 'red' },
-        message.type === 'success' ? '✓ ' : '✗ ',
-        message.text
+    // Toast Message
+    message && e(Box, { marginTop: 1, justifyContent: 'center' },
+      e(Box, {
+        borderStyle: 'round',
+        borderColor: message.type === 'success' ? 'green' : 'red',
+        paddingX: 2
+      },
+        e(Text, { color: message.type === 'success' ? 'green' : 'red', bold: true },
+          message.text
+        )
       )
     ),
 

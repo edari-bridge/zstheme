@@ -58,3 +58,27 @@ export function saveThemeToShellConfig(theme) {
 
   return configPath;
 }
+
+export function resetTheme() {
+  const configPath = getShellConfigPath();
+
+  if (!fs.existsSync(configPath)) {
+    return { success: true };
+  }
+
+  let content = fs.readFileSync(configPath, 'utf8');
+
+  // Remove CLAUDE_THEME line and comment
+  content = content.replace(/\n?# zstheme - Claude Code statusline theme\nexport CLAUDE_THEME=.*\n?/g, '\n');
+  content = content.replace(/^export CLAUDE_THEME=.*\n?/m, '');
+
+  fs.writeFileSync(configPath, content);
+
+  // Also remove theme-config.sh
+  const themeConfigPath = getThemeConfigPath();
+  if (fs.existsSync(themeConfigPath)) {
+    fs.unlinkSync(themeConfigPath);
+  }
+
+  return { success: true };
+}
