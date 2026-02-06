@@ -17,6 +17,9 @@ export const PATHS = {
   themeConfig: join(homedir(), '.claude', 'theme-config.sh'),
   customColor: join(homedir(), '.config', 'zstheme', 'custom-color.sh'),
   customColorDir: join(homedir(), '.config', 'zstheme'),
+  // 스킬 관련 경로
+  skillsBundle: join(PROJECT_ROOT, 'skills'),
+  claudeSkills: join(homedir(), '.claude', 'skills'),
 };
 
 // 버전
