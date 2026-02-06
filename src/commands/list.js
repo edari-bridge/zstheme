@@ -6,8 +6,9 @@ export function cmdList(filters = {}) {
   const current = getCurrentTheme();
   const hasFilters = filters.layout || filters.color || filters.animation || filters.icon;
 
-  // lsd 필터 사용 시 숨겨진 테마 포함
-  const includeHidden = filters.animation === 'lsd';
+  // 숨겨진 애니메이션 필터 사용 시 숨겨진 테마 포함
+  const hiddenAnimations = new Set(['lsd']);
+  const includeHidden = hiddenAnimations.has(filters.animation);
   let themes = getAllThemes(includeHidden);
 
   if (hasFilters) {
@@ -23,7 +24,7 @@ export function cmdList(filters = {}) {
 
   console.log('');
   console.log(chalk.bold(`Available themes (${themes.length}):`));
-  console.log(chalk.dim('Format: [mono-|custom-][rainbow-]{layout}[-nerd]'));
+  console.log(chalk.dim('Format: [mono-|custom-][lsd-|rainbow-]{layout}[-nerd]'));
   console.log('');
 
   // 레이아웃별 그룹핑

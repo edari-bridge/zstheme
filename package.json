@@ -9,7 +9,12 @@
   "type": "module",
   "scripts": {
     "start": "node bin/zstheme.js",
-    "dev": "node bin/zstheme.js"
+    "dev": "node bin/zstheme.js",
+    "lint": "bash scripts/check-js.sh",
+    "check:shell": "bash scripts/check-shell.sh",
+    "test": "node --test test/**/*.test.mjs",
+    "smoke": "bash scripts/smoke.sh",
+    "check": "npm run lint && npm run check:shell && npm test && npm run smoke"
   },
   "keywords": [
     "claude",

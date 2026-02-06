@@ -8,8 +8,8 @@ import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
-// User Requested Order: 1line, 2line, Badges, Bars, Card, Lab
-const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card', 'Lab'];
+// User Requested Order: 1line, 2line, Badges, Bars, Card
+const BASE_TABS = ['All', '1line', '2line', 'Badges', 'Bars', 'Card'];
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -30,7 +30,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [savedTheme, setSavedTheme] = useState(null);
   const [backSelected, setBackSelected] = useState(false);
 
-  // LSD Visuals
+  // Border animation
   const borderColor = useLsdBorderAnimation(isLsdUnlocked);
 
   // lsd unlocked 상태에 따라 테마 목록 다시 가져옴
@@ -44,9 +44,6 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const currentTabName = TABS[activeTab] || TABS[0];
 
   const filteredThemes = useMemo(() => {
-    if (currentTabName === 'Lab') {
-      return ['plasma-badges', 'neon-badges', 'noise-badges'];
-    }
     if (activeTab === 0) return allThemes;
     const filterKey = currentTabName.toLowerCase();
     return allThemes.filter(theme => theme.includes(filterKey));
@@ -150,10 +147,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     // Animation loop for Rainbow/LSD/Lab
     const isAnimated = selectedTheme && (
       selectedTheme.includes('rainbow') ||
-      selectedTheme.includes('lsd') ||
-      selectedTheme.includes('plasma') ||
-      selectedTheme.includes('neon') ||
-      selectedTheme.includes('noise')
+      selectedTheme.includes('lsd')
     );
 
     if (isAnimated) {

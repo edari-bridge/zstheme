@@ -2,7 +2,9 @@
 # 2-line Layout Module - 2줄 레이아웃
 # Line 1: Git 정보 + 컨텍스트
 # Line 2: 모델 + Rate limit + 세션
-# format_git_status, format_git_sync, is_animated, render_text → helpers.sh
+
+LAYOUT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$LAYOUT_DIR/common.sh"
 
 # ============================================================
 # 렌더링 함수
@@ -25,19 +27,15 @@ render() {
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        line1_parts+=("$(format_git_status)")
-        line1_parts+=("$(format_git_sync)")
+        line1_parts+=("$(format_git_status_common "  ")")
+        line1_parts+=("$(format_git_sync_common "  ")")
     else
         line1_parts+=("${C_DIM_STATUS}${ICON_GIT_STATUS} status${RST}")
         line1_parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
     fi
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
-    if [[ "$ICON_MODE" == "nerd" ]]; then
-        line1_parts+=("${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    else
-        line1_parts+=("${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}")
-    fi
+    line1_parts+=("$(format_context_common)")
 
     # Line 2: 세션 정보 + 테마
     local line2_parts=()

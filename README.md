@@ -6,7 +6,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 ## Features
 
-- **60 Theme Combinations** - Mix layouts, colors, animations, and icons
+- **50+ Theme Combinations** - Mix layouts, colors, animations, and icons
 - **Interactive Selector** - Preview themes in real-time with arrow keys
 - **Color Editor** - Customize colors with tweakcc-style interface
 - **Git Integration** - Branch, worktree, file changes, push/pull status
@@ -28,14 +28,15 @@ zstheme
 ### Theme Format
 
 ```
-[mono-|custom-][rainbow-]{layout}[-nerd]
+[mono-|custom-][lsd-|rainbow-|plasma-|neon-|noise-]{layout}[-nerd]
 ```
 
 | Component | Options | Description |
 |-----------|---------|-------------|
 | **Layout** | `1line`, `2line`, `card`, `bars`, `badges` | Required - Visual layout |
 | **Color** | (none)=pastel, `mono-`, `custom-` | Color palette (pick one) |
-| **Animation** | (none)=static, `rainbow-` | Color animation |
+| **Animation** | (none)=static, `rainbow-` | Public animation |
+| **Animation (Lab)** | `lsd-`, `plasma-`, `neon-`, `noise-` | Experimental animation |
 | **Icons** | (none), `-nerd` | Icon set (requires Nerd Font) |
 
 ### Examples
@@ -46,6 +47,7 @@ zstheme bars-nerd          # Grouped bars with Nerd Font
 zstheme mono-card          # Monochrome card style
 zstheme rainbow-badges-nerd # Rainbow animation with Nerd Font
 zstheme custom-2line       # Your custom colors + 2-line layout
+zstheme plasma-badges      # Experimental plasma animation
 ```
 
 ### Layout Previews
@@ -88,7 +90,7 @@ zstheme custom-2line       # Your custom colors + 2-line layout
 ```bash
 zstheme              # Interactive theme selector
 zstheme <theme>      # Show how to apply a theme
-zstheme --list       # List all 60 theme combinations
+zstheme --list       # List all public theme combinations
 zstheme --preview    # Preview sample themes
 zstheme --preview-all # Preview all themes
 zstheme --edit       # Launch color editor
@@ -110,9 +112,9 @@ Use skills directly in Claude Code:
 
 To install the skills:
 ```bash
-mkdir -p ~/.claude/commands
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/commands/dashboard.md
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/commands/dashboard-full.md
+mkdir -p ~/.claude/skills/dashboard ~/.claude/skills/dashboard-full
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/skills/dashboard/SKILL.md
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/skills/dashboard-full/SKILL.md
 ```
 
 ## Color Editor

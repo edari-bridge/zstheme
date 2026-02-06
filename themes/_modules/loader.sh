@@ -14,75 +14,14 @@ while [[ -L "$_LOADER_SOURCE" ]]; do
     [[ "$_LOADER_SOURCE" != /* ]] && _LOADER_SOURCE="$_LOADER_DIR/$_LOADER_SOURCE"
 done
 MODULES_DIR="$(cd -P "$(dirname "$_LOADER_SOURCE")" && pwd)"
+source "$MODULES_DIR/theme_contract.sh"
 
 # ============================================================
 # 테마명 파싱
 # ============================================================
 
 parse_theme_name() {
-    local theme_name="$1"
-
-    # 기본값
-    COLOR_MODE="pastel"
-    ANIMATION_MODE="static"
-    LAYOUT_MODE="2line"
-    ICON_MODE="emoji"
-
-    # 1. 색상 모드 확인 (pastel/mono/custom 중 택일)
-    if [[ "$theme_name" == custom-* ]]; then
-        COLOR_MODE="custom"
-        theme_name="${theme_name#custom-}"
-    elif [[ "$theme_name" == mono-* ]]; then
-        COLOR_MODE="mono"
-        theme_name="${theme_name#mono-}"
-    fi
-
-    # 3. lsd- 또는 rainbow- 접두사 확인
-    if [[ "$theme_name" == lsd-* ]]; then
-        ANIMATION_MODE="lsd"
-        theme_name="${theme_name#lsd-}"
-    elif [[ "$theme_name" == rainbow-* ]]; then
-        ANIMATION_MODE="rainbow"
-        theme_name="${theme_name#rainbow-}"
-    elif [[ "$theme_name" == plasma-* ]]; then
-        ANIMATION_MODE="plasma"
-        theme_name="${theme_name#plasma-}"
-    elif [[ "$theme_name" == neon-* ]]; then
-        ANIMATION_MODE="neon"
-        theme_name="${theme_name#neon-}"
-    elif [[ "$theme_name" == noise-* ]]; then
-        ANIMATION_MODE="noise"
-        theme_name="${theme_name#noise-}"
-    fi
-
-    # 4. -nerd 접미사 확인
-    if [[ "$theme_name" == *-nerd ]]; then
-        ICON_MODE="nerd"
-        theme_name="${theme_name%-nerd}"
-    fi
-
-    # 5. 레이아웃 결정
-    case "$theme_name" in
-        1-line|1line)
-            LAYOUT_MODE="1line"
-            ;;
-        2-line|2line|"")
-            LAYOUT_MODE="2line"
-            ;;
-        card)
-            LAYOUT_MODE="card"
-            ;;
-        bars)
-            LAYOUT_MODE="bars"
-            ;;
-        badges)
-            LAYOUT_MODE="badges"
-            ;;
-        *)
-            # 알 수 없는 레이아웃 → 2line 기본
-            LAYOUT_MODE="2line"
-            ;;
-    esac
+    parse_theme_name_contract "$1"
 }
 
 # ============================================================
@@ -109,7 +48,7 @@ load_modules() {
 
     # 3. 애니메이션 모듈 로드
     case "$ANIMATION_MODE" in
-        lsd|rainbow|plasma|neon|noise)
+        lsd|rainbow)
             source "$MODULES_DIR/animation/rainbow.sh"
             ;;
         *)
@@ -148,15 +87,17 @@ load_theme() {
 # ============================================================
 
 list_all_themes() {
-    local layouts=("1line" "2line" "card" "bars" "badges")
-    local colors=("" "mono-")
-    local anims=("" "lsd-" "rainbow-")
-    local icons=("" "-nerd")
+    local animations=("${THEME_ANIMATION_PUBLIC_PREFIXES[@]}" "${THEME_ANIMATION_HIDDEN_PREFIXES[@]}")
 
-    for color in "${colors[@]}"; do
-        for anim in "${anims[@]}"; do
-            for layout in "${layouts[@]}"; do
-                for icon in "${icons[@]}"; do
+    for color in "${THEME_COLOR_PREFIXES[@]}"; do
+        for anim in "${animations[@]}"; do
+            # custom 색상은 static 조합만 허용
+            if [[ "$color" == "custom-" && -n "$anim" ]]; then
+                continue
+            fi
+
+            for layout in "${THEME_LAYOUTS[@]}"; do
+                for icon in "${THEME_ICON_SUFFIXES[@]}"; do
                     echo "${color}${anim}${layout}${icon}"
                 done
             done
@@ -166,11 +107,5 @@ list_all_themes() {
 
 # 테마 유효성 검사
 is_valid_theme() {
-    local theme="$1"
-    local all_themes=$(list_all_themes)
-
-    for t in $all_themes; do
-        [[ "$t" == "$theme" ]] && return 0
-    done
-    return 1
+    is_valid_theme_name "$1"
 }

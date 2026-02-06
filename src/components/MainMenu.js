@@ -6,8 +6,8 @@ import { ColorEditor } from './ColorEditor.js';
 import { Dashboard } from './Dashboard.js';
 import { ResetSettings } from './ResetSettings.js';
 import { VERSION } from '../constants.js';
-import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 import { useEasterEgg } from '../hooks/useEasterEgg.js';
+import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
@@ -32,7 +32,7 @@ export function MainMenu() {
     const width = Math.max(80, columns - 4);
     const height = Math.max(28, rows - 4);
 
-    // Easter Egg & LSD Animation
+    // Easter Egg + Border Animation
     const { isLsdUnlocked, handleArrowKey, resetCounts } = useEasterEgg();
     const borderColor = useLsdBorderAnimation(isLsdUnlocked);
 
@@ -63,7 +63,7 @@ export function MainMenu() {
             resetCounts();
         }
 
-        // Easter Egg Triggers
+        // Hidden triggers
         if (key.rightArrow) handleArrowKey('right');
         if (key.leftArrow) handleArrowKey('left');
     });
