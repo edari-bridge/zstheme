@@ -6,7 +6,7 @@ import { getRateColor } from '../colors.js';
 function padTo(text, targetWidth) {
   const plain = stripAnsi(text);
   // Emoji width correction (emojis take 2 columns)
-  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
   const emojiCount = (plain.match(emojiRe) || []).length;
   const actualWidth = [...plain].length + emojiCount;
   const pad = Math.max(0, targetWidth - actualWidth);
