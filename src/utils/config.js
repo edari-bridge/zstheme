@@ -30,7 +30,7 @@ export const PATHS = {
   claudeSettings: join(homedir(), '.claude', 'settings.json'),
   // 스킬 관련 경로
   skillsBundle: join(PROJECT_ROOT, 'skills'),
-  claudeSkills: join(homedir(), '.claude', 'skills'),
+  claudeCommands: join(homedir(), '.claude', 'commands'),
 };
 
 // 버전 (package.json에서 동적 로딩)

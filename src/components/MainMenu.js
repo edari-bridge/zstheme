@@ -5,17 +5,21 @@ import { ThemeSelector } from './ThemeSelector.js';
 import { ColorEditor } from './ColorEditor.js';
 import { Dashboard } from './Dashboard.js';
 import { ResetSettings } from './ResetSettings.js';
-import { VERSION } from '../constants.js';
+import { VERSION, LSD_COLORS } from '../constants.js';
 import { useEasterEgg } from '../hooks/useEasterEgg.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 import { isZsthemeActive, getOriginalStatusline, toggleStatusline } from '../utils/shell.js';
 import { getCurrentTheme } from '../utils/themes.js';
-import { getUsageStats } from '../utils/stats.js';
+import { isSkillInstalled } from '../utils/skills.js';
+import { getThemeColorPalette } from '../utils/colors.js';
 
 const e = React.createElement;
 
 // Check if original statusline backup exists
 const hasBackup = getOriginalStatusline() !== undefined;
+
+// Check if skills are installed (dashboard + dashboard-full are always paired)
+const skillsInstalled = isSkillInstalled('dashboard');
 
 export function MainMenu() {
     const { exit } = useApp();
@@ -30,11 +34,10 @@ export function MainMenu() {
 
     // Dynamic Data
     const currentTheme = getCurrentTheme();
-    const stats = getUsageStats();
 
     // Menu Definitions
     const MENU_ITEMS = [
-        { id: 'themes', label: 'Explore Themes', icon: '🎨', desc: 'Browse & Apply Themes' },
+        { id: 'themes', label: 'Theme Explorer', icon: '🎨', desc: 'Browse & Apply Themes' },
         { id: 'editor', label: 'Color Editor', icon: '✏️ ', desc: 'Customize Colors' },
         { id: 'dashboard', label: 'Dashboard', icon: '📊', desc: 'Usage & Costs' },
         { id: 'reset', label: 'Reset Settings', icon: '⚙️ ', desc: 'Factory Reset' },
@@ -151,20 +154,6 @@ export function MainMenu() {
                     );
                 }),
 
-                e(Box, { flexGrow: 1 }), // Spacer to push description to bottom
-
-                // Action Description Banner (Moved to Left Bottom)
-                e(Box, {
-                    marginTop: 1,
-                    width: '100%',
-                    borderStyle: 'single',
-                    borderColor: 'white',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingY: 0
-                },
-                    e(Text, { color: 'cyan', italic: true }, MENU_ITEMS[selectedIndex].desc)
-                )
             ),
 
             // 3. Right Column: Logo & Info
@@ -178,35 +167,24 @@ export function MainMenu() {
                 paddingLeft: 2
             },
                 // A. Logo (Top)
-                e(Box, { marginBottom: 1, marginTop: 0 },
+                e(Box, { marginBottom: 1, marginTop: 2 },
                     e(Logo, { lsdMode: isLsdUnlocked })
                 ),
 
-                // B. System Status Card (Middle)
-                e(Box, {
-                    flexDirection: 'column',
-                    borderStyle: 'round',
-                    borderColor: 'gray',
-                    paddingX: 2,
-                    paddingY: 0,
-                    width: '90%',
-                    alignItems: 'center',
-                    marginBottom: 1
-                },
-                    e(Text, { color: 'green', bold: true, underline: false, marginBottom: 0 }, ' SYSTEM STATUS '),
-                    e(Box, { height: 1 }), // Spacer
-
-                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
-                        e(Text, { dimColor: true }, 'Theme:'),
-                        e(Text, { color: 'white', bold: true }, currentTheme)
+                // B. Theme & Skills Info (Simple Text)
+                e(Box, { flexDirection: 'column', alignItems: 'center', marginBottom: 1 },
+                    e(Box, null,
+                        e(Text, { dimColor: true }, 'Theme: '),
+                        ...(() => {
+                            const palette = getThemeColorPalette(currentTheme);
+                            return currentTheme.split('').map((ch, i) =>
+                                e(Text, { key: i, color: palette[i % palette.length], bold: true }, ch)
+                            );
+                        })()
                     ),
-                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
-                        e(Text, { dimColor: true }, 'Shell:'),
-                        e(Text, { color: zsthemeActive ? 'green' : 'red' }, zsthemeActive ? 'Active' : 'Inactive')
-                    ),
-                    e(Box, { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
-                        e(Text, { dimColor: true }, 'Node:'),
-                        e(Text, { color: 'cyan' }, process.version)
+                    e(Box, null,
+                        e(Text, { dimColor: true }, 'Skills: '),
+                        e(Text, { color: skillsInstalled ? 'green' : 'yellow' }, skillsInstalled ? 'Installed' : 'Not Installed')
                     )
                 ),
 
@@ -223,11 +201,13 @@ export function MainMenu() {
             justifyContent: 'center',
             paddingTop: 0
         },
-            e(Text, { dimColor: true },
-                isLsdUnlocked
-                    ? '🌈 LSD MODE ACTIVE - EPILEPSY WARNING 🌈'
-                    : 'Use ↑/↓ to Navigate, Enter to Select, Q to Quit'
-            )
+            isLsdUnlocked
+                ? e(Text, null,
+                    ...'🌈 LSD MODE ACTIVE - EPILEPSY WARNING 🌈'.split('').map((ch, i) =>
+                        e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
+                    )
+                )
+                : e(Text, { dimColor: true }, 'Use ↑ /↓ to Navigate, Enter to Select, Q to Quit')
         )
     );
 }
