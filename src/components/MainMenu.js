@@ -179,7 +179,7 @@ export function MainMenu() {
             },
                 // A. Logo (Top)
                 e(Box, { marginBottom: 1, marginTop: 0 },
-                    e(Logo, { isLsdUnlocked: isLsdUnlocked })
+                    e(Logo, { lsdMode: isLsdUnlocked })
                 ),
 
                 // B. System Status Card (Middle)

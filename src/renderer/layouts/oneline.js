@@ -21,7 +21,7 @@ export function render(ctx) {
   parts.push(renderText(colors.C_I_MODEL, colors.icons.MODEL, data.model, colors.C_MODEL, 9, ctx));
   parts.push(formatContext(ctx));
 
-  if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+  if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
     parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} (${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
   }
