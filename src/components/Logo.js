@@ -25,8 +25,8 @@ export function Logo({ lsdMode = false }) {
     const [colorOffset, setColorOffset] = useState(0);
 
     useEffect(() => {
-        // LSD Mode: Faster animation
-        const interval = lsdMode ? 20 : 50;
+        // LSD Mode: Faster animation (reduced from 50/20 to mitigate flicker)
+        const interval = lsdMode ? 80 : 200;
         const timer = setInterval(() => {
             setColorOffset(prev => (prev + 1) % 360); // Use 360 for full hue cycle
         }, interval);

@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 import { PATHS } from './config.js';
+import { parseThemeContract } from './themeContract.js';
+import { RAINBOW_COLORS, LSD_COLORS, MONO_CYCLE } from '../renderer/palette.js';
 
 // 전경색 기본값
 export const FG_DEFAULTS = {
@@ -178,6 +180,97 @@ export function saveCustomColors(fg, bgBadges, bgBars) {
   writeFileSync(PATHS.customColor, content, { mode: 0o644 });
 
   return PATHS.customColor;
+}
+
+/**
+ * ANSI 256 색상 코드 → hex 변환
+ */
+export function ansi256ToHex(code) {
+  // 0-7: 표준색
+  const STANDARD = [
+    '#000000', '#800000', '#008000', '#808000',
+    '#000080', '#800080', '#008080', '#c0c0c0',
+  ];
+  // 8-15: 밝은색
+  const BRIGHT = [
+    '#808080', '#ff0000', '#00ff00', '#ffff00',
+    '#0000ff', '#ff00ff', '#00ffff', '#ffffff',
+  ];
+
+  if (code < 8) return STANDARD[code];
+  if (code < 16) return BRIGHT[code - 8];
+
+  // 16-231: 6x6x6 큐브
+  if (code < 232) {
+    const idx = code - 16;
+    const r = Math.floor(idx / 36);
+    const g = Math.floor((idx % 36) / 6);
+    const b = idx % 6;
+    const toVal = (v) => v === 0 ? 0 : 55 + v * 40;
+    const hex = (v) => toVal(v).toString(16).padStart(2, '0');
+    return `#${hex(r)}${hex(g)}${hex(b)}`;
+  }
+
+  // 232-255: 그레이스케일
+  const grey = 8 + (code - 232) * 10;
+  const h = grey.toString(16).padStart(2, '0');
+  return `#${h}${h}${h}`;
+}
+
+// Pastel FG: 렌더러 실제 색상 기준 (basic ANSI bright + ANSI 256)
+const PASTEL_HEX = [
+  '#ffff00',  // BRANCH: \033[93m bright yellow
+  '#00ff00',  // TREE: \033[92m bright green
+  '#00ffff',  // DIR: \033[96m bright cyan
+  '#ff00ff',  // MODEL: \033[95m bright magenta
+  '#87afff',  // STATUS: fg(111)
+  '#af87ff',  // SYNC: fg(141)
+  '#ffffaf',  // RATE: fg(229)
+  '#ffaf87',  // BURN: fg(216)
+  '#5fafff',  // TIME: fg(75)
+];
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+function samplePalette(palette, count = 10) {
+  const step = palette.length / count;
+  return Array.from({ length: count }, (_, i) => {
+    const [r, g, b] = palette[Math.floor(i * step)];
+    return rgbToHex(r, g, b);
+  });
+}
+
+/**
+ * 테마 색상 팔레트 조회 (hex 배열)
+ * 렌더러의 실제 색상 로직과 일치하도록 구현
+ */
+export function getThemeColorPalette(themeName) {
+  const { color, animation } = parseThemeContract(themeName);
+
+  // 애니메이션 테마: RGB 팔레트에서 샘플링
+  if (animation !== 'static') {
+    let palette;
+    if (color === 'mono') palette = MONO_CYCLE;
+    else if (animation === 'lsd') palette = LSD_COLORS;
+    else palette = RAINBOW_COLORS;
+    return samplePalette(palette);
+  }
+
+  // static mono
+  if (color === 'mono') {
+    return [ansi256ToHex(250)];
+  }
+
+  // static custom (ANSI 256 codes)
+  if (color === 'custom') {
+    const { fg } = loadCustomColors();
+    return Object.values(fg).map(ansi256ToHex);
+  }
+
+  // static pastel
+  return PASTEL_HEX;
 }
 
 /**
