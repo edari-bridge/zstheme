@@ -51,7 +51,7 @@ export function render(ctx) {
 
     // Line 2: Session chip + Theme
     let sesRaw = ` ${colors.icons.MODEL} ${data.model}`;
-    if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
       sesRaw += `     ${colors.icons.TIME} ${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`;
     }
     sesRaw += `     ${colors.icons.SESSION} ${data.sessionDurationMin}m`;
@@ -63,7 +63,7 @@ export function render(ctx) {
       chipSes = colorizeBgLsd(sesRaw, 50, colorOffset, colorMode, '\x1b[30m');
     } else {
       let sesAnimated = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colorizeText(data.model, 50, colorOffset, animationMode, colorMode)}`;
-      if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+      if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
         sesAnimated += `     ${colors.C_I_RATE}${colors.icons.TIME} ${colorizeText(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 60, colorOffset, animationMode, colorMode)}`;
       }
       sesAnimated += `     ${colors.C_I_TIME}${colors.icons.SESSION} ${colorizeText(`${data.sessionDurationMin}m`, 70, colorOffset, animationMode, colorMode)}`;
@@ -104,7 +104,7 @@ export function render(ctx) {
   const line1 = `${makeChip(bgLoc, locContent, chipStyle, colors)}    ${makeChip(bgGit, gitContent, chipStyle, colors)}    ${ctxDisplay}`;
 
   let sesContent = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}`;
-  if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+  if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
     sesContent += `     ${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`;
   }

@@ -26,7 +26,7 @@ export function render(ctx) {
   const line2Parts = [];
   line2Parts.push(renderText(colors.C_I_MODEL, colors.icons.MODEL, data.model, colors.C_MODEL, 9, ctx));
 
-  if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+  if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     if (isAnimated(ctx.animationMode)) {
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeText(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 10, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
     } else {
