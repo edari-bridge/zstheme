@@ -112,7 +112,7 @@ export function render(ctx) {
   }
 
   // Rate limit
-  if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+  if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     if (isAnimated(animationMode)) {
       if (animationMode === 'lsd') {
         chipRate = colorizeBgLsd(` ${colors.icons.TIME} ${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%) `, 60, colorOffset, colorMode, '\x1b[30m');

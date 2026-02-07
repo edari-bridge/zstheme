@@ -116,6 +116,21 @@ export function filterThemes(themes, filters) {
 }
 
 /**
+ * 테마 카테고리 탭 필터
+ * @param {string[]} themes
+ * @param {'All'|'Standard'|'Custom'} category
+ */
+export function filterThemesByCategory(themes, category = 'All') {
+  if (category === 'Custom') {
+    return themes.filter(theme => theme.startsWith('custom-'));
+  }
+  if (category === 'Standard') {
+    return themes.filter(theme => !theme.startsWith('custom-'));
+  }
+  return themes;
+}
+
+/**
  * 테마 정렬 (Smart Sorting)
  * Layout -> Style -> Icon
  * @param {string[]} themes - 테마 목록

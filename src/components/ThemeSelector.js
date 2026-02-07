@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { getAllThemes, getCurrentTheme, sortThemes, getThemeDescription, parseThemeName } from '../utils/themes.js';
+import { getAllThemes, getCurrentTheme, sortThemes, getThemeDescription, filterThemesByCategory } from '../utils/themes.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
@@ -10,6 +10,7 @@ const e = React.createElement;
 const GRID_COLS = 3;
 const GRID_VISIBLE_ROWS = 6;
 const PAGE_SIZE = GRID_COLS * GRID_VISIBLE_ROWS;
+const TABS = ['All', 'Standard', 'Custom'];
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -32,32 +33,21 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     return sortThemes(themes);
   }, []);
 
-  // Tabs
-  const tabs = ['All', 'Dark', 'Light', 'Custom'];
   const [activeTab, setActiveTab] = useState('All');
 
   // Input State
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(0); // For grid navigation logic if needed
 
   const [toast, setToast] = useState(null);
 
   // Filter Logic
-  const filteredThemes = useMemo(() => {
-    if (activeTab === 'All') return allThemes;
-    if (activeTab === 'Custom') return allThemes.filter(t => t.name.startsWith('custom-'));
-    return allThemes.filter(t => {
-      if (activeTab === 'Custom') return t.name.startsWith('custom-');
-      if (activeTab === 'Standard') return !t.name.startsWith('custom-');
-      return true;
-    });
-  }, [allThemes, activeTab]);
+  const filteredThemes = useMemo(() => filterThemesByCategory(allThemes, activeTab), [allThemes, activeTab]);
 
   const safeIndex = Math.min(selectedIndex, Math.max(0, filteredThemes.length - 1));
   const selectedTheme = filteredThemes[safeIndex];
 
   // Pagination
-  const totalPages = Math.ceil(filteredThemes.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredThemes.length / PAGE_SIZE));
   const currentPage = Math.floor(safeIndex / PAGE_SIZE);
   const startIdx = currentPage * PAGE_SIZE;
   const currentThemesPage = filteredThemes.slice(startIdx, startIdx + PAGE_SIZE);
@@ -85,9 +75,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
     if (key.tab) {
       // Cycle Tabs
-      const tabList = ['All', 'Standard', 'Custom'];
-      const currTabIdx = tabList.indexOf(activeTab);
-      const nextTab = tabList[(currTabIdx + 1) % tabList.length];
+      const currTabIdx = TABS.indexOf(activeTab);
+      const nextTab = TABS[(currTabIdx + 1) % TABS.length];
       setActiveTab(nextTab);
       setSelectedIndex(0);
       return;
@@ -100,8 +89,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
     if (key.return) {
       if (selectedTheme) {
-        saveThemeToShellConfig(selectedTheme.name);
-        setToast({ type: 'success', text: `Applied theme: ${selectedTheme.name}` });
+        saveThemeToShellConfig(selectedTheme);
+        setToast({ type: 'success', text: `Applied theme: ${selectedTheme}` });
         setTimeout(() => setToast(null), 2000);
       }
     }
@@ -121,7 +110,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     if (!theme) return e(Box, { width: '32%', height: 1 }); // Placeholder
 
     const isSelected = (startIdx + idx) === safeIndex;
-    const isCurrent = theme.name === currentThemeName;
+    const isCurrent = theme === currentThemeName;
 
     return e(Box, {
       width: '32%',
@@ -133,7 +122,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         backgroundColor: isSelected ? 'cyan' : undefined,
         bold: isSelected || isCurrent
       },
-        isSelected ? `> ${theme.name}` : (isCurrent ? `* ${theme.name}` : `  ${theme.name}`)
+        isSelected ? `> ${theme}` : (isCurrent ? `* ${theme}` : `  ${theme}`)
       )
     );
   };
@@ -188,7 +177,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       // Info Area
       e(Box, { marginTop: 1, borderStyle: 'round', borderColor: 'gray', paddingX: 1, justifyContent: 'center', width: '100%' },
-        e(Text, { dimColor: true }, selectedTheme ? getThemeDescription(selectedTheme.name) : 'Select a theme...')
+        e(Text, { dimColor: true }, selectedTheme ? getThemeDescription(selectedTheme) : 'Select a theme...')
       ),
 
       // Pagination Info

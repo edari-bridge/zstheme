@@ -276,7 +276,7 @@ render_theme_output() {
     local theme_config="${THEME_CONFIG:-$HOME/.claude/theme-config.sh}"
 
     [[ -f "$theme_config" ]] && source "$theme_config"
-    THEME_NAME="${CLAUDE_THEME:-badges}"
+    THEME_NAME="${CLAUDE_THEME:-2line}"
 
     export_statusline_variables
 

@@ -65,6 +65,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   useInput((input, key) => {
     if (key.escape || input === 'q') {
       if (onBack) onBack();
+      else exit();
       return;
     }
 
