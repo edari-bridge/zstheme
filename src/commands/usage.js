@@ -105,7 +105,7 @@ function getRateLimitInfo() {
 function getCurrentSessionInfo() {
   try {
     // 현재 디렉토리 기반 프로젝트 경로 찾기
-    const cwd = process.cwd().replace(/\//g, '-').replace(/^-/, '-');
+    const cwd = process.cwd().replace(/\//g, '-');
     const projectsDir = join(homedir(), '.claude', 'projects');
 
     if (!existsSync(projectsDir)) return null;
