@@ -53,6 +53,7 @@ function getRateLimitInfo() {
       encoding: 'utf-8',
       timeout: 10000,
       stdio: ['pipe', 'pipe', 'ignore'],
+      shell: true,
     });
     const data = JSON.parse(result);
     const blocks = data.blocks || [];
@@ -111,9 +112,12 @@ function getCurrentSessionInfo() {
 
     if (!existsSync(projectsDir)) return null;
 
-    // 프로젝트 폴더 찾기
+    // 프로젝트 폴더 찾기 (exact match 우선, fallback은 가장 긴 매칭)
     const dirs = readdirSync(projectsDir);
-    const projectDir = dirs.find(d => cwd.includes(d.slice(1)) || d.slice(1).includes(cwd.slice(1)));
+    const projectDir = dirs.find(d => d.slice(1) === cwd)
+      || dirs.filter(d => cwd.includes(d.slice(1)) || d.slice(1).includes(cwd))
+              .sort((a, b) => b.length - a.length)[0]
+      || null;
 
     if (!projectDir) return null;
 
