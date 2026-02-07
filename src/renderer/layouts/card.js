@@ -64,7 +64,7 @@ export function render(ctx) {
   let R1, R2, R3, R4, R5;
   if (isAnimated(animationMode)) {
     R1 = `${colors.C_I_MODEL}${colors.icons.MODEL}${RST} ${colorizeText(data.model, 9, colorOffset, animationMode, colorMode)}`;
-    if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
       R2 = `${colors.C_I_RATE}${colors.icons.TIME}${RST} ${colorizeText(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 12, colorOffset, animationMode, colorMode)}`;
     } else {
       R2 = '';
@@ -74,7 +74,7 @@ export function render(ctx) {
     R5 = `${colors.C_I_THEME}${colors.icons.THEME}${RST} ${colorizeText(data.themeName, 5, colorOffset, animationMode, colorMode)}`;
   } else {
     R1 = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}${RST}`;
-    if (data.rateTimeLeft && data.rateResetTime && data.rateLimitPct) {
+    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
       const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
       R2 = `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)${RST}`;
     } else {

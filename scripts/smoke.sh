@@ -51,4 +51,19 @@ EOF
     fi
 done
 
+rm -f "$TMP_HOME/.claude/theme-config.sh"
+PATH="/usr/bin:/bin" env -u CLAUDE_THEME HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" >/tmp/zstheme-smoke-status.out 2>/tmp/zstheme-smoke-status.err
+
+if [[ -s /tmp/zstheme-smoke-status.err ]]; then
+    echo "statusline emitted stderr for default theme fallback."
+    cat /tmp/zstheme-smoke-status.err
+    exit 1
+fi
+
+default_stripped=$(sed $'s/\x1b\\[[0-9;]*m//g' /tmp/zstheme-smoke-status.out)
+if ! echo "$default_stripped" | grep -q "2line"; then
+    echo "statusline default theme fallback check failed (expected 2line)."
+    exit 1
+fi
+
 echo "Smoke checks passed."
