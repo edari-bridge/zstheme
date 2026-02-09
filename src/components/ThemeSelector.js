@@ -234,11 +234,11 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       // Preview Area
       e(Box, { flexDirection: 'column', marginTop: 1 },
-        preview ? e(Text, {}, preview) : null
+        preview ? e(Text, {}, (selectedTheme && parseThemeName(selectedTheme).layout !== 'card' ? '\n' : '') + preview) : null
       ),
 
       // Pagination Info
-      e(Box, { justifyContent: 'center', marginTop: 0, width: '100%' },
+      e(Box, { justifyContent: 'center', marginTop: 1, width: '100%' },
         e(Text, { dimColor: true }, `Page ${currentPage + 1} / ${totalPages}  (${filteredThemes.length} themes)`)
       )
     ),
