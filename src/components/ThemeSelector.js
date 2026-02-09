@@ -12,10 +12,14 @@ const e = React.createElement;
 const GRID_COLS = 3;
 const GRID_VISIBLE_ROWS = 3;
 const PAGE_SIZE = GRID_COLS * GRID_VISIBLE_ROWS;
-const SEP = '__sep__';
+const SEP_PREFIX = '__sep_';
 
 function isThemeItem(item) {
-  return item && item !== SEP;
+  return item && !item.startsWith?.(SEP_PREFIX);
+}
+
+function isSep(item) {
+  return item && typeof item === 'string' && item.startsWith(SEP_PREFIX);
 }
 
 // All 탭: 레이아웃 그룹 사이에 padding + separator row 삽입
@@ -27,9 +31,11 @@ function buildDisplayList(themes, activeTab) {
 
   for (const theme of themes) {
     const layout = parseThemeName(theme).layout;
-    if (lastLayout && layout !== lastLayout) {
+    if (layout !== lastLayout) {
       while (result.length % GRID_COLS !== 0) result.push(null);
-      for (let i = 0; i < GRID_COLS; i++) result.push(SEP);
+      result.push(`${SEP_PREFIX}L_${layout}`);
+      result.push(`${SEP_PREFIX}C_${layout}`);
+      result.push(`${SEP_PREFIX}R_${layout}`);
     }
     result.push(theme);
     lastLayout = layout;
@@ -81,6 +87,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   }, [isLsdUnlocked, activeTab]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollRow, setScrollRow] = useState(0);
   const [toast, setToast] = useState(null);
 
   // Filter + display list (All 탭: separator 포함)
@@ -127,10 +134,20 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     }
   }, [selectedTheme, previewTick]);
 
-  // Pagination (display list 기준)
-  const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE));
-  const currentPage = Math.floor(safeIndex / PAGE_SIZE);
-  const startIdx = currentPage * PAGE_SIZE;
+  // Row-based scrolling: 선택된 행이 보이도록 scrollRow 조정
+  const selectedRow = Math.floor(safeIndex / GRID_COLS);
+  const totalRows = Math.ceil(displayList.length / GRID_COLS);
+  const maxScrollRow = Math.max(0, totalRows - GRID_VISIBLE_ROWS);
+
+  useEffect(() => {
+    setScrollRow(prev => {
+      if (selectedRow < prev) return selectedRow;
+      if (selectedRow >= prev + GRID_VISIBLE_ROWS) return selectedRow - GRID_VISIBLE_ROWS + 1;
+      return prev;
+    });
+  }, [selectedRow]);
+
+  const startIdx = scrollRow * GRID_COLS;
   const rawPage = displayList.slice(startIdx, startIdx + PAGE_SIZE);
   const currentThemesPage = [...rawPage];
   while (currentThemesPage.length % GRID_COLS !== 0) currentThemesPage.push(null);
@@ -172,6 +189,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       }
       setActiveTab(tabs[nextIdx]);
       setSelectedIndex(0);
+      setScrollRow(0);
       return;
     }
 
@@ -211,10 +229,16 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   };
 
   const renderGridItem = (theme, idx) => {
-    if (theme === SEP) {
-      return e(Box, { key: `sep-${idx}`, width: '32%', height: 1, marginBottom: 1, justifyContent: 'center' },
-        e(Text, { dimColor: true }, '· · · · ·')
-      );
+    if (isSep(theme)) {
+      const pos = theme[SEP_PREFIX.length]; // L, C, R
+      const layoutName = theme.slice(SEP_PREFIX.length + 2);
+      let content;
+      if (pos === 'L') {
+        content = e(Text, { dimColor: true }, `  `, e(Text, { italic: true }, layoutName), ` ────`);
+      } else {
+        content = null;
+      }
+      return e(Box, { key: `sep-${idx}`, width: '32%', height: 1, marginBottom: 1 }, content);
     }
     if (!theme) return e(Box, { key: `empty-${idx}`, width: '32%', height: 1, marginBottom: 1 });
 
@@ -298,7 +322,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       // Pagination Info
       e(Box, { justifyContent: 'center', marginTop: 1, width: '100%' },
-        e(Text, { dimColor: true }, `Page ${currentPage + 1} / ${totalPages}  (${filteredThemes.length} themes)`)
+        e(Text, { dimColor: true }, `${Math.min(scrollRow + GRID_VISIBLE_ROWS, totalRows)} / ${totalRows} rows  (${filteredThemes.length} themes)`)
       )
     ),
 
