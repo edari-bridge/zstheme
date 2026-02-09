@@ -24,9 +24,8 @@ export function formatGitStatus(separator, ctx) {
     const addText = git.added > 0 ? `+${git.added}` : '+0';
     const modText = git.modified > 0 ? `~${git.modified}` : '~0';
     const delText = git.deleted > 0 ? `-${git.deleted}` : '-0';
-    add = colorizeText(addText, 3, colorOffset, animationMode, colorMode);
-    mod = colorizeText(modText, 5, colorOffset, animationMode, colorMode);
-    del = colorizeText(delText, 7, colorOffset, animationMode, colorMode);
+    const combined = `${addText}${separator}${modText}${separator}${delText}`;
+    return `${colors.C_I_STATUS}${colors.icons.GIT_STATUS}${colors.RST} ${colorizeText(combined, 30, colorOffset, animationMode, colorMode)}`;
   } else {
     add = git.added > 0 ? `${colors.C_BRIGHT_STATUS}+${git.added}${colors.RST}` : `${colors.C_DIM_STATUS}+0${colors.RST}`;
     mod = git.modified > 0 ? `${colors.C_BRIGHT_STATUS}~${git.modified}${colors.RST}` : `${colors.C_DIM_STATUS}~0${colors.RST}`;
@@ -43,8 +42,8 @@ export function formatGitSync(separator, ctx) {
   if (isAnimated(animationMode)) {
     const aheadText = git.ahead > 0 ? `\u2191 ${git.ahead}` : '\u2191 0';
     const behindText = git.behind > 0 ? `\u2193 ${git.behind}` : '\u2193 0';
-    ahead = colorizeText(aheadText, 0, colorOffset, animationMode, colorMode);
-    behind = colorizeText(behindText, 4, colorOffset, animationMode, colorMode);
+    const combined = `${aheadText}${separator}${behindText}`;
+    return `${colors.C_I_SYNC}${colors.icons.SYNC}${colors.RST} ${colorizeText(combined, 40, colorOffset, animationMode, colorMode)}`;
   } else {
     ahead = git.ahead > 0 ? `${colors.C_BRIGHT_SYNC}\u2191 ${git.ahead}${colors.RST}` : `${colors.C_DIM_SYNC}\u2191 0${colors.RST}`;
     behind = git.behind > 0 ? `${colors.C_BRIGHT_SYNC}\u2193 ${git.behind}${colors.RST}` : `${colors.C_DIM_SYNC}\u2193 0${colors.RST}`;
