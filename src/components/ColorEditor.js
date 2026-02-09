@@ -211,14 +211,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
     // Top Preview (Real Renderer)
     e(Box, { flexDirection: 'column', width: '100%', height: 11, paddingX: 2, marginBottom: 1, alignItems: 'center' },
       e(Text, { dimColor: true, underline: true }, isLsdUnlocked ? 'PREVIEW (lsd style)' : `PREVIEW (${layout} style)`),
-      preview ? e(Box, { marginTop: 1 }, e(Text, {}, (layout !== 'card' ? '\n' : '') + preview)) : null,
-      e(Box, { flexGrow: 1 }),
-      e(Box, null,
-        e(Text, { dimColor: true }, 'Values: '),
-        e(Text, { color: 'cyan' }, `Dir:${fgColors.C_DIR} `),
-        e(Text, { color: 'green' }, `Git:${fgColors.C_BRANCH} `),
-        e(Text, { color: 'yellow' }, `Status:${fgColors.C_STATUS}`)
-      )
+      preview ? e(Box, { marginTop: 1 }, e(Text, {}, (layout !== 'card' ? '\n' : '') + preview)) : null
     ),
 
     // Bottom Controls (Split)
