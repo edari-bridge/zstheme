@@ -57,6 +57,18 @@ export function renderCustomPreview(layout, iconType, fgColors, bgBadgesColors, 
 }
 
 /**
+ * LSD 모드 프리뷰 (자체 팔레트 사용, customColorCodes 불필요)
+ */
+export function renderLsdPreview(layout, iconType) {
+  const themeName = `lsd-${layout}${iconType === 'nerd' ? '-nerd' : ''}`;
+  try {
+    return renderStatusline(MOCK_JSON_INPUT, { themeName, mockGit: MOCK_GIT });
+  } catch (error) {
+    return `[Preview error: ${error.message}]`;
+  }
+}
+
+/**
  * 비동기 프리뷰 렌더링 (애니메이션용, 인터페이스 호환)
  * @returns {Promise<string>}
  */

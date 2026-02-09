@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { renderCustomPreview } from '../utils/preview.js';
+import { renderCustomPreview, renderLsdPreview } from '../utils/preview.js';
 import {
   FG_DEFAULTS,
   BG_BADGES_DEFAULTS,
@@ -10,7 +10,7 @@ import {
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
-import { VERSION, LAYOUTS, ICONS } from '../constants.js';
+import { VERSION, LAYOUTS, ICONS, ANIMATION_INTERVAL } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -48,6 +48,14 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const [modified, setModified] = useState(false);
   const [message, setMessage] = useState(null);
 
+  // LSD animation ticker
+  const [previewTick, setPreviewTick] = useState(0);
+  useEffect(() => {
+    if (!isLsdUnlocked) return;
+    const timer = setInterval(() => setPreviewTick(t => t + 1), ANIMATION_INTERVAL);
+    return () => clearInterval(timer);
+  }, [isLsdUnlocked]);
+
   // --- Derived Data ---
   const fgKeys = Object.keys(FG_DEFAULTS);
   const hasBgSupport = LAYOUTS_WITH_BG.includes(layout);
@@ -62,6 +70,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const currentKey = currentKeys[safeIndex];
 
   const icons = ICONS[iconType];
+
+  // LSD mode: symbols cycle per tick
+  const LSD_SYMBOLS = ['✦', '◈', '◇', '△', '○', '◎'];
 
   // --- Input Handling ---
   useInput((input, key) => {
@@ -156,11 +167,14 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
   const preview = useMemo(() => {
     try {
+      if (isLsdUnlocked) {
+        return renderLsdPreview(layout, iconType);
+      }
       let result = renderCustomPreview(layout, iconType, fgColors, bgBadgesColors, bgBarsColors);
       if (layout === '1line') result = result.replace(/    /g, '  ');
       return result;
     } catch { return ''; }
-  }, [layout, iconType, fgColors, bgBadgesColors, bgBarsColors]);
+  }, [isLsdUnlocked, layout, iconType, fgColors, bgBadgesColors, bgBarsColors, previewTick]);
 
   /* 
      사용자 요청: 외곽 박스 포커싱(노란색 변경) 기능 해제
@@ -196,7 +210,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
     // Top Preview (Real Renderer)
     e(Box, { flexDirection: 'column', width: '100%', height: 11, paddingX: 2, marginBottom: 1, alignItems: 'center' },
-      e(Text, { dimColor: true, underline: true }, `PREVIEW (${layout} style)`),
+      e(Text, { dimColor: true, underline: true }, isLsdUnlocked ? 'PREVIEW (lsd style)' : `PREVIEW (${layout} style)`),
       preview ? e(Box, { marginTop: 1 }, e(Text, {}, (layout !== 'card' ? '\n' : '') + preview)) : null,
       e(Box, { flexGrow: 1 }),
       e(Box, null,
@@ -253,6 +267,15 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
             if (idx < selectedIndex - 5 || idx > selectedIndex + 5) return null;
             const isSelected = idx === selectedIndex;
             const val = currentColors[key];
+            if (isLsdUnlocked) {
+              const sym = LSD_SYMBOLS[(idx + previewTick) % LSD_SYMBOLS.length];
+              return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
+                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected },
+                  isSelected ? `> ${key}` : `  ${key}`
+                ),
+                e(Text, { color: lsdBorderColor, bold: true }, sym)
+              );
+            }
             return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
               e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected },
                 isSelected ? `> ${key}` : `  ${key}`
