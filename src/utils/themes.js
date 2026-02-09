@@ -158,13 +158,13 @@ export function sortThemes(themes, isLsdMode = false) {
 
     if (safeLayoutA !== safeLayoutB) return safeLayoutA - safeLayoutB;
 
-    const colorWeightA = infoA.color === 'custom' ? 99 : (infoA.color === 'mono' ? 10 : 0);
-    const colorWeightB = infoB.color === 'custom' ? 99 : (infoB.color === 'mono' ? 10 : 0);
-    if (colorWeightA !== colorWeightB) return colorWeightA - colorWeightB;
-
     const animationWeightA = getAnimationWeight(infoA.animation);
     const animationWeightB = getAnimationWeight(infoB.animation);
     if (animationWeightA !== animationWeightB) return animationWeightA - animationWeightB;
+
+    const colorWeightA = infoA.color === 'custom' ? 99 : (infoA.color === 'mono' ? 10 : 0);
+    const colorWeightB = infoB.color === 'custom' ? 99 : (infoB.color === 'mono' ? 10 : 0);
+    if (colorWeightA !== colorWeightB) return colorWeightA - colorWeightB;
 
     if (infoA.icon !== infoB.icon) return infoA.icon === 'emoji' ? -1 : 1;
 
