@@ -179,6 +179,14 @@ export function sortThemes(themes, isLsdMode = false) {
  * @param {boolean} isLsdUnlocked
  */
 export function filterThemesByTab(themes, tab, isLsdUnlocked = false) {
+  if (tab === 'All') {
+    return themes.filter(t => {
+      const p = parseThemeName(t);
+      if (p.color === 'custom') return false;
+      if (p.animation === 'lsd' && !isLsdUnlocked) return false;
+      return true;
+    });
+  }
   if (tab === 'Custom') return themes.filter(t => t.startsWith('custom-'));
   if (tab === 'LSD') {
     if (!isLsdUnlocked) return [];
@@ -198,7 +206,7 @@ export function filterThemesByTab(themes, tab, isLsdUnlocked = false) {
 export function getAvailableTabs(isLsdUnlocked = false) {
   const tabs = [];
   if (isLsdUnlocked) tabs.push('LSD');
-  tabs.push('1line', '2line', 'badges', 'bars', 'card', 'Custom');
+  tabs.push('All', '1line', '2line', 'badges', 'bars', 'card', 'Custom');
   return tabs;
 }
 

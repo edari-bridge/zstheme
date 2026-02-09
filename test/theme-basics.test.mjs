@@ -55,12 +55,12 @@ test('filterThemesByTab should return empty for LSD tab when locked', () => {
 });
 
 // getAvailableTabs tests
-test('getAvailableTabs should return 6 tabs without LSD', () => {
+test('getAvailableTabs should return 7 tabs without LSD', () => {
   const tabs = getAvailableTabs(false);
-  assert.deepEqual(tabs, ['1line', '2line', 'badges', 'bars', 'card', 'Custom']);
+  assert.deepEqual(tabs, ['All', '1line', '2line', 'badges', 'bars', 'card', 'Custom']);
 });
 
 test('getAvailableTabs should include LSD tab first when unlocked', () => {
   const tabs = getAvailableTabs(true);
-  assert.deepEqual(tabs, ['LSD', '1line', '2line', 'badges', 'bars', 'card', 'Custom']);
+  assert.deepEqual(tabs, ['LSD', 'All', '1line', '2line', 'badges', 'bars', 'card', 'Custom']);
 });

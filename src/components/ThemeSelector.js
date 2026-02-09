@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { getAllThemes, getCurrentTheme, sortThemes, getThemeDescription, parseThemeName, filterThemesByTab, getAvailableTabs } from '../utils/themes.js';
+import { getAllThemes, getCurrentTheme, sortThemes, parseThemeName, filterThemesByTab, getAvailableTabs } from '../utils/themes.js';
 import { renderThemePreview } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
@@ -34,12 +34,12 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
   const tabs = useMemo(() => getAvailableTabs(isLsdUnlocked), [isLsdUnlocked]);
 
-  const [activeTab, setActiveTab] = useState(isLsdUnlocked ? 'LSD' : '1line');
+  const [activeTab, setActiveTab] = useState(isLsdUnlocked ? 'LSD' : 'All');
 
   // LSD 해금 해제 시 탭 리셋
   useEffect(() => {
     if (!isLsdUnlocked && activeTab === 'LSD') {
-      setActiveTab('1line');
+      setActiveTab('All');
     }
   }, [isLsdUnlocked, activeTab]);
 
@@ -82,7 +82,9 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const totalPages = Math.max(1, Math.ceil(filteredThemes.length / PAGE_SIZE));
   const currentPage = Math.floor(safeIndex / PAGE_SIZE);
   const startIdx = currentPage * PAGE_SIZE;
-  const currentThemesPage = filteredThemes.slice(startIdx, startIdx + PAGE_SIZE);
+  const rawPage = filteredThemes.slice(startIdx, startIdx + PAGE_SIZE);
+  const currentThemesPage = [...rawPage];
+  while (currentThemesPage.length % GRID_COLS !== 0) currentThemesPage.push(null);
 
   // Grid Navigation
   const moveCursor = (direction) => {
@@ -155,7 +157,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   };
 
   const renderGridItem = (theme, idx) => {
-    if (!theme) return null;
+    if (!theme) return e(Box, { key: `empty-${idx}`, width: '32%', height: 1, marginBottom: 1 });
 
     const isSelected = (startIdx + idx) === safeIndex;
     const isCurrent = theme === currentThemeName;
@@ -232,7 +234,6 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       // Preview Area
       e(Box, { flexDirection: 'column', marginTop: 1 },
-        e(Text, { dimColor: true }, selectedTheme ? getThemeDescription(selectedTheme) : 'Select a theme...'),
         preview ? e(Text, {}, preview) : null
       ),
 
