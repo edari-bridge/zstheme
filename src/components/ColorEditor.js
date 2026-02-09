@@ -208,7 +208,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
     ),
 
     // Bottom Controls (Split)
-    e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1 },
+    e(Box, { flexDirection: 'row', width: '100%', gap: 1 },
 
       // LEFT: Settings
       e(Box, {
@@ -222,18 +222,16 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 0 ? 'green' : undefined, bold: styleIndex === 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
-          e(Text, { color: styleIndex === 0 ? 'green' : undefined, bold: true }, `  < ${layout} >`)
+          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0, dimColor: styleIndex !== 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
+          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0, dimColor: styleIndex !== 0 }, `  < ${layout} >`)
         ),
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 1 ? 'green' : undefined, bold: styleIndex === 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
-          e(Text, { color: styleIndex === 1 ? 'green' : undefined, bold: true }, `  < ${iconType} >`)
+          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1, dimColor: styleIndex !== 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
+          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1, dimColor: styleIndex !== 1 }, `  < ${iconType} >`)
         ),
 
-        e(Box, { flexGrow: 1 }),
-        e(Text, { dimColor: true }, 'S: Save / R: Reset / Tab: Switch')
       ),
 
       // RIGHT: Colors
@@ -262,11 +260,17 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
               e(Text, { color: isSelected ? 'green' : 'white' }, `${val}`)
             );
           })
-        ),
-
-        e(Box, { marginTop: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderBottom: false, borderColor: 'gray' },
-          e(Text, { dimColor: true }, `Adj: ← → / +/-`)
         )
+      )
+    ),
+
+    // Help text (outside grid boxes, vertically centered in remaining space)
+    e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1, paddingX: 1, alignItems: 'center' },
+      e(Box, { width: '35%' },
+        e(Text, {}, 'S Save  R Reset  Tab Switch  Q Quit')
+      ),
+      e(Box, { width: '65%' },
+        e(Text, {}, '↑↓ Select  ←→ Adjust  +/- ±10')
       )
     ),
 
