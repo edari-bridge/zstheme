@@ -132,19 +132,30 @@ render() {
         R5="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi
 
-    # 테두리 (W=24 + 양쪽 공백 2 = 26)
-    local TOP1="${C_BOX}╭──────────────────────────╮${RST}"
-    local BOT1="${C_BOX}╰──────────────────────────╯${RST}"
+    # 오른쪽 카드 너비: R5(테마명)가 길 수 있으므로 동적 계산
+    local WR=$W
+    local r5_plain=$(echo -e "$R5" | sed $'s/\x1b\\[[0-9;]*m//g')
+    local r5_emoji=$(echo "$r5_plain" | grep -oE '[🔱🌿📂💾🔮🔋🔥🪫🧠⏳💰💬🎨]' 2>/dev/null | wc -l | tr -d ' ')
+    local r5_len=$(( ${#r5_plain} + r5_emoji ))
+    [[ $r5_len -gt $WR ]] && WR=$r5_len
+
+    # 테두리
+    local border_l=$(printf '─%.0s' $(seq 1 $((W + 2))))
+    local border_r=$(printf '─%.0s' $(seq 1 $((WR + 2))))
+    local TOP1="${C_BOX}╭${border_l}╮${RST}"
+    local BOT1="${C_BOX}╰${border_l}╯${RST}"
+    local TOP2="${C_BOX}╭${border_r}╮${RST}"
+    local BOT2="${C_BOX}╰${border_r}╯${RST}"
     local BTOP="${C_BOX}╭─────╮${RST}"
     local BBOT="${C_BOX}╰─────╯${RST}"
     local BV="${C_BOX}│${RST}"
 
     # 출력
-    echo "${TOP1}  ${TOP1}  ${BTOP}"
-    echo "${V} $(pad_to "$L1" $W) ${V}  ${V} $(pad_to "$R1" $W) ${V}  ${BV}$(battery_line 1)${BV}"
-    echo "${V} $(pad_to "$L2" $W) ${V}  ${V} $(pad_to "$R2" $W) ${V}  ${BV}$(battery_line 2)${BV}"
-    echo "${V} $(pad_to "$L3" $W) ${V}  ${V} $(pad_to "$R3" $W) ${V}  ${BV}$(battery_line 3)${BV}"
-    echo "${V} $(pad_to "$L4" $W) ${V}  ${V} $(pad_to "$R4" $W) ${V}  ${BV}$(battery_line 4)${BV}"
-    echo "${V} $(pad_to "$L5" $W) ${V}  ${V} $(pad_to "$R5" $W) ${V}  ${BV}$(battery_line 5)${BV}"
-    echo "${BOT1}  ${BOT1}  ${BBOT}"
+    echo "${TOP1}  ${TOP2}  ${BTOP}"
+    echo "${V} $(pad_to "$L1" $W) ${V}  ${V} $(pad_to "$R1" $WR) ${V}  ${BV}$(battery_line 1)${BV}"
+    echo "${V} $(pad_to "$L2" $W) ${V}  ${V} $(pad_to "$R2" $WR) ${V}  ${BV}$(battery_line 2)${BV}"
+    echo "${V} $(pad_to "$L3" $W) ${V}  ${V} $(pad_to "$R3" $WR) ${V}  ${BV}$(battery_line 3)${BV}"
+    echo "${V} $(pad_to "$L4" $W) ${V}  ${V} $(pad_to "$R4" $WR) ${V}  ${BV}$(battery_line 4)${BV}"
+    echo "${V} $(pad_to "$L5" $W) ${V}  ${V} $(pad_to "$R5" $WR) ${V}  ${BV}$(battery_line 5)${BV}"
+    echo "${BOT1}  ${BOT2}  ${BBOT}"
 }

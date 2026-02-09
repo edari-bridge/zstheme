@@ -3,12 +3,16 @@ import { colorizeText, colorizeFgSparkle, getAnimatedBatteryColor, getTimestampD
 import { formatGitStatus, formatGitSync, isAnimated, stripAnsi } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
-function padTo(text, targetWidth) {
+const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+
+function visibleWidth(text) {
   const plain = stripAnsi(text);
-  // Emoji width correction (emojis take 2 columns)
-  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
   const emojiCount = (plain.match(emojiRe) || []).length;
-  const actualWidth = [...plain].length + emojiCount;
+  return [...plain].length + emojiCount;
+}
+
+function padTo(text, targetWidth) {
+  const actualWidth = visibleWidth(text);
   const pad = Math.max(0, targetWidth - actualWidth);
   return text + ' '.repeat(pad);
 }
@@ -99,21 +103,26 @@ export function render(ctx) {
     R5 = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
   }
 
+  // Right card width: dynamic based on longest content (theme name can be long)
+  const WR = Math.max(W, ...[R1, R2, R3, R4, R5].filter(Boolean).map(visibleWidth));
+
   // Borders
-  const TOP1 = `${colors.C_BOX}\u256D${'─'.repeat(26)}\u256E${RST}`;
-  const BOT1 = `${colors.C_BOX}\u2570${'─'.repeat(26)}\u256F${RST}`;
+  const TOP1 = `${colors.C_BOX}\u256D${'─'.repeat(W + 2)}\u256E${RST}`;
+  const BOT1 = `${colors.C_BOX}\u2570${'─'.repeat(W + 2)}\u256F${RST}`;
+  const TOP2 = `${colors.C_BOX}\u256D${'─'.repeat(WR + 2)}\u256E${RST}`;
+  const BOT2 = `${colors.C_BOX}\u2570${'─'.repeat(WR + 2)}\u256F${RST}`;
   const BTOP = `${colors.C_BOX}\u256D${'─'.repeat(5)}\u256E${RST}`;
   const BBOT = `${colors.C_BOX}\u2570${'─'.repeat(5)}\u256F${RST}`;
   const BV = `${colors.C_BOX}\u2502${RST}`;
 
   const lines = [];
-  lines.push(`${TOP1}  ${TOP1}  ${BTOP}`);
-  lines.push(`${V} ${padTo(L1, W)} ${V}  ${V} ${padTo(R1, W)} ${V}  ${BV}${batteryLine(1, data.contextPct, animationMode, colorMode, colors)}${BV}`);
-  lines.push(`${V} ${padTo(L2, W)} ${V}  ${V} ${padTo(R2, W)} ${V}  ${BV}${batteryLine(2, data.contextPct, animationMode, colorMode, colors)}${BV}`);
-  lines.push(`${V} ${padTo(L3, W)} ${V}  ${V} ${padTo(R3, W)} ${V}  ${BV}${batteryLine(3, data.contextPct, animationMode, colorMode, colors)}${BV}`);
-  lines.push(`${V} ${padTo(L4, W)} ${V}  ${V} ${padTo(R4, W)} ${V}  ${BV}${batteryLine(4, data.contextPct, animationMode, colorMode, colors)}${BV}`);
-  lines.push(`${V} ${padTo(L5, W)} ${V}  ${V} ${padTo(R5, W)} ${V}  ${BV}${batteryLine(5, data.contextPct, animationMode, colorMode, colors)}${BV}`);
-  lines.push(`${BOT1}  ${BOT1}  ${BBOT}`);
+  lines.push(`${TOP1}  ${TOP2}  ${BTOP}`);
+  lines.push(`${V} ${padTo(L1, W)} ${V}  ${V} ${padTo(R1, WR)} ${V}  ${BV}${batteryLine(1, data.contextPct, animationMode, colorMode, colors)}${BV}`);
+  lines.push(`${V} ${padTo(L2, W)} ${V}  ${V} ${padTo(R2, WR)} ${V}  ${BV}${batteryLine(2, data.contextPct, animationMode, colorMode, colors)}${BV}`);
+  lines.push(`${V} ${padTo(L3, W)} ${V}  ${V} ${padTo(R3, WR)} ${V}  ${BV}${batteryLine(3, data.contextPct, animationMode, colorMode, colors)}${BV}`);
+  lines.push(`${V} ${padTo(L4, W)} ${V}  ${V} ${padTo(R4, WR)} ${V}  ${BV}${batteryLine(4, data.contextPct, animationMode, colorMode, colors)}${BV}`);
+  lines.push(`${V} ${padTo(L5, W)} ${V}  ${V} ${padTo(R5, WR)} ${V}  ${BV}${batteryLine(5, data.contextPct, animationMode, colorMode, colors)}${BV}`);
+  lines.push(`${BOT1}  ${BOT2}  ${BBOT}`);
 
   return lines.join('\n');
 }
