@@ -38,6 +38,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   // Focus: 0=Settings(Left), 1=Colors(Right)
   const [focusArea, setFocusArea] = useState(0);
 
+  // Style Navigation: 0=Layout, 1=Icon
+  const [styleIndex, setStyleIndex] = useState(0);
+
   // Colors Navigation
   const [colorCategory, setColorCategory] = useState(0); // 0=FG, 1=BG
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -73,21 +76,29 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       return;
     }
 
-    if (focusArea === 0) { // Settings
+    if (focusArea === 0) { // Style
+      if (key.upArrow || input === 'k') {
+        setStyleIndex(prev => Math.max(0, prev - 1));
+      }
+      if (key.downArrow || input === 'j') {
+        setStyleIndex(prev => Math.min(1, prev + 1));
+      }
       if (key.leftArrow || input === 'h') {
-        const idx = LAYOUTS.indexOf(layout);
-        const next = (idx - 1 + LAYOUTS.length) % LAYOUTS.length;
-        setLayout(LAYOUTS[next]);
+        if (styleIndex === 0) {
+          const idx = LAYOUTS.indexOf(layout);
+          setLayout(LAYOUTS[(idx - 1 + LAYOUTS.length) % LAYOUTS.length]);
+        } else {
+          setIconType(prev => prev === 'emoji' ? 'nerd' : 'emoji');
+        }
         setModified(true);
       }
       if (key.rightArrow || input === 'l') {
-        const idx = LAYOUTS.indexOf(layout);
-        const next = (idx + 1) % LAYOUTS.length;
-        setLayout(LAYOUTS[next]);
-        setModified(true);
-      }
-      if (key.upArrow || key.downArrow) {
-        setIconType(prev => prev === 'emoji' ? 'nerd' : 'emoji');
+        if (styleIndex === 0) {
+          const idx = LAYOUTS.indexOf(layout);
+          setLayout(LAYOUTS[(idx + 1) % LAYOUTS.length]);
+        } else {
+          setIconType(prev => prev === 'emoji' ? 'nerd' : 'emoji');
+        }
         setModified(true);
       }
     }
@@ -211,14 +222,14 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, 'Layout Style:'),
-          e(Text, { bold: true }, `< ${layout} >`)
+          e(Text, { color: styleIndex === 0 ? 'green' : undefined, bold: styleIndex === 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
+          e(Text, { color: styleIndex === 0 ? 'green' : undefined, bold: true }, `  < ${layout} >`)
         ),
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { dimColor: true }, 'Icon Set:'),
-          e(Text, { bold: true }, `< ${iconType} >`)
+          e(Text, { color: styleIndex === 1 ? 'green' : undefined, bold: styleIndex === 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
+          e(Text, { color: styleIndex === 1 ? 'green' : undefined, bold: true }, `  < ${iconType} >`)
         ),
 
         e(Box, { flexGrow: 1 }),
