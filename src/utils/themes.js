@@ -173,6 +173,36 @@ export function sortThemes(themes, isLsdMode = false) {
 }
 
 /**
+ * 탭별 테마 필터링
+ * @param {string[]} themes
+ * @param {string} tab - layout name, 'Custom', or 'LSD'
+ * @param {boolean} isLsdUnlocked
+ */
+export function filterThemesByTab(themes, tab, isLsdUnlocked = false) {
+  if (tab === 'Custom') return themes.filter(t => t.startsWith('custom-'));
+  if (tab === 'LSD') {
+    if (!isLsdUnlocked) return [];
+    return themes.filter(t => parseThemeName(t).animation === 'lsd');
+  }
+  // 레이아웃 탭: 해당 레이아웃만, custom/lsd 제외
+  return themes.filter(t => {
+    const p = parseThemeName(t);
+    return p.layout === tab && p.color !== 'custom' && p.animation !== 'lsd';
+  });
+}
+
+/**
+ * 사용 가능한 탭 목록 반환
+ * @param {boolean} isLsdUnlocked
+ */
+export function getAvailableTabs(isLsdUnlocked = false) {
+  const tabs = [];
+  if (isLsdUnlocked) tabs.push('LSD');
+  tabs.push('1line', '2line', 'badges', 'bars', 'card', 'Custom');
+  return tabs;
+}
+
+/**
  * 테마명 파싱
  */
 export function parseThemeName(themeName) {

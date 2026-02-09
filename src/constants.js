@@ -13,7 +13,7 @@ export const EASTER_EGG_TRIGGER_COUNT = 3;
 
 // Grid constants (ThemeSelector)
 export const GRID_COLUMNS = 3;
-export const GRID_VISIBLE_ROWS = 6;
+export const GRID_VISIBLE_ROWS = 3;
 
 // Opus 4.5 pricing (USD per 1M tokens)
 export const PRICING = {

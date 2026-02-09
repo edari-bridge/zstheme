@@ -20,12 +20,23 @@ export const MOCK_DATA = {
 
 const MOCK_JSON_INPUT = JSON.stringify(MOCK_DATA);
 
+const MOCK_GIT = {
+  isGitRepo: true,
+  branch: 'main',
+  worktree: 'my-project',
+  added: 3,
+  modified: 2,
+  deleted: 0,
+  ahead: 1,
+  behind: 0,
+};
+
 /**
  * Node.js renderer를 호출하여 프리뷰 문자열 반환
  */
 export function renderThemePreview(themeName) {
   try {
-    return renderStatusline(MOCK_JSON_INPUT, { themeName });
+    return renderStatusline(MOCK_JSON_INPUT, { themeName, mockGit: MOCK_GIT });
   } catch (error) {
     return `[Preview error: ${error.message}]`;
   }

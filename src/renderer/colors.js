@@ -76,7 +76,7 @@ export function initColors(colorMode, iconMode, contextPct, animationMode) {
   } else {
     ctxIcon = icons.CTX_NORM;
     ctxText = colorMode === 'mono' ? fg(250) : RST;
-    iCtx = fg(92);
+    iCtx = `${ESC}[92m`;
     batFill = colorMode === 'mono' ? bg(237) : bg(23);
   }
 

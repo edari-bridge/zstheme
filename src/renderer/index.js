@@ -26,7 +26,7 @@ function loadThemeName(themeNameOverride = '') {
 
 export function renderStatusline(jsonInput, options = {}) {
   const data = parseInput(jsonInput);
-  const git = collectGitInfo(data.dir);
+  const git = options.mockGit || collectGitInfo(data.dir);
   const themeName = loadThemeName(options.themeName);
   const theme = parseThemeContract(themeName);
 

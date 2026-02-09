@@ -1,16 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { getAllThemes, getCurrentTheme, sortThemes, getThemeDescription, filterThemesByCategory } from '../utils/themes.js';
+import { getAllThemes, getCurrentTheme, sortThemes, getThemeDescription, parseThemeName, filterThemesByTab, getAvailableTabs } from '../utils/themes.js';
+import { renderThemePreview } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
+import { ANIMATION_INTERVAL } from '../constants.js';
 
 const e = React.createElement;
 
 // Constants
 const GRID_COLS = 3;
-const GRID_VISIBLE_ROWS = 6;
+const GRID_VISIBLE_ROWS = 3;
 const PAGE_SIZE = GRID_COLS * GRID_VISIBLE_ROWS;
-const TABS = ['All', 'Standard', 'Custom'];
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -18,33 +19,64 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const columns = stdout?.columns || 120;
   const rows = stdout?.rows || 40;
 
-  // MainMenu/Dashboard와 동일한 크기 정책 사용
   const width = Math.max(80, columns - 4);
   const height = Math.max(28, rows - 4);
   const lsdBorderColor = useLsdBorderAnimation(isLsdUnlocked);
 
-  // ThemeSelector 전용 색상: Magenta
   const baseBorderColor = 'magenta';
   const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
   const currentThemeName = getCurrentTheme();
   const allThemes = useMemo(() => {
-    const themes = getAllThemes();
+    const themes = getAllThemes(isLsdUnlocked);
     return sortThemes(themes);
-  }, []);
+  }, [isLsdUnlocked]);
 
-  const [activeTab, setActiveTab] = useState('All');
+  const tabs = useMemo(() => getAvailableTabs(isLsdUnlocked), [isLsdUnlocked]);
 
-  // Input State
+  const [activeTab, setActiveTab] = useState(isLsdUnlocked ? 'LSD' : '1line');
+
+  // LSD 해금 해제 시 탭 리셋
+  useEffect(() => {
+    if (!isLsdUnlocked && activeTab === 'LSD') {
+      setActiveTab('1line');
+    }
+  }, [isLsdUnlocked, activeTab]);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   const [toast, setToast] = useState(null);
 
-  // Filter Logic
-  const filteredThemes = useMemo(() => filterThemesByCategory(allThemes, activeTab), [allThemes, activeTab]);
+  // Filter
+  const filteredThemes = useMemo(() => filterThemesByTab(allThemes, activeTab, isLsdUnlocked), [allThemes, activeTab, isLsdUnlocked]);
 
   const safeIndex = Math.min(selectedIndex, Math.max(0, filteredThemes.length - 1));
   const selectedTheme = filteredThemes[safeIndex];
+
+  // Animated preview: tick counter for rainbow/lsd themes
+  const isAnimatedTheme = useMemo(() => {
+    if (!selectedTheme) return false;
+    const parsed = parseThemeName(selectedTheme);
+    return parsed.animation === 'rainbow' || parsed.animation === 'lsd';
+  }, [selectedTheme]);
+
+  const [previewTick, setPreviewTick] = useState(0);
+
+  useEffect(() => {
+    if (!isAnimatedTheme) return;
+    const timer = setInterval(() => {
+      setPreviewTick(t => t + 1);
+    }, ANIMATION_INTERVAL);
+    return () => clearInterval(timer);
+  }, [isAnimatedTheme]);
+
+  const preview = useMemo(() => {
+    if (!selectedTheme) return '';
+    try {
+      return renderThemePreview(selectedTheme);
+    } catch {
+      return '';
+    }
+  }, [selectedTheme, previewTick]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredThemes.length / PAGE_SIZE));
@@ -52,15 +84,14 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const startIdx = currentPage * PAGE_SIZE;
   const currentThemesPage = filteredThemes.slice(startIdx, startIdx + PAGE_SIZE);
 
-  // Grid Navigation Helper
-  const moveCursor = (direction) => { // 'up', 'down', 'left', 'right'
+  // Grid Navigation
+  const moveCursor = (direction) => {
     let newIndex = safeIndex;
     if (direction === 'right') newIndex += 1;
     if (direction === 'left') newIndex -= 1;
     if (direction === 'up') newIndex -= GRID_COLS;
     if (direction === 'down') newIndex += GRID_COLS;
 
-    // Boundary checks
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= filteredThemes.length) newIndex = filteredThemes.length - 1;
 
@@ -74,10 +105,16 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     }
 
     if (key.tab) {
-      // Cycle Tabs
-      const currTabIdx = TABS.indexOf(activeTab);
-      const nextTab = TABS[(currTabIdx + 1) % TABS.length];
-      setActiveTab(nextTab);
+      const currTabIdx = tabs.indexOf(activeTab);
+      let nextIdx;
+      if (key.shift) {
+        // Shift+Tab: previous tab
+        nextIdx = (currTabIdx - 1 + tabs.length) % tabs.length;
+      } else {
+        // Tab: next tab
+        nextIdx = (currTabIdx + 1) % tabs.length;
+      }
+      setActiveTab(tabs[nextIdx]);
       setSelectedIndex(0);
       return;
     }
@@ -99,20 +136,32 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   // Render Helpers
   const renderTab = (name) => {
     const isActive = activeTab === name;
+    const isLsdTab = name === 'LSD';
+    let color, bgColor;
+
+    if (isActive) {
+      color = 'black';
+      bgColor = isLsdTab ? lsdBorderColor : 'cyan';
+    } else {
+      color = isLsdTab ? lsdBorderColor : 'white';
+      bgColor = undefined;
+    }
+
     return e(Text, {
-      color: isActive ? 'black' : 'white',
-      backgroundColor: isActive ? 'cyan' : undefined,
+      color,
+      backgroundColor: bgColor,
       bold: isActive
     }, isActive ? ` [ ${name} ] ` : `   ${name}   `);
   };
 
   const renderGridItem = (theme, idx) => {
-    if (!theme) return e(Box, { width: '32%', height: 1 }); // Placeholder
+    if (!theme) return null;
 
     const isSelected = (startIdx + idx) === safeIndex;
     const isCurrent = theme === currentThemeName;
 
     return e(Box, {
+      key: theme,
       width: '32%',
       height: 1,
       marginBottom: 1,
@@ -126,6 +175,13 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       )
     );
   };
+
+  // Grid height: 2 rows × (1 line + 1 marginBottom) + padding 2 + border 2
+  const gridHeight = GRID_VISIBLE_ROWS * 2 + 4;
+
+  // Header text with LSD animation
+  const headerColor = isLsdUnlocked ? lsdBorderColor : borderColor;
+  const headerText = isLsdUnlocked ? ' ✨ Theme Explorer ✨ ' : ' 🎨 Theme Explorer 🎨 ';
 
   return e(Box, {
     flexDirection: 'column',
@@ -146,7 +202,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       paddingBottom: 0,
       marginBottom: 1
     },
-      e(Text, { bold: true, color: isLsdUnlocked ? 'magenta' : borderColor }, isLsdUnlocked ? ' ✨ EXPLORE THEMES ✨ ' : ' 🎨 EXPLORE THEMES 🎨 ')
+      e(Text, { bold: true, color: headerColor }, headerText)
     ),
 
     // Main Content
@@ -154,11 +210,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
       // Tabs
       e(Box, { flexDirection: 'row', marginBottom: 1, justifyContent: 'center', gap: 1, width: '100%' },
-        renderTab('All'),
-        e(Text, { dimColor: true }, '|'),
-        renderTab('Standard'),
-        e(Text, { dimColor: true }, '|'),
-        renderTab('Custom')
+        ...tabs.map((tab, i) => [
+          i > 0 && e(Text, { key: `sep-${i}`, dimColor: true }, '|'),
+          e(React.Fragment, { key: tab }, renderTab(tab))
+        ]).flat().filter(Boolean)
       ),
 
       // Grid Area
@@ -169,15 +224,16 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         borderStyle: 'single',
         borderColor: 'gray',
         padding: 1,
-        height: height - 12, // Dynamic height calculation
+        height: gridHeight,
         width: '100%'
       },
         currentThemesPage.map((theme, i) => renderGridItem(theme, i))
       ),
 
-      // Info Area
-      e(Box, { marginTop: 1, borderStyle: 'round', borderColor: 'gray', paddingX: 1, justifyContent: 'center', width: '100%' },
-        e(Text, { dimColor: true }, selectedTheme ? getThemeDescription(selectedTheme) : 'Select a theme...')
+      // Preview Area
+      e(Box, { flexDirection: 'column', marginTop: 1 },
+        e(Text, { dimColor: true }, selectedTheme ? getThemeDescription(selectedTheme) : 'Select a theme...'),
+        preview ? e(Text, {}, preview) : null
       ),
 
       // Pagination Info
@@ -197,12 +253,13 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       justifyContent: 'space-between',
       width: '100%'
     },
-      e(Text, { dimColor: true }, isLsdUnlocked ? 'MODE: LSD ACTIVE' : 'MODE: STANDARD'),
+      e(Text, { dimColor: true, color: isLsdUnlocked ? lsdBorderColor : undefined },
+        isLsdUnlocked ? 'MODE: LSD ACTIVE' : 'MODE: STANDARD'),
       e(Box, {},
         e(Text, { color: 'green' }, 'ARROWS'), e(Text, { dimColor: true }, ' Navigate '),
-        e(Text, { color: 'cyan' }, 'TAB'), e(Text, { dimColor: true }, ' Category '),
+        e(Text, { color: 'cyan' }, 'TAB/S-TAB'), e(Text, { dimColor: true }, ' Category '),
         e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Apply '),
-        e(Text, { color: 'red' }, 'Q'), e(Text, { dimColor: true }, ' Back')
+        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Back')
       )
     ),
 
