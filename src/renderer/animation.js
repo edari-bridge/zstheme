@@ -15,7 +15,7 @@ export function computeOffsets(animationMode, colorMode) {
     colorOffset = (ts * 41) % 60;
     bgOffset = (ts * 37) % 60;
   } else if (animationMode === 'rainbow') {
-    colorOffset = (ts * 5) % 60;
+    colorOffset = (ts * 41) % 60;
     bgOffset = (colorOffset + 30) % 60;
   } else {
     colorOffset = 0;
