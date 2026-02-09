@@ -146,7 +146,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const preview = useMemo(() => {
     try {
       let result = renderCustomPreview(layout, iconType, fgColors, bgBadgesColors, bgBarsColors);
-      if (layout === '1line') result = result.replace(/    /g, '   ');
+      if (layout === '1line') result = result.replace(/    /g, '  ');
       return result;
     } catch { return ''; }
   }, [layout, iconType, fgColors, bgBadgesColors, bgBarsColors]);
@@ -186,10 +186,11 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
     ),
 
     // Top Preview (Real Renderer)
-    e(Box, { flexDirection: 'column', width: '100%', paddingX: 2, marginBottom: 1, alignItems: 'center', justifyContent: 'center' },
+    e(Box, { flexDirection: 'column', width: '100%', height: 11, paddingX: 2, marginBottom: 1, alignItems: 'center' },
       e(Text, { dimColor: true, underline: true }, `PREVIEW (${layout} style)`),
       preview ? e(Box, { marginTop: 1 }, e(Text, {}, (layout !== 'card' ? '\n' : '') + preview)) : null,
-      e(Box, { marginTop: 1 },
+      e(Box, { flexGrow: 1 }),
+      e(Box, null,
         e(Text, { dimColor: true }, 'Values: '),
         e(Text, { color: 'cyan' }, `Dir:${fgColors.C_DIR} `),
         e(Text, { color: 'green' }, `Git:${fgColors.C_BRANCH} `),
