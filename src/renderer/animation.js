@@ -116,3 +116,18 @@ export function getAnimatedBatteryColor(timestamp, animationMode, colorMode, bat
   const [r, g, b] = RAINBOW_COLORS[idx];
   return `${ESC}[48;2;${r};${g};${b}m`;
 }
+
+// Sparkle background: solid LSD color per badge with random shimmer + flash
+export function colorizeBgSparkle(text, elementIdx = 0, bgOffset = 0, colorMode = 'pastel', fgColor = `${ESC}[30m`) {
+  // 3% bright white flash (sparkle)
+  if (Math.random() < 0.03) {
+    return `${ESC}[48;2;255;255;255m${fgColor}${text}${ESC}[0m`;
+  }
+
+  const palette = colorMode === 'mono' ? MONO_CYCLE : LSD_COLORS;
+  // Random jitter (0-7) for per-badge shimmer each render
+  const jitter = Math.floor(Math.random() * 8);
+  const idx = ((elementIdx + bgOffset + jitter) % 60 + 60) % 60;
+  const [r, g, b] = palette[idx];
+  return `${ESC}[48;2;${r};${g};${b}m${fgColor}${text}${ESC}[0m`;
+}

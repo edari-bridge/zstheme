@@ -1,5 +1,5 @@
 // Bars layout (ported from bars.sh)
-import { colorizeText, colorizeBgLsd } from '../animation.js';
+import { colorizeText, colorizeBgSparkle } from '../animation.js';
 import { formatContext, isAnimated, makeChip } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
@@ -16,7 +16,7 @@ export function render(ctx) {
 
     let chipLoc;
     if (animationMode === 'lsd') {
-      chipLoc = colorizeBgLsd(rawLoc, 0, colorOffset, colorMode, '\x1b[30m');
+      chipLoc = colorizeBgSparkle(rawLoc, 0, bgOffset, colorMode, '\x1b[30m');
     } else {
       const locContent = `${colors.C_I_BRANCH}${colors.icons.BRANCH} ${colorizeText(git.branch || 'branch', 0, colorOffset, animationMode, colorMode)}    ${colors.C_I_TREE}${colors.icons.TREE} ${colorizeText(git.worktree || 'worktree', 10, colorOffset, animationMode, colorMode)}    ${colors.C_I_DIR}${colors.icons.DIR} ${colorizeText(data.dirName, 20, colorOffset, animationMode, colorMode)}`;
       chipLoc = makeChip(colors.C_BG_LOC, locContent, chipStyle, colors);
@@ -32,15 +32,15 @@ export function render(ctx) {
       const rawGit = ` ${colors.icons.GIT_STATUS} ${add}  ${mod}  ${del}    ${colors.icons.SYNC} ${ahead}  ${behind} `;
 
       if (animationMode === 'lsd') {
-        chipGit = colorizeBgLsd(rawGit, 30, colorOffset, colorMode, '\x1b[30m');
+        chipGit = colorizeBgSparkle(rawGit, 30, bgOffset, colorMode, '\x1b[30m');
       } else {
         const gitContent = `${colors.C_I_STATUS}${colors.icons.GIT_STATUS} ${colorizeText(`${add}  ${mod}  ${del}`, 30, colorOffset, animationMode, colorMode)}    ${colors.C_I_SYNC}${colors.icons.SYNC} ${colorizeText(`${ahead}  ${behind}`, 40, colorOffset, animationMode, colorMode)}`;
         chipGit = makeChip(colors.C_BG_GIT, gitContent, chipStyle, colors);
       }
     } else {
-      const rawGit = ` ${colors.icons.GIT_STATUS} ---    ${colors.icons.SYNC} --- `;
+      const rawGit = ` ${colors.icons.GIT_STATUS} status    ${colors.icons.SYNC} sync `;
       if (animationMode === 'lsd') {
-        chipGit = colorizeBgLsd(rawGit, 30, colorOffset, colorMode, '\x1b[30;2m');
+        chipGit = colorizeBgSparkle(rawGit, 30, bgOffset, colorMode, '\x1b[30;2m');
       } else {
         chipGit = makeChip(colors.C_BG_GIT, `${colors.C_DIM_STATUS}${colors.icons.GIT_STATUS} ---    ${colors.C_DIM_SYNC}${colors.icons.SYNC} ---`, chipStyle, colors);
       }
@@ -60,7 +60,7 @@ export function render(ctx) {
 
     let chipSes;
     if (animationMode === 'lsd') {
-      chipSes = colorizeBgLsd(sesRaw, 50, colorOffset, colorMode, '\x1b[30m');
+      chipSes = colorizeBgSparkle(sesRaw, 50, bgOffset, colorMode, '\x1b[30m');
     } else {
       let sesAnimated = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colorizeText(data.model, 50, colorOffset, animationMode, colorMode)}`;
       if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
