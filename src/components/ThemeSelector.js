@@ -12,6 +12,43 @@ const e = React.createElement;
 const GRID_COLS = 3;
 const GRID_VISIBLE_ROWS = 3;
 const PAGE_SIZE = GRID_COLS * GRID_VISIBLE_ROWS;
+const SEP = '__sep__';
+
+function isThemeItem(item) {
+  return item && item !== SEP;
+}
+
+// All 탭: 레이아웃 그룹 사이에 padding + separator row 삽입
+function buildDisplayList(themes, activeTab) {
+  if (activeTab !== 'All') return themes;
+
+  const result = [];
+  let lastLayout = null;
+
+  for (const theme of themes) {
+    const layout = parseThemeName(theme).layout;
+    if (lastLayout && layout !== lastLayout) {
+      while (result.length % GRID_COLS !== 0) result.push(null);
+      for (let i = 0; i < GRID_COLS; i++) result.push(SEP);
+    }
+    result.push(theme);
+    lastLayout = layout;
+  }
+
+  return result;
+}
+
+// 가장 가까운 테마 아이템으로 스냅
+function snapToTheme(list, idx, direction = 1) {
+  let i = idx;
+  while (i >= 0 && i < list.length && !isThemeItem(list[i])) i += direction;
+  if (i >= 0 && i < list.length && isThemeItem(list[i])) return i;
+  // 반대 방향 시도
+  i = idx;
+  while (i >= 0 && i < list.length && !isThemeItem(list[i])) i -= direction;
+  if (i >= 0 && i < list.length && isThemeItem(list[i])) return i;
+  return 0;
+}
 
 export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const { exit } = useApp();
@@ -46,11 +83,19 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [toast, setToast] = useState(null);
 
-  // Filter
+  // Filter + display list (All 탭: separator 포함)
   const filteredThemes = useMemo(() => filterThemesByTab(allThemes, activeTab, isLsdUnlocked), [allThemes, activeTab, isLsdUnlocked]);
+  const displayList = useMemo(() => buildDisplayList(filteredThemes, activeTab), [filteredThemes, activeTab]);
 
-  const safeIndex = Math.min(selectedIndex, Math.max(0, filteredThemes.length - 1));
-  const selectedTheme = filteredThemes[safeIndex];
+  const safeIndex = useMemo(() => {
+    let idx = Math.min(selectedIndex, Math.max(0, displayList.length - 1));
+    if (!isThemeItem(displayList[idx])) {
+      idx = snapToTheme(displayList, idx, 1);
+    }
+    return idx;
+  }, [selectedIndex, displayList]);
+
+  const selectedTheme = isThemeItem(displayList[safeIndex]) ? displayList[safeIndex] : null;
 
   // Animated preview: tick counter for rainbow/lsd themes
   const isAnimatedTheme = useMemo(() => {
@@ -82,15 +127,15 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     }
   }, [selectedTheme, previewTick]);
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredThemes.length / PAGE_SIZE));
+  // Pagination (display list 기준)
+  const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE));
   const currentPage = Math.floor(safeIndex / PAGE_SIZE);
   const startIdx = currentPage * PAGE_SIZE;
-  const rawPage = filteredThemes.slice(startIdx, startIdx + PAGE_SIZE);
+  const rawPage = displayList.slice(startIdx, startIdx + PAGE_SIZE);
   const currentThemesPage = [...rawPage];
   while (currentThemesPage.length % GRID_COLS !== 0) currentThemesPage.push(null);
 
-  // Grid Navigation
+  // Grid Navigation (separator/null 건너뛰기)
   const moveCursor = (direction) => {
     let newIndex = safeIndex;
     if (direction === 'right') newIndex += 1;
@@ -98,8 +143,13 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
     if (direction === 'up') newIndex -= GRID_COLS;
     if (direction === 'down') newIndex += GRID_COLS;
 
-    if (newIndex < 0) newIndex = 0;
-    if (newIndex >= filteredThemes.length) newIndex = filteredThemes.length - 1;
+    newIndex = Math.max(0, Math.min(newIndex, displayList.length - 1));
+
+    if (!isThemeItem(displayList[newIndex])) {
+      const dir = (direction === 'left' || direction === 'up') ? -1 : 1;
+      const snapped = snapToTheme(displayList, newIndex, dir);
+      newIndex = snapped;
+    }
 
     setSelectedIndex(newIndex);
   };
@@ -161,6 +211,11 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   };
 
   const renderGridItem = (theme, idx) => {
+    if (theme === SEP) {
+      return e(Box, { key: `sep-${idx}`, width: '32%', height: 1, marginBottom: 1, justifyContent: 'center' },
+        e(Text, { dimColor: true }, '· · · · ·')
+      );
+    }
     if (!theme) return e(Box, { key: `empty-${idx}`, width: '32%', height: 1, marginBottom: 1 });
 
     const isSelected = (startIdx + idx) === safeIndex;

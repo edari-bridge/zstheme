@@ -177,10 +177,10 @@ function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, b
   const cc = loadCustomColorCodes();
   const g = (key, def) => cc[key] ?? def;
 
-  const branchCode = g('C_BRANCH', 93);
-  const treeCode = g('C_TREE', 92);
-  const dirCode = g('C_DIR', 96);
-  const modelCode = g('C_MODEL', 95);
+  const branchCode = g('C_BRANCH', 11);
+  const treeCode = g('C_TREE', 10);
+  const dirCode = g('C_DIR', 14);
+  const modelCode = g('C_MODEL', 13);
   const statusCode = g('C_STATUS', 111);
   const syncCode = g('C_SYNC', 141);
   const rateCode = g('C_RATE', 229);

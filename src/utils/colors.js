@@ -6,16 +6,16 @@ import { RAINBOW_COLORS, LSD_COLORS, MONO_CYCLE } from '../renderer/palette.js';
 
 // 전경색 기본값
 export const FG_DEFAULTS = {
-  C_BRANCH: { name: 'Branch', code: 93 },
-  C_TREE: { name: 'Worktree', code: 92 },
-  C_DIR: { name: 'Directory', code: 96 },
-  C_MODEL: { name: 'Model', code: 95 },
+  C_BRANCH: { name: 'Branch', code: 11 },
+  C_TREE: { name: 'Worktree', code: 10 },
+  C_DIR: { name: 'Directory', code: 14 },
+  C_MODEL: { name: 'Model', code: 13 },
   C_STATUS: { name: 'Status', code: 111 },
   C_SYNC: { name: 'Sync', code: 141 },
   C_RATE: { name: 'Rate', code: 229 },
   C_BURN: { name: 'Burn', code: 216 },
   C_TIME: { name: 'Time', code: 75 },
-  C_CTX: { name: 'Context', code: 92 },
+  C_CTX: { name: 'Context', code: 10 },
 };
 
 // badges용 배경색 기본값 (개별 요소)
