@@ -1,4 +1,4 @@
-export const LAYOUTS = ['1line', '2line', 'card', 'bars', 'badges'];
+export const LAYOUTS = ['1line', '2line', 'badges', 'bars', 'card'];
 
 export const COLOR_MODES = ['', 'mono-', 'custom-'];
 export const ANIMATION_MODES = ['', 'rainbow-'];

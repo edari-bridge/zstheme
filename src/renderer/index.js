@@ -37,7 +37,7 @@ export function renderStatusline(jsonInput, options = {}) {
   const animationMode = theme.animation;
   const iconMode = theme.icon;
 
-  const colors = initColors(colorMode, iconMode, data.contextPct, animationMode);
+  const colors = initColors(colorMode, iconMode, data.contextPct, animationMode, options.customColorCodes || null);
   const { colorOffset, bgOffset } = computeOffsets(animationMode, colorMode);
 
   const ctx = {

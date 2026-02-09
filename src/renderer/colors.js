@@ -98,7 +98,7 @@ const DEFAULT_ICON_COLORS = {
   rate: fg(229), burn: fg(216), time: fg(75), theme: fg(229),
 };
 
-export function initColors(colorMode, iconMode, contextPct, animationMode) {
+export function initColors(colorMode, iconMode, contextPct, animationMode, overrideColorCodes = null) {
   const icons = iconMode === 'nerd' ? NERD_ICONS : EMOJI_ICONS;
 
   // Determine context icon
@@ -125,7 +125,7 @@ export function initColors(colorMode, iconMode, contextPct, animationMode) {
   }
 
   if (colorMode === 'custom') {
-    return initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill);
+    return initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill, overrideColorCodes);
   }
 
   return initPastelColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill);
@@ -193,8 +193,8 @@ function initMonoColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, bat
   });
 }
 
-function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill) {
-  const cc = loadCustomColorCodes();
+function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill, overrideColorCodes = null) {
+  const cc = overrideColorCodes || loadCustomColorCodes();
   const g = (key, def) => cc[key] ?? def;
 
   const branchCode = g('C_BRANCH', 11);

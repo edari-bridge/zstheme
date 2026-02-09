@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
-import { ColorBlock } from './common/ColorBlock.js';
+import { renderCustomPreview } from '../utils/preview.js';
 import {
   FG_DEFAULTS,
   BG_BADGES_DEFAULTS,
@@ -36,7 +36,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const [iconType, setIconType] = useState(initialColors.iconType);
 
   // Focus: 0=Settings(Left), 1=Colors(Right)
-  const [focusArea, setFocusArea] = useState(1);
+  const [focusArea, setFocusArea] = useState(0);
 
   // Colors Navigation
   const [colorCategory, setColorCategory] = useState(0); // 0=FG, 1=BG
@@ -52,7 +52,6 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const bgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
 
   const currentKeys = colorCategory === 0 ? fgKeys : (hasBgSupport ? bgKeys : []);
-  const currentDefaults = colorCategory === 0 ? FG_DEFAULTS : bgDefaults;
   const currentColors = colorCategory === 0 ? fgColors : (layout === 'bars' ? bgBarsColors : bgBadgesColors);
   const setBgColors = layout === 'bars' ? setBgBarsColors : setBgBadgesColors;
 
@@ -144,66 +143,13 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
   // --- Render Helpers ---
 
-  // NOTE: Ink doesn't support raw ANSI strings well inside Text components if they modify layout.
-  // We will build a safer preview using standard Text components with RGB colors.
-  const renderTopPreview = () => {
-    const fg = fgColors;
-
-    // Preview Content Construction
-    const Part = ({ icon, label, colorKey }) => {
-      // colorKey is from fgColors, which stores ANSI 256 color code (0-255).
-      // Ink doesn't support 'ansi256' prop directly on Text, but supports 'color' which can be hex/rgb/keyword.
-      // Since we are dealing with 0-255, we can't easily map to RGB without a library.
-      // BUT, for the sake of UI stability, let's just show the TEXT intent.
-      // Ideally we would map 256 -> hex, but for now let's use a safe fallback or just show the structure.
-
-      // *Correction*: Actually, Ink usually handles 256 colors if the environment supports it, but standard Text color prop expects recognized format.
-      // Let's rely on a visual approximation: Green for Branch, Blue for Dir, etc. 
-      // Or if we want to be accurate, we'd need a helper.
-      // For this "Creative" UI, let's keep it clean and just use safe colors or basic mapping if possible.
-      // Users are editing 256 codes, so the number matters more than precise pixel color in this TUI editor if we can't render it perfectly.
-
-      // HOWEVER, to fix the layout crash, we MUST avoid raw \x1b strings.
-
-      return e(Box, {
-        borderStyle: 'single', // Use box to simulate prompt block
-        borderColor: 'white',
-        paddingX: 1,
-        marginRight: 1
-      },
-        e(Text, { color: 'white' }, `${icon} ${label}`)
-      );
-    };
-
-    return e(Box, {
-      flexDirection: 'column',
-      width: '100%',
-      // height: 8, // Let auto-height handle it to avoid overflow
-      borderStyle: 'single',
-      borderColor: 'white',
-      paddingX: 2,
-      paddingY: 1,
-      marginBottom: 1,
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-      e(Text, { dimColor: true, underline: true, marginBottom: 1 }, `PREVIEW (${layout} style)`),
-
-      // Safe Preview Layout
-      e(Box, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-        e(Part, { icon: icons.DIR, label: '~/project', colorKey: 'C_DIR' }),
-        e(Part, { icon: icons.BRANCH, label: 'main', colorKey: 'C_BRANCH' }),
-        e(Part, { icon: icons.STATUS, label: '+2', colorKey: 'C_STATUS' })
-      ),
-
-      e(Box, { marginTop: 1 },
-        e(Text, { dimColor: true }, 'Values: '),
-        e(Text, { color: 'cyan' }, `Dir:${fg.C_DIR} `),
-        e(Text, { color: 'green' }, `Git:${fg.C_BRANCH} `),
-        e(Text, { color: 'yellow' }, `Status:${fg.C_STATUS}`)
-      )
-    );
-  };
+  const preview = useMemo(() => {
+    try {
+      let result = renderCustomPreview(layout, iconType, fgColors, bgBadgesColors, bgBarsColors);
+      if (layout === '1line') result = result.replace(/    /g, '   ');
+      return result;
+    } catch { return ''; }
+  }, [layout, iconType, fgColors, bgBadgesColors, bgBarsColors]);
 
   /* 
      사용자 요청: 외곽 박스 포커싱(노란색 변경) 기능 해제
@@ -239,8 +185,17 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       e(Text, { bold: true, color: borderColor }, ' 🎨 COLOR EDITOR 🎨 ')
     ),
 
-    // Top Preview (Safe)
-    renderTopPreview(),
+    // Top Preview (Real Renderer)
+    e(Box, { flexDirection: 'column', width: '100%', paddingX: 2, marginBottom: 1, alignItems: 'center', justifyContent: 'center' },
+      e(Text, { dimColor: true, underline: true }, `PREVIEW (${layout} style)`),
+      preview ? e(Box, { marginTop: 1 }, e(Text, {}, (layout !== 'card' ? '\n' : '') + preview)) : null,
+      e(Box, { marginTop: 1 },
+        e(Text, { dimColor: true }, 'Values: '),
+        e(Text, { color: 'cyan' }, `Dir:${fgColors.C_DIR} `),
+        e(Text, { color: 'green' }, `Git:${fgColors.C_BRANCH} `),
+        e(Text, { color: 'yellow' }, `Status:${fgColors.C_STATUS}`)
+      )
+    ),
 
     // Bottom Controls (Split)
     e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1 },

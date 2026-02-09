@@ -44,6 +44,19 @@ export function renderThemePreview(themeName) {
 }
 
 /**
+ * Color Editor용 커스텀 프리뷰 (파일 저장 없이 메모리의 색상 코드를 직접 전달)
+ */
+export function renderCustomPreview(layout, iconType, fgColors, bgBadgesColors, bgBarsColors) {
+  const themeName = `custom-${layout}${iconType === 'nerd' ? '-nerd' : ''}`;
+  const customColorCodes = { ...fgColors, ...bgBadgesColors, ...bgBarsColors };
+  try {
+    return renderStatusline(MOCK_JSON_INPUT, { themeName, mockGit: MOCK_GIT, customColorCodes });
+  } catch (error) {
+    return `[Preview error: ${error.message}]`;
+  }
+}
+
+/**
  * 비동기 프리뷰 렌더링 (애니메이션용, 인터페이스 호환)
  * @returns {Promise<string>}
  */
