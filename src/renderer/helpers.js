@@ -1,5 +1,5 @@
 // Common formatting helpers (ported from helpers.sh / common.sh)
-import { colorizeText } from './animation.js';
+import { colorizeText, colorizeFgSparkle } from './animation.js';
 
 export function isAnimated(animationMode) {
   return animationMode === 'lsd' || animationMode === 'rainbow';
@@ -10,6 +10,9 @@ export function stripAnsi(str) {
 }
 
 export function renderText(iconColor, icon, text, colorVar, offset, ctx) {
+  if (ctx.animationMode === 'lsd') {
+    return `${iconColor}${icon}${ctx.colors.RST} ${colorizeFgSparkle(text, offset, ctx.bgOffset, ctx.colorMode)}`;
+  }
   if (isAnimated(ctx.animationMode)) {
     return `${iconColor}${icon}${ctx.colors.RST} ${colorizeText(text, offset, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`;
   }
@@ -17,10 +20,16 @@ export function renderText(iconColor, icon, text, colorVar, offset, ctx) {
 }
 
 export function formatGitStatus(separator, ctx) {
-  const { colors, animationMode, colorMode, colorOffset, git } = ctx;
+  const { colors, animationMode, colorMode, colorOffset, bgOffset, git } = ctx;
   let add, mod, del;
 
-  if (isAnimated(animationMode)) {
+  if (animationMode === 'lsd') {
+    const addText = git.added > 0 ? `+${git.added}` : '+0';
+    const modText = git.modified > 0 ? `~${git.modified}` : '~0';
+    const delText = git.deleted > 0 ? `-${git.deleted}` : '-0';
+    const combined = `${addText}${separator}${modText}${separator}${delText}`;
+    return `${colors.C_I_STATUS}${colors.icons.GIT_STATUS}${colors.RST} ${colorizeFgSparkle(combined, 30, bgOffset, colorMode)}`;
+  } else if (isAnimated(animationMode)) {
     const addText = git.added > 0 ? `+${git.added}` : '+0';
     const modText = git.modified > 0 ? `~${git.modified}` : '~0';
     const delText = git.deleted > 0 ? `-${git.deleted}` : '-0';
@@ -36,10 +45,15 @@ export function formatGitStatus(separator, ctx) {
 }
 
 export function formatGitSync(separator, ctx) {
-  const { colors, animationMode, colorMode, colorOffset, git } = ctx;
+  const { colors, animationMode, colorMode, colorOffset, bgOffset, git } = ctx;
   let ahead, behind;
 
-  if (isAnimated(animationMode)) {
+  if (animationMode === 'lsd') {
+    const aheadText = git.ahead > 0 ? `\u2191 ${git.ahead}` : '\u2191 0';
+    const behindText = git.behind > 0 ? `\u2193 ${git.behind}` : '\u2193 0';
+    const combined = `${aheadText}${separator}${behindText}`;
+    return `${colors.C_I_SYNC}${colors.icons.SYNC}${colors.RST} ${colorizeFgSparkle(combined, 40, bgOffset, colorMode)}`;
+  } else if (isAnimated(animationMode)) {
     const aheadText = git.ahead > 0 ? `\u2191 ${git.ahead}` : '\u2191 0';
     const behindText = git.behind > 0 ? `\u2193 ${git.behind}` : '\u2193 0';
     const combined = `${aheadText}${separator}${behindText}`;

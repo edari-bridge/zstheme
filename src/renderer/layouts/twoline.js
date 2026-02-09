@@ -1,6 +1,6 @@
 // 2line layout (ported from 2line.sh)
 import { renderText, formatGitStatus, formatGitSync, formatContext, isAnimated } from '../helpers.js';
-import { colorizeText } from '../animation.js';
+import { colorizeText, colorizeFgSparkle } from '../animation.js';
 import { getRateColor } from '../colors.js';
 
 export function render(ctx) {
@@ -27,14 +27,18 @@ export function render(ctx) {
   line2Parts.push(renderText(colors.C_I_MODEL, colors.icons.MODEL, data.model, colors.C_MODEL, 9, ctx));
 
   if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
-    if (isAnimated(ctx.animationMode)) {
+    if (ctx.animationMode === 'lsd') {
+      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeFgSparkle(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 10, ctx.bgOffset, ctx.colorMode)}`);
+    } else if (isAnimated(ctx.animationMode)) {
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeText(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 10, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
     } else {
       const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
     }
   } else if (data.rateLimitPct) {
-    if (isAnimated(ctx.animationMode)) {
+    if (ctx.animationMode === 'lsd') {
+      line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeFgSparkle(`(${data.rateLimitPct}%)`, 10, ctx.bgOffset, ctx.colorMode)}`);
+    } else if (isAnimated(ctx.animationMode)) {
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME}${colors.RST} ${colorizeText(`(${data.rateLimitPct}%)`, 10, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
     } else {
       const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
@@ -48,7 +52,11 @@ export function render(ctx) {
     line2Parts.push(renderText(colors.C_I_BURN, colors.icons.COST, data.burnRate, colors.C_BURN, 30, ctx));
   }
 
-  line2Parts.push(renderText(colors.C_I_THEME, colors.icons.THEME, data.themeName, colors.C_RATE, 5, ctx));
+  if (isAnimated(ctx.animationMode)) {
+    line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME}${colors.RST} ${colorizeText(data.themeName, 5, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
+  } else {
+    line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${colors.RST}`);
+  }
 
   const line1 = line1Parts.join('    ');
   const line2 = line2Parts.join('     ');

@@ -1,5 +1,5 @@
 // Card layout (ported from card.sh)
-import { colorizeText, getAnimatedBatteryColor, getTimestampDecis } from '../animation.js';
+import { colorizeText, colorizeFgSparkle, getAnimatedBatteryColor, getTimestampDecis } from '../animation.js';
 import { formatGitStatus, formatGitSync, isAnimated, stripAnsi } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
@@ -41,14 +41,18 @@ function batteryLine(row, contextPct, animationMode, colorMode, colors) {
 }
 
 export function render(ctx) {
-  const { colors, data, git, animationMode, colorMode, colorOffset } = ctx;
+  const { colors, data, git, animationMode, colorMode, colorOffset, bgOffset } = ctx;
   const RST = colors.RST;
   const V = `${colors.C_BOX}\u2502${RST}`;
   const W = 24;
 
   // Left card content
   let L1, L2, L3;
-  if (isAnimated(animationMode)) {
+  if (animationMode === 'lsd') {
+    L1 = `${colors.C_I_BRANCH}${colors.icons.BRANCH}${RST} ${colorizeFgSparkle(git.branch || 'branch', 0, bgOffset, colorMode)}`;
+    L2 = `${colors.C_I_TREE}${colors.icons.TREE}${RST} ${colorizeFgSparkle(git.worktree || 'worktree', 3, bgOffset, colorMode)}`;
+    L3 = `${colors.C_I_DIR}${colors.icons.DIR}${RST} ${colorizeFgSparkle(data.dirName, 6, bgOffset, colorMode)}`;
+  } else if (isAnimated(animationMode)) {
     L1 = `${colors.C_I_BRANCH}${colors.icons.BRANCH}${RST} ${colorizeText(git.branch || 'branch', 0, colorOffset, animationMode, colorMode)}`;
     L2 = `${colors.C_I_TREE}${colors.icons.TREE}${RST} ${colorizeText(git.worktree || 'worktree', 3, colorOffset, animationMode, colorMode)}`;
     L3 = `${colors.C_I_DIR}${colors.icons.DIR}${RST} ${colorizeText(data.dirName, 6, colorOffset, animationMode, colorMode)}`;
@@ -62,7 +66,17 @@ export function render(ctx) {
 
   // Right card content
   let R1, R2, R3, R4, R5;
-  if (isAnimated(animationMode)) {
+  if (animationMode === 'lsd') {
+    R1 = `${colors.C_I_MODEL}${colors.icons.MODEL}${RST} ${colorizeFgSparkle(data.model, 9, bgOffset, colorMode)}`;
+    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
+      R2 = `${colors.C_I_RATE}${colors.icons.TIME}${RST} ${colorizeFgSparkle(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 12, bgOffset, colorMode)}`;
+    } else {
+      R2 = '';
+    }
+    R3 = `${colors.C_I_TIME}${colors.icons.SESSION}${RST} ${colorizeFgSparkle(`${data.sessionDurationMin}m`, 22, bgOffset, colorMode)}`;
+    R4 = data.burnRate ? `${colors.C_I_BURN}${colors.icons.COST}${RST} ${colorizeFgSparkle(data.burnRate, 32, bgOffset, colorMode)}` : '';
+    R5 = `${colors.C_I_THEME}${colors.icons.THEME}${RST} ${colorizeText(data.themeName, 5, colorOffset, animationMode, colorMode)}`;
+  } else if (isAnimated(animationMode)) {
     R1 = `${colors.C_I_MODEL}${colors.icons.MODEL}${RST} ${colorizeText(data.model, 9, colorOffset, animationMode, colorMode)}`;
     if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
       R2 = `${colors.C_I_RATE}${colors.icons.TIME}${RST} ${colorizeText(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 12, colorOffset, animationMode, colorMode)}`;
