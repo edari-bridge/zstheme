@@ -72,7 +72,11 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const preview = useMemo(() => {
     if (!selectedTheme) return '';
     try {
-      return renderThemePreview(selectedTheme);
+      let result = renderThemePreview(selectedTheme);
+      if (parseThemeName(selectedTheme).layout === '1line') {
+        result = result.replace(/    /g, '   ');
+      }
+      return result;
     } catch {
       return '';
     }
