@@ -74,7 +74,7 @@ export function render(ctx) {
     }
 
     const chipTheme = colorizeText(`${colors.icons.THEME} ${data.themeName}`, 0, colorOffset, animationMode, colorMode);
-    const line2 = `${chipSes}    ${chipTheme}`;
+    const line2 = `${chipSes}     ${chipTheme}`;
 
     return `${line1}\n${line2}`;
   }
@@ -112,7 +112,7 @@ export function render(ctx) {
   if (data.burnRate) sesContent += `     ${colors.C_I_BURN}${colors.icons.COST} ${colors.C_BURN}${data.burnRate}`;
 
   const themeDisplay = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
-  const line2 = `${makeChip(bgSes, sesContent, chipStyle, colors)}    ${themeDisplay}`;
+  const line2 = `${makeChip(bgSes, sesContent, chipStyle, colors)}     ${themeDisplay}`;
 
   return `${line1}\n${line2}`;
 }

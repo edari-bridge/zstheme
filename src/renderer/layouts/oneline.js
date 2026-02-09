@@ -27,5 +27,5 @@ export function render(ctx) {
 
   parts.push(formatContext(ctx));
 
-  return parts.join('  ');
+  return parts.join('    ');
 }

@@ -95,7 +95,7 @@ export function render(ctx) {
   }
 
   const chipCtx = formatContext(ctx);
-  const line1 = `${chipBranch} ${chipTree} ${chipDir}  ${chipStatus} ${chipSync}  ${chipCtx}`;
+  const line1 = `${chipBranch}    ${chipTree}    ${chipDir}    ${chipStatus}    ${chipSync}    ${chipCtx}`;
 
   // === Line 2 chips ===
   let chipModel, chipRate, chipTime, chipBurn, chipTheme;
@@ -160,9 +160,8 @@ export function render(ctx) {
     chipTheme = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
   }
 
-  let line2 = `${chipModel} ${chipRate} ${chipTime} ${chipBurn}  ${chipTheme}`;
-  // Collapse multiple spaces from empty chips
-  line2 = line2.replace(/ {2,}/g, ' ');
+  const line2Chips = [chipModel, chipRate, chipTime, chipBurn].filter(Boolean);
+  const line2 = `${line2Chips.join('     ')}     ${chipTheme}`;
 
   return `${line1}\n${line2}`;
 }
