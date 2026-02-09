@@ -158,11 +158,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const baseBorderColor = 'cyan';
   const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
-  /* 
-     사용자 요청: 내부 탭 영역 포커싱 강화
-     - 외곽 박스는 변하지 않지만, 내부 활성 박스는 modified 상태일 때 노란색으로 강조
-  */
-  const activeBorderColor = modified ? 'yellow' : 'cyan';
+  // 포커스된 탭은 항상 yellow로 조작 가능 상태 표시
+  const activeBorderColor = 'yellow';
+  const titleColor = isLsdUnlocked ? lsdBorderColor : 'cyan';
 
   return e(Box, {
     flexDirection: 'column',
@@ -209,7 +207,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         borderColor: focusArea === 0 ? activeBorderColor : 'gray',
         padding: 1
       },
-        e(Text, { color: activeBorderColor, bold: true, underline: true }, 'SETTINGS (Tab)'),
+        e(Text, { color: titleColor, bold: true, underline: true }, 'STYLE'),
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
@@ -224,7 +222,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         ),
 
         e(Box, { flexGrow: 1 }),
-        e(Text, { dimColor: true }, 'S: Save / R: Reset')
+        e(Text, { dimColor: true }, 'S: Save / R: Reset / Tab: Switch')
       ),
 
       // RIGHT: Colors
@@ -236,7 +234,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         padding: 1
       },
         e(Box, { justifyContent: 'space-between', marginBottom: 1 },
-          e(Text, { color: activeBorderColor, bold: true, underline: true }, `COLORS (${colorCategory === 0 ? 'Fg' : 'Bg'})`),
+          e(Text, { color: titleColor, bold: true, underline: true }, 'COLORS'),
           hasBgSupport && e(Text, { dimColor: true }, `[F] / [B]`)
         ),
 
