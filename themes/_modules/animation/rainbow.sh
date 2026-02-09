@@ -20,11 +20,21 @@ MONO_CYCLE=("192;192;192" "198;198;198" "204;204;204" "210;210;210" "216;216;216
 # Chaotic Offset (Visual Speed & Pattern)
 # Use Perl/Python/Date safely.
 get_timestamp_decis() {
+    # Bash 5+ EPOCHREALTIME (no fork needed)
+    if [[ -n "${EPOCHREALTIME+x}" ]]; then
+        local rt="${EPOCHREALTIME}"
+        # EPOCHREALTIME is like "1234567890.123456" - multiply by 10 for deciseconds
+        local secs="${rt%%.*}"
+        local frac="${rt#*.}"
+        echo "${secs}${frac:0:1}"
+        return
+    fi
+
     # Try Perl (High Precision, Standard on macOS/Linux)
     if command -v perl >/dev/null 2>&1; then
         perl -MTime::HiRes -e 'printf "%.0f\n", Time::HiRes::time()*10' 2>/dev/null && return
     fi
-    
+
     # Try Python3
     if command -v python3 >/dev/null 2>&1; then
         python3 -c 'import time; print(int(time.time()*10))' 2>/dev/null && return
@@ -67,8 +77,10 @@ colorize_text() {
     local result=""
     local i=0
 
-    # UTF-8 문자를 하나씩 처리 (grep -o로 문자 분리)
-    while IFS= read -r char; do
+    # UTF-8 문자를 하나씩 처리 (bash 내장 인덱싱)
+    local len=${#text}
+    for ((i=0; i<len; i++)); do
+        local char="${text:$i:1}"
         # Stride 7 for higher spatial frequency (more color changes per char)
         local color_idx=$(( (start_idx + (i * 7) + COLOR_OFFSET) % 60 ))
 
@@ -78,11 +90,10 @@ colorize_text() {
              # LSD Mode: Vivid Neon Palette
              result+="\033[1;38;2;${LSD_COLORS[$color_idx]}m${char}"
         else
-             # Rainbow Mode: Pastel Palette 
+             # Rainbow Mode: Pastel Palette
              result+="\033[1;38;2;${RAINBOW_COLORS[$color_idx]}m${char}"
         fi
-        ((i++))
-    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
+    done
 
     echo -e "${result}\033[22;39m"
 }
@@ -182,7 +193,9 @@ colorize_bg_lsd() {
     local direction=1
     [[ $((start_idx % 20)) -ge 10 ]] && direction=-1
 
-    while IFS= read -r char; do
+    local len=${#text}
+    for ((i=0; i<len; i++)); do
+        local char="${text:$i:1}"
         local color_idx=$(( (start_idx + (i * stride * direction) + COLOR_OFFSET) % 60 ))
         # 음수 보정
         [[ $color_idx -lt 0 ]] && color_idx=$((60 + color_idx))
@@ -196,8 +209,7 @@ colorize_bg_lsd() {
         fi
 
         result+="${bg_code}${fg_color}${char}"
-        ((i++))
-    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
+    done
 
     echo -e "${result}\033[0m"
 }
@@ -215,19 +227,20 @@ colorize_bg_rainbow() {
     local result=""
     local i=0
 
-    while IFS= read -r char; do
+    local len=${#text}
+    for ((i=0; i<len; i++)); do
+        local char="${text:$i:1}"
         # Slower, smoother wave for shimmer
         local wave=$(( (start_idx + i + (COLOR_OFFSET / 2)) % 20 ))
-        
+
         local bg_code="$base_bg"
         # Simple shimmer band (width 5)
         if [[ $wave -lt 5 ]]; then
             bg_code="$highlight_bg"
         fi
-        
+
         result+="${bg_code}${fg_color}${char}"
-        ((i++))
-    done < <(echo -n "$text" | grep -oE '.' 2>/dev/null || echo -n "$text" | fold -w1)
+    done
 
     echo -e "${result}\033[0m"
 }

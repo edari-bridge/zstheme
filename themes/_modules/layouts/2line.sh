@@ -27,15 +27,15 @@ render() {
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        line1_parts+=("$(format_git_status_common "  ")")
-        line1_parts+=("$(format_git_sync_common "  ")")
+        line1_parts+=("$(format_git_status "  ")")
+        line1_parts+=("$(format_git_sync "  ")")
     else
         line1_parts+=("${C_DIM_STATUS}${ICON_GIT_STATUS} status${RST}")
         line1_parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
     fi
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
-    line1_parts+=("$(format_context_common)")
+    line1_parts+=("$(format_context)")
 
     # Line 2: 세션 정보 + 테마
     local line2_parts=()

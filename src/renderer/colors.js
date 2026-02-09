@@ -58,6 +58,46 @@ function loadCustomColorCodes() {
   return codes;
 }
 
+// Common color set builder - all modes share this return structure
+function buildColorSet({ foreground, dimStatus, brightStatus, dimSync, brightSync, rate, burn, time, iconColors, bgBadges, bgBars, chipColor, batFill, ctxIcon, ctxText, iCtx, icons, iconMode }) {
+  return {
+    RST,
+    // Foreground
+    C_BRANCH: foreground.branch, C_TREE: foreground.tree,
+    C_DIR: foreground.dir, C_MODEL: foreground.model,
+    C_STATUS: foreground.status, C_SYNC: foreground.sync,
+    C_DIM_STATUS: dimStatus, C_BRIGHT_STATUS: brightStatus,
+    C_DIM_SYNC: dimSync, C_BRIGHT_SYNC: brightSync,
+    C_RATE: rate, C_BURN: burn, C_TIME: time,
+    // Icon colors
+    C_I_BRANCH: iconColors.branch, C_I_TREE: iconColors.tree,
+    C_I_DIR: iconColors.dir, C_I_MODEL: iconColors.model,
+    C_I_STATUS: iconColors.status, C_I_SYNC: iconColors.sync,
+    C_I_CTX: iCtx, C_I_RATE: iconColors.rate, C_I_BURN: iconColors.burn,
+    C_I_TIME: iconColors.time, C_I_THEME: iconColors.theme,
+    // Context
+    CTX_ICON: ctxIcon, C_CTX_TEXT: ctxText,
+    // Background (badges)
+    ...bgBadges,
+    // Background (bars)
+    ...bgBars,
+    // Box/chip
+    C_BOX: fg(240), C_CHIP: chipColor,
+    // Battery
+    C_BAT_EMPTY: bg(236), C_BAT_FILL: batFill,
+    // Icons
+    icons,
+    iconMode,
+  };
+}
+
+// Default icon colors (shared by pastel and mono)
+const DEFAULT_ICON_COLORS = {
+  branch: `${ESC}[93m`, tree: `${ESC}[92m`, dir: `${ESC}[96m`,
+  model: `${ESC}[95m`, status: fg(111), sync: fg(141),
+  rate: fg(229), burn: fg(216), time: fg(75), theme: fg(229),
+};
+
 export function initColors(colorMode, iconMode, contextPct, animationMode) {
   const icons = iconMode === 'nerd' ? NERD_ICONS : EMOJI_ICONS;
 
@@ -105,36 +145,22 @@ function initPastelColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, b
     cModel = `${ESC}[95m`; cStatus = fg(111); cSync = fg(141);
   }
 
-  return {
-    RST,
-    // Foreground
-    C_BRANCH: cBranch, C_TREE: cTree, C_DIR: cDir, C_MODEL: cModel,
-    C_STATUS: cStatus, C_SYNC: cSync,
-    C_DIM_STATUS: fg(111), C_BRIGHT_STATUS: fgBold(153),
-    C_DIM_SYNC: fg(141), C_BRIGHT_SYNC: fgBold(183),
-    C_RATE: fg(229), C_BURN: fg(216), C_TIME: fg(75),
-    // Icon colors
-    C_I_BRANCH: `${ESC}[93m`, C_I_TREE: `${ESC}[92m`, C_I_DIR: `${ESC}[96m`,
-    C_I_MODEL: `${ESC}[95m`, C_I_STATUS: fg(111), C_I_SYNC: fg(141),
-    C_I_CTX: iCtx, C_I_RATE: fg(229), C_I_BURN: fg(216), C_I_TIME: fg(75),
-    C_I_THEME: fg(229),
-    // Context
-    CTX_ICON: ctxIcon, C_CTX_TEXT: ctxText,
-    // Background (badges)
-    C_BG_BRANCH: bg(58), C_BG_TREE: bg(22), C_BG_DIR: bg(23),
-    C_BG_STATUS: bg(24), C_BG_SYNC: bg(53), C_BG_MODEL: bg(53),
-    C_BG_RATE: bg(58), C_BG_TIME: bg(24), C_BG_BURN: bg(94),
-    C_BG_CTX: bg(22), C_BG_CTX_WARN: bg(94), C_BG_CTX_CRIT: bg(52),
-    // Background (bars)
-    C_BG_LOC: bg(23), C_BG_GIT: bg(24), C_BG_SES: bg(53),
-    // Box/chip
-    C_BOX: fg(240), C_CHIP: fg(245),
-    // Battery
-    C_BAT_EMPTY: bg(236), C_BAT_FILL: batFill,
-    // Icons
-    icons,
-    iconMode,
-  };
+  return buildColorSet({
+    foreground: { branch: cBranch, tree: cTree, dir: cDir, model: cModel, status: cStatus, sync: cSync },
+    dimStatus: fg(111), brightStatus: fgBold(153),
+    dimSync: fg(141), brightSync: fgBold(183),
+    rate: fg(229), burn: fg(216), time: fg(75),
+    iconColors: DEFAULT_ICON_COLORS,
+    bgBadges: {
+      C_BG_BRANCH: bg(58), C_BG_TREE: bg(22), C_BG_DIR: bg(23),
+      C_BG_STATUS: bg(24), C_BG_SYNC: bg(53), C_BG_MODEL: bg(53),
+      C_BG_RATE: bg(58), C_BG_TIME: bg(24), C_BG_BURN: bg(94),
+      C_BG_CTX: bg(22), C_BG_CTX_WARN: bg(94), C_BG_CTX_CRIT: bg(52),
+    },
+    bgBars: { C_BG_LOC: bg(23), C_BG_GIT: bg(24), C_BG_SES: bg(53) },
+    chipColor: fg(245),
+    batFill, ctxIcon, ctxText, iCtx, icons, iconMode,
+  });
 }
 
 function initMonoColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill) {
@@ -149,28 +175,22 @@ function initMonoColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, bat
     cBranch = BASE; cTree = BASE; cDir = BASE; cModel = BASE;
   }
 
-  return {
-    RST,
-    C_BRANCH: cBranch, C_TREE: cTree, C_DIR: cDir, C_MODEL: cModel,
-    C_STATUS: BASE, C_SYNC: BASE,
-    C_DIM_STATUS: BASE, C_BRIGHT_STATUS: fgBold(252),
-    C_DIM_SYNC: BASE, C_BRIGHT_SYNC: fgBold(250),
-    C_RATE: BASE, C_BURN: BASE, C_TIME: BASE,
-    C_I_BRANCH: `${ESC}[93m`, C_I_TREE: `${ESC}[92m`, C_I_DIR: `${ESC}[96m`,
-    C_I_MODEL: `${ESC}[95m`, C_I_STATUS: fg(111), C_I_SYNC: fg(141),
-    C_I_CTX: iCtx, C_I_RATE: fg(229), C_I_BURN: fg(216), C_I_TIME: fg(75),
-    C_I_THEME: fg(229),
-    CTX_ICON: ctxIcon, C_CTX_TEXT: ctxText,
-    C_BG_BRANCH: bg(236), C_BG_TREE: bg(241), C_BG_DIR: bg(234),
-    C_BG_STATUS: bg(239), C_BG_SYNC: bg(235), C_BG_MODEL: bg(240),
-    C_BG_RATE: bg(237), C_BG_TIME: bg(242), C_BG_BURN: bg(235),
-    C_BG_CTX: bg(236), C_BG_CTX_WARN: bg(240), C_BG_CTX_CRIT: bg(244),
-    C_BG_LOC: bg(239), C_BG_GIT: bg(237), C_BG_SES: bg(233),
-    C_BOX: fg(240), C_CHIP: fg(242),
-    C_BAT_EMPTY: bg(236), C_BAT_FILL: batFill,
-    icons,
-    iconMode,
-  };
+  return buildColorSet({
+    foreground: { branch: cBranch, tree: cTree, dir: cDir, model: cModel, status: BASE, sync: BASE },
+    dimStatus: BASE, brightStatus: fgBold(252),
+    dimSync: BASE, brightSync: fgBold(250),
+    rate: BASE, burn: BASE, time: BASE,
+    iconColors: DEFAULT_ICON_COLORS,
+    bgBadges: {
+      C_BG_BRANCH: bg(236), C_BG_TREE: bg(241), C_BG_DIR: bg(234),
+      C_BG_STATUS: bg(239), C_BG_SYNC: bg(235), C_BG_MODEL: bg(240),
+      C_BG_RATE: bg(237), C_BG_TIME: bg(242), C_BG_BURN: bg(235),
+      C_BG_CTX: bg(236), C_BG_CTX_WARN: bg(240), C_BG_CTX_CRIT: bg(244),
+    },
+    bgBars: { C_BG_LOC: bg(239), C_BG_GIT: bg(237), C_BG_SES: bg(233) },
+    chipColor: fg(242),
+    batFill, ctxIcon, ctxText, iCtx, icons, iconMode,
+  });
 }
 
 function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, batFill) {
@@ -190,30 +210,27 @@ function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, b
   const bold = contextPct >= 50;
   const mkFg = bold ? fgBold : fg;
 
-  return {
-    RST,
-    C_BRANCH: mkFg(branchCode), C_TREE: mkFg(treeCode), C_DIR: mkFg(dirCode),
-    C_MODEL: mkFg(modelCode), C_STATUS: mkFg(statusCode), C_SYNC: mkFg(syncCode),
-    C_DIM_STATUS: fg(statusCode), C_BRIGHT_STATUS: fgBold(statusCode),
-    C_DIM_SYNC: fg(syncCode), C_BRIGHT_SYNC: fgBold(syncCode),
-    C_RATE: fg(rateCode), C_BURN: fg(burnCode), C_TIME: fg(timeCode),
-    C_I_BRANCH: fg(branchCode), C_I_TREE: fg(treeCode), C_I_DIR: fg(dirCode),
-    C_I_MODEL: fg(modelCode), C_I_STATUS: fg(statusCode), C_I_SYNC: fg(syncCode),
-    C_I_CTX: iCtx, C_I_RATE: fg(rateCode), C_I_BURN: fg(burnCode), C_I_TIME: fg(timeCode),
-    C_I_THEME: fg(229),
-    CTX_ICON: ctxIcon, C_CTX_TEXT: ctxText,
-    C_BG_BRANCH: bg(g('C_BG_BRANCH', 58)), C_BG_TREE: bg(g('C_BG_TREE', 22)),
-    C_BG_DIR: bg(g('C_BG_DIR', 23)), C_BG_STATUS: bg(g('C_BG_STATUS', 24)),
-    C_BG_SYNC: bg(g('C_BG_SYNC', 53)), C_BG_MODEL: bg(g('C_BG_MODEL', 53)),
-    C_BG_RATE: bg(58), C_BG_TIME: bg(24), C_BG_BURN: bg(94),
-    C_BG_CTX: bg(22), C_BG_CTX_WARN: bg(94), C_BG_CTX_CRIT: bg(52),
-    C_BG_LOC: bg(g('C_BG_LOC', 23)), C_BG_GIT: bg(g('C_BG_GIT', 24)),
-    C_BG_SES: bg(g('C_BG_SES', 53)),
-    C_BOX: fg(240), C_CHIP: fg(245),
-    C_BAT_EMPTY: bg(236), C_BAT_FILL: batFill,
-    icons,
-    iconMode,
-  };
+  return buildColorSet({
+    foreground: { branch: mkFg(branchCode), tree: mkFg(treeCode), dir: mkFg(dirCode), model: mkFg(modelCode), status: mkFg(statusCode), sync: mkFg(syncCode) },
+    dimStatus: fg(statusCode), brightStatus: fgBold(statusCode),
+    dimSync: fg(syncCode), brightSync: fgBold(syncCode),
+    rate: fg(rateCode), burn: fg(burnCode), time: fg(timeCode),
+    iconColors: {
+      branch: fg(branchCode), tree: fg(treeCode), dir: fg(dirCode),
+      model: fg(modelCode), status: fg(statusCode), sync: fg(syncCode),
+      rate: fg(rateCode), burn: fg(burnCode), time: fg(timeCode), theme: fg(229),
+    },
+    bgBadges: {
+      C_BG_BRANCH: bg(g('C_BG_BRANCH', 58)), C_BG_TREE: bg(g('C_BG_TREE', 22)),
+      C_BG_DIR: bg(g('C_BG_DIR', 23)), C_BG_STATUS: bg(g('C_BG_STATUS', 24)),
+      C_BG_SYNC: bg(g('C_BG_SYNC', 53)), C_BG_MODEL: bg(g('C_BG_MODEL', 53)),
+      C_BG_RATE: bg(58), C_BG_TIME: bg(24), C_BG_BURN: bg(94),
+      C_BG_CTX: bg(22), C_BG_CTX_WARN: bg(94), C_BG_CTX_CRIT: bg(52),
+    },
+    bgBars: { C_BG_LOC: bg(g('C_BG_LOC', 23)), C_BG_GIT: bg(g('C_BG_GIT', 24)), C_BG_SES: bg(g('C_BG_SES', 53)) },
+    chipColor: fg(245),
+    batFill, ctxIcon, ctxText, iCtx, icons, iconMode,
+  });
 }
 
 export function getRateColor(rateLimitPct, colorMode, colors) {

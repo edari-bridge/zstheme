@@ -38,122 +38,96 @@ make_chip() {
 # 렌더링 함수
 # ============================================================
 
-render() {
-    init_colors
-
-    # 배경색 가져오기 (lsd/rainbow일 때 순환)
+render_animated() {
     local bg_loc bg_git bg_ses
-    if is_animated; then
-        bg_loc=$(get_animated_bg 0)
-        bg_git=$(get_animated_bg 1)
-        bg_ses=$(get_animated_bg 2)
+    bg_loc=$(get_animated_bg 0)
+    bg_git=$(get_animated_bg 1)
+    bg_ses=$(get_animated_bg 2)
+
+    # Line 1: Location chip
+    local raw_loc=" ${ICON_BRANCH} ${BRANCH:-branch}    ${ICON_TREE} ${WORKTREE:-worktree}    ${ICON_DIR} ${DIR_NAME} "
+
+    local chip_loc
+    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        chip_loc=$(colorize_bg_lsd "$raw_loc" 0 "\033[30m")
     else
-        bg_loc="$C_BG_LOC"
-        bg_git="$C_BG_GIT"
-        bg_ses="$C_BG_SES"
+        chip_loc="$(make_chip "$C_BG_LOC" "${C_I_BRANCH}${ICON_BRANCH} $(colorize_text "${BRANCH:-branch}" 0)    ${C_I_TREE}${ICON_TREE} $(colorize_text "${WORKTREE:-worktree}" 10)    ${C_I_DIR}${ICON_DIR} $(colorize_text "${DIR_NAME}" 20)")"
     fi
 
-    # Line 1: 위치 칩 + Git 칩 + 컨텍스트
-    local loc_content=""
-    if is_animated; then
-        # Define base colors for Rainbow Shimmer here (Hardcoded for now as vars are in C_BG_*)
-        # We need to pass the ANSI codes.
-        
-        # Raw content strings
-        local raw_loc=" ${ICON_BRANCH} ${BRANCH:-branch}    ${ICON_TREE} ${WORKTREE:-worktree}    ${ICON_DIR} ${DIR_NAME} "
-        
-        local chip_loc
+    local line1_chips="${chip_loc}    "
+
+    # Git Chip
+    if [[ "$IS_GIT_REPO" == "true" ]]; then
+        local add mod del ahead behind
+        [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
+        [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
+        [[ "$GIT_DELETED" -gt 0 ]] && del="-${GIT_DELETED}" || del="-0"
+        [[ "$GIT_AHEAD" -gt 0 ]] && ahead="↑ ${GIT_AHEAD}" || ahead="↑ 0"
+        [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
+
+        local raw_git=" ${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind} "
+
+        local chip_git
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            chip_loc=$(colorize_bg_lsd "$raw_loc" 0 "\033[30m")
+            chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30m")
         else
-            chip_loc="$(make_chip "$C_BG_LOC" "${C_I_BRANCH}${ICON_BRANCH} $(colorize_text "${BRANCH:-branch}" 0)    ${C_I_TREE}${ICON_TREE} $(colorize_text "${WORKTREE:-worktree}" 10)    ${C_I_DIR}${ICON_DIR} $(colorize_text "${DIR_NAME}" 20)")"
+            chip_git="$(make_chip "$C_BG_GIT" "${C_I_STATUS}${ICON_GIT_STATUS} $(colorize_text "${add}  ${mod}  ${del}" 30)    ${C_I_SYNC}${ICON_SYNC} $(colorize_text "${ahead}  ${behind}" 40)")"
         fi
-        
-        local line1_chips="${chip_loc}    "
-        
-        # Git Chip
-        if [[ "$IS_GIT_REPO" == "true" ]]; then
-             local add mod del ahead behind
-             [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
-             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
-             [[ "$GIT_DELETED" -gt 0 ]] && del="-${GIT_DELETED}" || del="-0"
-             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="↑ ${GIT_AHEAD}" || ahead="↑ 0"
-             [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
-             
-             local raw_git=" ${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind} "
-             
-             local chip_git
-             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                 chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30m")
-             else
-                 chip_git="$(make_chip "$C_BG_GIT" "${C_I_STATUS}${ICON_GIT_STATUS} $(colorize_text "${add}  ${mod}  ${del}" 30)    ${C_I_SYNC}${ICON_SYNC} $(colorize_text "${ahead}  ${behind}" 40)")"
-             fi
-             line1_chips+="${chip_git}    "
+        line1_chips+="${chip_git}    "
+    else
+        local raw_git=" ${ICON_GIT_STATUS} ---    ${ICON_SYNC} --- "
+        local chip_git
+        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30;2m")
         else
-             local raw_git=" ${ICON_GIT_STATUS} ---    ${ICON_SYNC} --- "
-             local chip_git
-             if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30;2m")
-             else
-                chip_git="$(make_chip "$C_BG_GIT" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---    ${C_DIM_SYNC}${ICON_SYNC} ---")"
-             fi
-             line1_chips+="${chip_git}    "
+            chip_git="$(make_chip "$C_BG_GIT" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---    ${C_DIM_SYNC}${ICON_SYNC} ---")"
         fi
-        
-        # Context (Keep standard)
-        if [[ "$ICON_MODE" == "nerd" ]]; then
-            line1_chips+="${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
-        else
-            line1_chips+="${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
-        fi
-        
-        local line1="${line1_chips}"
-        
-        # Line 2: Session + Theme
-        local line2_chips=""
-        
-        # Session Chip
-        local ses_raw=" ${ICON_MODEL} ${MODEL}"
+        line1_chips+="${chip_git}    "
+    fi
+
+    # Context
+    line1_chips+="$(format_context)"
+
+    local line1="${line1_chips}"
+
+    # Line 2: Session + Theme
+    local ses_raw=" ${ICON_MODEL} ${MODEL}"
+    if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+        ses_raw+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
+    fi
+    ses_raw+="     ${ICON_SESSION} ${SESSION_DURATION_MIN}m"
+    [[ -n "$BURN_RATE" ]] && ses_raw+="     ${ICON_COST} ${BURN_RATE}"
+    ses_raw+=" "
+
+    local chip_ses
+    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        chip_ses=$(colorize_bg_lsd "$ses_raw" 50 "\033[30m")
+    else
+        local ses_animated="${C_I_MODEL}${ICON_MODEL} $(colorize_text "${MODEL}" 50)"
         if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-            ses_raw+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
+            ses_animated+="     ${C_I_RATE}${ICON_TIME} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60)"
         fi
-        ses_raw+="     ${ICON_SESSION} ${SESSION_DURATION_MIN}m"
-        [[ -n "$BURN_RATE" ]] && ses_raw+="     ${ICON_COST} ${BURN_RATE}"
-        ses_raw+=" "
-        
-        local chip_ses
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            chip_ses=$(colorize_bg_lsd "$ses_raw" 50 "\033[30m")
-        else
-            local ses_animated="${C_I_MODEL}${ICON_MODEL} $(colorize_text "${MODEL}" 50)"
-            if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-                ses_animated+="     ${C_I_RATE}${ICON_TIME} $(colorize_text "${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60)"
-            fi
-            ses_animated+="     ${C_I_TIME}${ICON_SESSION} $(colorize_text "${SESSION_DURATION_MIN}m" 70)"
-            [[ -n "$BURN_RATE" ]] && ses_animated+="     ${C_I_BURN}${ICON_COST} $(colorize_text "${BURN_RATE}" 80)"
-            chip_ses="$(make_chip "$C_BG_SES" "$ses_animated")"
-        fi
-        
-        line2_chips+="${chip_ses}    "
-        
-        # Theme (텍스트 그라데이션, 배경 없음)
-        local chip_theme
-        chip_theme=$(colorize_text "${ICON_THEME} ${THEME_NAME}")
-        
-        line2_chips+="${chip_theme}"
-        
-        local line2="${line2_chips}"
-        
-        echo -e "$line1"
-        echo -e "$line2"
-        return
+        ses_animated+="     ${C_I_TIME}${ICON_SESSION} $(colorize_text "${SESSION_DURATION_MIN}m" 70)"
+        [[ -n "$BURN_RATE" ]] && ses_animated+="     ${C_I_BURN}${ICON_COST} $(colorize_text "${BURN_RATE}" 80)"
+        chip_ses="$(make_chip "$C_BG_SES" "$ses_animated")"
     fi
 
-    # ... Original Logic below ...
+    local chip_theme
+    chip_theme=$(colorize_text "${ICON_THEME} ${THEME_NAME}")
+
+    local line2="${chip_ses}    ${chip_theme}"
+
+    echo -e "$line1"
+    echo -e "$line2"
+}
+
+render_static() {
+    local bg_loc="$C_BG_LOC"
+    local bg_git="$C_BG_GIT"
+    local bg_ses="$C_BG_SES"
 
     # Line 1: 위치 칩 + Git 칩 + 컨텍스트
     local loc_content=""
-    # lsd와 static 모두 동일한 글자색 (기존 모노톤 유지)
     loc_content="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}    "
     loc_content="${loc_content}${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}    "
     loc_content="${loc_content}${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}"
@@ -161,7 +135,6 @@ render() {
     local git_content=""
     if [[ "$IS_GIT_REPO" == "true" ]]; then
         local add mod del ahead behind
-        # lsd와 static 모두 동일한 글자색
         [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}" || add="${C_DIM_STATUS}+0"
         [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}" || mod="${C_DIM_STATUS}~0"
         [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}" || del="${C_DIM_STATUS}-0"
@@ -172,19 +145,13 @@ render() {
         git_content="${C_DIM_STATUS}${ICON_GIT_STATUS} ---    ${C_DIM_SYNC}${ICON_SYNC} ---"
     fi
 
-    # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
     local ctx_display
-    if [[ "$ICON_MODE" == "nerd" ]]; then
-        ctx_display="${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
-    else
-        ctx_display="${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
-    fi
+    ctx_display="$(format_context)"
 
     local line1="$(make_chip "$bg_loc" "$loc_content")    $(make_chip "$bg_git" "$git_content")    ${ctx_display}"
 
     # Line 2: 세션 칩 + 테마
     local ses_content=""
-    # lsd와 static 모두 동일한 글자색
     ses_content="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}"
 
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
@@ -196,11 +163,20 @@ render() {
     [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}"
 
     local theme_display
-    # lsd와 static 모두 동일한 글자색
     theme_display="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
 
     local line2="$(make_chip "$bg_ses" "$ses_content")    ${theme_display}"
 
     echo -e "$line1"
     echo -e "$line2"
+}
+
+render() {
+    init_colors
+
+    if is_animated; then
+        render_animated
+    else
+        render_static
+    fi
 }

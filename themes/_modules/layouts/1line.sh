@@ -25,8 +25,8 @@ render() {
 
     # Git 상태
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        parts+=("$(format_git_status_common " ")")
-        parts+=("$(format_git_sync_common " ")")
+        parts+=("$(format_git_status " ")")
+        parts+=("$(format_git_sync " ")")
     else
         parts+=("${C_DIM_STATUS}${ICON_GIT_STATUS} status${RST}")
         parts+=("${C_DIM_SYNC}${ICON_SYNC} sync${RST}")
@@ -36,7 +36,7 @@ render() {
     parts+=("$(render_text "$C_I_MODEL" "$ICON_MODEL" "${MODEL}" "$C_MODEL" 9)")
 
     # 컨텍스트 (경고 색상 유지 - lsd/rainbow 제외)
-    parts+=("$(format_context_common)")
+    parts+=("$(format_context)")
 
     # Rate limit (컴팩트)
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_LIMIT_PCT" ]]; then

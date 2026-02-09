@@ -18,7 +18,7 @@ render_text() {
     fi
 }
 
-format_git_status_common() {
+format_git_status() {
     local separator="${1:- }"
     local add mod del
 
@@ -39,7 +39,7 @@ format_git_status_common() {
     echo "${C_I_STATUS}${ICON_GIT_STATUS}${RST} ${add}${separator}${mod}${separator}${del}"
 }
 
-format_git_sync_common() {
+format_git_sync() {
     local separator="${1:- }"
     local ahead behind
 
@@ -57,10 +57,37 @@ format_git_sync_common() {
     echo "${C_I_SYNC}${ICON_SYNC}${RST} ${ahead}${separator}${behind}"
 }
 
-format_context_common() {
+format_context() {
     if [[ "$ICON_MODE" == "nerd" ]]; then
         echo "${C_I_CTX}${CTX_ICON}${RST} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
     else
         echo "${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
+    fi
+}
+
+# Unified animation content generator
+# Args: $1=type ("text"|"chip"|"bg_chip"), $2=text, $3=offset,
+#       $4=icon_color, $5=icon, $6=bg_color, $7=text_color (static only)
+make_animated_content() {
+    local type="$1" text="$2" offset="$3"
+    local icon_color="$4" icon="$5" bg_color="$6" text_color="$7"
+
+    if [[ "$ANIMATION_MODE" == "lsd" ]]; then
+        case "$type" in
+            bg_chip) colorize_bg_lsd " ${icon} ${text} " "$offset" "\033[30m" ;;
+            chip) make_chip "$bg_color" "${icon_color}${icon} $(colorize_text "$text" "$offset")" ;;
+            text) echo "${icon_color}${icon}${RST} $(colorize_text "$text" "$offset")" ;;
+        esac
+    elif is_animated; then
+        case "$type" in
+            bg_chip) make_chip "$bg_color" "${icon_color}${icon} $(colorize_text "$text" "$offset")" ;;
+            chip) make_chip "$bg_color" "${icon_color}${icon} $(colorize_text "$text" "$offset")" ;;
+            text) echo "${icon_color}${icon}${RST} $(colorize_text "$text" "$offset")" ;;
+        esac
+    else
+        case "$type" in
+            bg_chip|chip) make_chip "$bg_color" "${icon_color}${icon} ${text_color}${text}" ;;
+            text) echo "${icon_color}${icon} ${text_color}${text}${RST}" ;;
+        esac
     fi
 }

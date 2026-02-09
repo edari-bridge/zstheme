@@ -77,22 +77,11 @@ render() {
     local L1 L2 L3 L4 L5
     # 왼쪽 카드 내용
     local L1 L2 L3 L4 L5
-    if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
-        local raw_branch="${ICON_BRANCH} ${BRANCH:-branch}"
-        local raw_tree="${ICON_TREE} ${WORKTREE:-worktree}"
-        local raw_dir="${ICON_DIR} ${DIR_NAME}"
-
-        # 아이콘은 고유 색상, 텍스트만 애니메이션
-        L1="${C_I_BRANCH}${ICON_BRANCH}${RST} $(colorize_text "${BRANCH:-branch}" 0)"
-        L2="${C_I_TREE}${ICON_TREE}${RST} $(colorize_text "${WORKTREE:-worktree}" 3)"
-        L3="${C_I_DIR}${ICON_DIR}${RST} $(colorize_text "${DIR_NAME}" 6)"
-    else
-        L1="${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}${RST}"
-        L2="${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}${RST}"
-        L3="${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}${RST}"
-    fi
-    L4="$(format_git_status_common "  ")"
-    L5="$(format_git_sync_common "  ")"
+    L1="$(make_animated_content "text" "${BRANCH:-branch}" 0 "${C_I_BRANCH}" "${ICON_BRANCH}" "" "${C_BRANCH}")"
+    L2="$(make_animated_content "text" "${WORKTREE:-worktree}" 3 "${C_I_TREE}" "${ICON_TREE}" "" "${C_TREE}")"
+    L3="$(make_animated_content "text" "${DIR_NAME}" 6 "${C_I_DIR}" "${ICON_DIR}" "" "${C_DIR}")"
+    L4="$(format_git_status "  ")"
+    L5="$(format_git_sync "  ")"
 
     # 오른쪽 카드 내용
     local R1 R2 R3 R4 R5
@@ -105,32 +94,20 @@ render() {
     raw_session="${ICON_SESSION} ${SESSION_DURATION_MIN}m"
     [[ -n "$BURN_RATE" ]] && raw_burn="${ICON_COST} ${BURN_RATE}"
 
-    if [[ "$ANIMATION_MODE" != "static" && -n "$ANIMATION_MODE" ]]; then
-        local raw_model="${ICON_MODEL} ${MODEL}"
-        local raw_theme="${ICON_THEME} ${THEME_NAME}"
-
-        # 아이콘은 고유 색상, 텍스트만 애니메이션
-        R1="${C_I_MODEL}${ICON_MODEL}${RST} $(colorize_text "${MODEL}" 9)"
-        if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
-            R2="${C_I_RATE}${ICON_TIME}${RST} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 12)"
+    R1="$(make_animated_content "text" "${MODEL}" 9 "${C_I_MODEL}" "${ICON_MODEL}" "" "${C_MODEL}")"
+    if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+        if is_animated; then
+            R2="$(make_animated_content "text" "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 12 "${C_I_RATE}" "${ICON_TIME}" "" "")"
         else
-            R2=""
-        fi
-        R3="${C_I_TIME}${ICON_SESSION}${RST} $(colorize_text "${SESSION_DURATION_MIN}m" 22)"
-        [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST}${RST} $(colorize_text "${BURN_RATE}" 32)" || R4=""
-        R5="${C_I_THEME}${ICON_THEME}${RST} $(colorize_text "${THEME_NAME}" 5)"
-    else
-        R1="${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}${RST}"
-        if [[ -n "$raw_rate" ]]; then
             local rate_color=$(get_rate_color)
             R2="${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)${RST}"
-        else
-            R2=""
         fi
-        R3="${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m${RST}"
-        [[ -n "$BURN_RATE" ]] && R4="${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}${RST}" || R4=""
-        R5="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
+    else
+        R2=""
     fi
+    R3="$(make_animated_content "text" "${SESSION_DURATION_MIN}m" 22 "${C_I_TIME}" "${ICON_SESSION}" "" "${C_TIME}")"
+    [[ -n "$BURN_RATE" ]] && R4="$(make_animated_content "text" "${BURN_RATE}" 32 "${C_I_BURN}" "${ICON_COST}" "" "${C_BURN}")" || R4=""
+    R5="$(make_animated_content "text" "${THEME_NAME}" 5 "${C_I_THEME}" "${ICON_THEME}" "" "${C_RATE}")"
 
     # 오른쪽 카드 너비: R5(테마명)가 길 수 있으므로 동적 계산
     local WR=$W

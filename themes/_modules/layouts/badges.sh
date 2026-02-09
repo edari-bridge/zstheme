@@ -78,81 +78,35 @@ render() {
     local chip_branch chip_tree chip_dir chip_status chip_sync chip_ctx
 
     # 브랜치 칩
-    if is_animated; then
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            local raw_branch=" ${ICON_BRANCH} ${BRANCH:-branch} "
-            chip_branch=$(colorize_bg_lsd "$raw_branch" 0 "\033[30m")
-        else
-            chip_branch="$(make_chip "$C_BG_BRANCH" "${C_I_BRANCH}${ICON_BRANCH} $(colorize_text "${BRANCH:-branch}" 0)")"
-        fi
-    else
-        chip_branch="$(make_chip "$bg_branch" "${C_I_BRANCH}${ICON_BRANCH} ${C_BRANCH}${BRANCH:-branch}")"
-    fi
+    chip_branch="$(make_animated_content "bg_chip" "${BRANCH:-branch}" 0 "${C_I_BRANCH}" "${ICON_BRANCH}" "$bg_branch" "${C_BRANCH}")"
 
     # 워크트리 칩
-    if is_animated; then
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            local raw_tree=" ${ICON_TREE} ${WORKTREE:-worktree} "
-            chip_tree=$(colorize_bg_lsd "$raw_tree" 10 "\033[30m")
-        else
-            chip_tree="$(make_chip "$C_BG_TREE" "${C_I_TREE}${ICON_TREE} $(colorize_text "${WORKTREE:-worktree}" 10)")"
-        fi
-    else
-        chip_tree="$(make_chip "$bg_tree" "${C_I_TREE}${ICON_TREE} ${C_TREE}${WORKTREE:-worktree}")"
-    fi
+    chip_tree="$(make_animated_content "bg_chip" "${WORKTREE:-worktree}" 10 "${C_I_TREE}" "${ICON_TREE}" "$bg_tree" "${C_TREE}")"
 
     # 디렉토리 칩
-    if is_animated; then
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            local raw_dir=" ${ICON_DIR} ${DIR_NAME} "
-            chip_dir=$(colorize_bg_lsd "$raw_dir" 20 "\033[30m")
-        else
-            chip_dir="$(make_chip "$C_BG_DIR" "${C_I_DIR}${ICON_DIR} $(colorize_text "${DIR_NAME}" 20)")"
-        fi
-    else
-        chip_dir="$(make_chip "$bg_dir" "${C_I_DIR}${ICON_DIR} ${C_DIR}${DIR_NAME}")"
-    fi
+    chip_dir="$(make_animated_content "bg_chip" "${DIR_NAME}" 20 "${C_I_DIR}" "${ICON_DIR}" "$bg_dir" "${C_DIR}")"
 
     # Git 상태 칩
     if [[ "$IS_GIT_REPO" == "true" ]]; then
-        local status_content sync_content
+        local add mod del ahead behind
         if is_animated; then
-            local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="+${GIT_ADDED}" || add="+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="~${GIT_MODIFIED}" || mod="~0"
             [[ "$GIT_DELETED" -gt 0 ]] && del="-${GIT_DELETED}" || del="-0"
-            
-            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                 local raw_status=" ${ICON_GIT_STATUS} ${add} ${mod} ${del} "
-                 chip_status=$(colorize_bg_lsd "$raw_status" 30 "\033[30m")
-            else
-                 chip_status="$(make_chip "$C_BG_STATUS" "${C_I_STATUS}${ICON_GIT_STATUS} $(colorize_text "${add} ${mod} ${del}" 30)")"
-            fi
+            chip_status="$(make_animated_content "bg_chip" "${add} ${mod} ${del}" 30 "${C_I_STATUS}" "${ICON_GIT_STATUS}" "$bg_status" "")"
 
-            local ahead behind
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="↑ ${GIT_AHEAD}" || ahead="↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="↓ ${GIT_BEHIND}" || behind="↓ 0"
-
-            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                local raw_sync=" ${ICON_SYNC} ${ahead} ${behind} "
-                chip_sync=$(colorize_bg_lsd "$raw_sync" 40 "\033[30m")
-            else
-                chip_sync="$(make_chip "$C_BG_SYNC" "${C_I_SYNC}${ICON_SYNC} $(colorize_text "${ahead} ${behind}" 40)")"
-            fi
+            chip_sync="$(make_animated_content "bg_chip" "${ahead} ${behind}" 40 "${C_I_SYNC}" "${ICON_SYNC}" "$bg_sync" "")"
         else
-            local add mod del
             [[ "$GIT_ADDED" -gt 0 ]] && add="${C_BRIGHT_STATUS}+${GIT_ADDED}" || add="${C_DIM_STATUS}+0"
             [[ "$GIT_MODIFIED" -gt 0 ]] && mod="${C_BRIGHT_STATUS}~${GIT_MODIFIED}" || mod="${C_DIM_STATUS}~0"
             [[ "$GIT_DELETED" -gt 0 ]] && del="${C_BRIGHT_STATUS}-${GIT_DELETED}" || del="${C_DIM_STATUS}-0"
-            status_content="${C_I_STATUS}${ICON_GIT_STATUS}${add}  ${mod}  ${del}"
+            chip_status="$(make_chip "$bg_status" "${C_I_STATUS}${ICON_GIT_STATUS}${add}  ${mod}  ${del}")"
 
-            local ahead behind
             [[ "$GIT_AHEAD" -gt 0 ]] && ahead="${C_BRIGHT_SYNC}↑ ${GIT_AHEAD}" || ahead="${C_DIM_SYNC}↑ 0"
             [[ "$GIT_BEHIND" -gt 0 ]] && behind="${C_BRIGHT_SYNC}↓ ${GIT_BEHIND}" || behind="${C_DIM_SYNC}↓ 0"
-            sync_content="${C_I_SYNC}${ICON_SYNC}${ahead}  ${behind}"
-            
-            chip_status="$(make_chip "$bg_status" "$status_content")"
-            chip_sync="$(make_chip "$bg_sync" "$sync_content")"
+            chip_sync="$(make_chip "$bg_sync" "${C_I_SYNC}${ICON_SYNC}${ahead}  ${behind}")"
         fi
     else
         chip_status="$(make_chip "$bg_status" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---")"
@@ -173,26 +127,12 @@ render() {
     local chip_model chip_rate chip_time chip_burn chip_theme
 
     # 모델 칩
-    if is_animated; then
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            local raw_model=" ${ICON_MODEL} ${MODEL} "
-            chip_model=$(colorize_bg_lsd "$raw_model" 50 "\033[30m")
-        else
-            chip_model="$(make_chip "$C_BG_MODEL" "${C_I_MODEL}${ICON_MODEL} $(colorize_text "${MODEL}" 50)")"
-        fi
-    else
-        chip_model="$(make_chip "$bg_model" "${C_I_MODEL}${ICON_MODEL} ${C_MODEL}${MODEL}")"
-    fi
+    chip_model="$(make_animated_content "bg_chip" "${MODEL}" 50 "${C_I_MODEL}" "${ICON_MODEL}" "$bg_model" "${C_MODEL}")"
 
     # Rate limit 칩
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         if is_animated; then
-            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                local raw_rate=" ${ICON_TIME} ${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%) "
-                chip_rate=$(colorize_bg_lsd "$raw_rate" 60 "\033[30m")
-            else
-                chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} $(colorize_text "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60)")"
-            fi
+            chip_rate="$(make_animated_content "bg_chip" "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60 "${C_I_RATE}" "${ICON_TIME}" "$C_BG_RATE" "")"
         else
             local rate_color=$(get_rate_color)
             chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)")"
@@ -202,36 +142,18 @@ render() {
     fi
 
     # 세션 시간 칩
-    if is_animated; then
-        if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            local raw_time=" ${ICON_SESSION} ${SESSION_DURATION_MIN}m "
-            chip_time=$(colorize_bg_lsd "$raw_time" 70 "\033[30m")
-        else
-            chip_time="$(make_chip "$C_BG_TIME" "${C_I_TIME}${ICON_SESSION} $(colorize_text "${SESSION_DURATION_MIN}m" 70)")"
-        fi
-    else
-        chip_time="$(make_chip "$C_BG_TIME" "${C_I_TIME}${ICON_SESSION} ${C_TIME}${SESSION_DURATION_MIN}m")"
-    fi
+    chip_time="$(make_animated_content "bg_chip" "${SESSION_DURATION_MIN}m" 70 "${C_I_TIME}" "${ICON_SESSION}" "$C_BG_TIME" "${C_TIME}")"
 
     # 번레이트 칩
     if [[ -n "$BURN_RATE" ]]; then
-        if is_animated; then
-            if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-                local raw_burn=" ${ICON_COST} ${BURN_RATE} "
-                chip_burn=$(colorize_bg_lsd "$raw_burn" 80 "\033[30m")
-            else
-                chip_burn="$(make_chip "$C_BG_BURN" "${C_I_BURN}${ICON_COST} $(colorize_text "${BURN_RATE}" 80)")"
-            fi
-        else
-            chip_burn="$(make_chip "$C_BG_BURN" "${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}")"
-        fi
+        chip_burn="$(make_animated_content "bg_chip" "${BURN_RATE}" 80 "${C_I_BURN}" "${ICON_COST}" "$C_BG_BURN" "${C_BURN}")"
     else
         chip_burn=""
     fi
 
     # 테마 (배경 없음, 텍스트 그라데이션)
     if is_animated; then
-        chip_theme=$(colorize_text "${ICON_THEME} ${THEME_NAME}")
+        chip_theme="$(colorize_text "${ICON_THEME} ${THEME_NAME}")"
     else
         chip_theme="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
     fi

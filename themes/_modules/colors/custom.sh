@@ -8,6 +8,9 @@
 # 2. 아래 색상 코드 값을 수정
 # 3. export CLAUDE_THEME=custom-2line 설정
 
+COLORS_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$COLORS_DIR/base_colors.sh"
+
 # ============================================================
 # 색상 코드 (256 color palette)
 # 값 범위: 0-255
@@ -43,6 +46,21 @@ C_BG_SES_CODE=53     # Purple (Session group)
 
 init_colors() {
     RST=$'\033[0m'
+    _init_box_colors
+    _init_battery_empty
+    _init_context_icon
+
+    # 아이콘 색상 (커스텀 코드 기반)
+    C_I_BRANCH=$'\033[38;5;'"${C_BRANCH_CODE}"'m'
+    C_I_TREE=$'\033[38;5;'"${C_TREE_CODE}"'m'
+    C_I_DIR=$'\033[38;5;'"${C_DIR_CODE}"'m'
+    C_I_MODEL=$'\033[38;5;'"${C_MODEL_CODE}"'m'
+    C_I_STATUS=$'\033[38;5;'"${C_STATUS_CODE}"'m'
+    C_I_SYNC=$'\033[38;5;'"${C_SYNC_CODE}"'m'
+    C_I_RATE=$'\033[38;5;'"${C_RATE_CODE}"'m'
+    C_I_BURN=$'\033[38;5;'"${C_BURN_CODE}"'m'
+    C_I_TIME=$'\033[38;5;'"${C_TIME_CODE}"'m'
+    C_I_THEME=$'\033[38;5;229m'
 
     # Git 상태 색상
     C_DIM_STATUS=$'\033[38;5;'"${C_STATUS_CODE}"'m'
@@ -54,19 +72,6 @@ init_colors() {
     C_RATE=$'\033[38;5;'"${C_RATE_CODE}"'m'
     C_BURN=$'\033[38;5;'"${C_BURN_CODE}"'m'
     C_TIME=$'\033[38;5;'"${C_TIME_CODE}"'m'
-
-    # 아이콘 색상
-    C_I_BRANCH=$'\033[38;5;'"${C_BRANCH_CODE}"'m'
-    C_I_TREE=$'\033[38;5;'"${C_TREE_CODE}"'m'
-    C_I_DIR=$'\033[38;5;'"${C_DIR_CODE}"'m'
-    C_I_MODEL=$'\033[38;5;'"${C_MODEL_CODE}"'m'
-    C_I_STATUS=$'\033[38;5;'"${C_STATUS_CODE}"'m'
-    C_I_SYNC=$'\033[38;5;'"${C_SYNC_CODE}"'m'
-    # C_I_CTX는 컨텍스트 조건문에서 동적 설정
-    C_I_RATE=$'\033[38;5;'"${C_RATE_CODE}"'m'
-    C_I_BURN=$'\033[38;5;'"${C_BURN_CODE}"'m'
-    C_I_TIME=$'\033[38;5;'"${C_TIME_CODE}"'m'
-    C_I_THEME=$'\033[38;5;229m'
 
     # 배경색
     C_BG_BRANCH=$'\033[48;5;'"${C_BG_BRANCH_CODE}"'m'
@@ -82,8 +87,7 @@ init_colors() {
     C_BG_CTX_WARN=$'\033[48;5;94m'
     C_BG_CTX_CRIT=$'\033[48;5;52m'
 
-    # 박스/칩 테두리
-    C_BOX=$'\033[38;5;240m'
+    # 칩 테두리
     C_CHIP=$'\033[38;5;245m'
 
     # 칩/카드 배경색
@@ -93,7 +97,6 @@ init_colors() {
     C_BG=$'\033[48;5;235m'
 
     # 배터리 배경색
-    C_BAT_EMPTY=$'\033[48;5;236m'
     C_BAT_GREEN=$'\033[48;5;23m'
     C_BAT_YELLOW=$'\033[48;5;94m'
     C_BAT_RED=$'\033[48;5;52m'
@@ -108,8 +111,6 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;'"${C_SYNC_CODE}"'m'
         C_CTX=$'\033[1;91m'
         C_CTX_TEXT=$'\033[1;91m'
-        C_I_CTX=$'\033[1;91m'       # 아이콘도 빨간색 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         C_BRANCH=$'\033[1;38;5;'"${C_BRANCH_CODE}"'m'
@@ -120,8 +121,6 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;'"${C_SYNC_CODE}"'m'
         C_CTX=$'\033[1;38;5;208m'
         C_CTX_TEXT=$'\033[1;38;5;208m'
-        C_I_CTX=$'\033[1;38;5;208m' # 아이콘도 주황색 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
     else
         C_BRANCH=$'\033[38;5;'"${C_BRANCH_CODE}"'m'
@@ -133,7 +132,6 @@ init_colors() {
         C_CTX=$'\033[38;5;'"${C_CTX_CODE}"'m'
         C_CTX_TEXT=$'\033[0m'
         C_I_CTX=$'\033[38;5;'"${C_CTX_CODE}"'m'  # 아이콘도 Context 색상 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
     fi
 }

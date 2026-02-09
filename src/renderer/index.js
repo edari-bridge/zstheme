@@ -1,19 +1,18 @@
 // Main renderer entry point (ported from statusline_engine.sh + statusline.sh)
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
 import { parseInput, collectGitInfo } from './data.js';
 import { initColors } from './colors.js';
 import { computeOffsets } from './animation.js';
 import { renderLayout } from './layouts/index.js';
 import { parseThemeContract } from '../utils/themeContract.js';
+import { PATHS } from '../utils/config.js';
 
 function loadThemeName(themeNameOverride = '') {
   if (typeof themeNameOverride === 'string' && themeNameOverride.trim()) {
     return themeNameOverride.trim();
   }
 
-  const configFile = join(homedir(), '.claude', 'theme-config.sh');
+  const configFile = PATHS.themeConfig;
   if (existsSync(configFile)) {
     try {
       const content = readFileSync(configFile, 'utf-8');

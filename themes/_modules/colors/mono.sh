@@ -2,12 +2,19 @@
 # Mono Color Module - 회색 그라데이션 팔레트
 # 모든 색상을 회색 계열로 통일
 
+COLORS_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$COLORS_DIR/base_colors.sh"
+
 # ============================================================
 # 모노 색상 팔레트 (회색 그라데이션)
 # ============================================================
 
 init_colors() {
     RST=$'\033[0m'
+    _init_icon_colors
+    _init_box_colors
+    _init_battery_empty
+    _init_context_icon
 
     # 회색 그라데이션
     MONO_1=$'\033[38;5;255m'  # 가장 밝음 (중요값)
@@ -30,25 +37,10 @@ init_colors() {
     C_BURN="$C_BASE"
     C_TIME="$C_BASE"
 
-    # 아이콘 색상 (컬러 모드와 동일 - nerd 모드에서 사용)
-    C_I_BRANCH=$'\033[93m'      # 노랑
-    C_I_TREE=$'\033[92m'        # 녹색
-    C_I_DIR=$'\033[96m'         # 시안
-    C_I_MODEL=$'\033[95m'       # 마젠타
-    C_I_STATUS=$'\033[38;5;111m'  # 파랑
-    C_I_SYNC=$'\033[38;5;141m'    # 보라
-    # C_I_CTX는 컨텍스트 조건문에서 동적 설정
-    C_I_RATE=$'\033[38;5;229m'   # 노랑
-    C_I_BURN=$'\033[38;5;216m'   # 주황
-    C_I_TIME=$'\033[38;5;75m'    # 파랑
-    C_I_THEME=$'\033[38;5;229m'  # 노랑
-
-    # 박스/칩 테두리 (회색)
-    C_BOX=$'\033[38;5;240m'
+    # 칩 테두리 (회색)
     C_CHIP=$'\033[38;5;242m'
 
     # 칩/카드 배경색 (밝기 차이 극대화)
-    # C_DIR=MONO_4=240이므로 충돌 피해 다른 값 사용
     C_BG_LOC=$'\033[48;5;239m'  # 중간 어두움
     C_BG_GIT=$'\033[48;5;237m'  # LOC에 가깝게
     C_BG_SES=$'\033[48;5;233m'  # 더 어두움
@@ -70,7 +62,6 @@ init_colors() {
     C_BG_CTX_CRIT=$'\033[48;5;244m'
 
     # 배터리 배경색 (위험할수록 밝게 - 눈에 띄도록)
-    C_BAT_EMPTY=$'\033[48;5;236m'
     C_BAT_GREEN=$'\033[48;5;237m'   # 정상 = 어두움
     C_BAT_YELLOW=$'\033[48;5;242m'  # 경고 = 중간
     C_BAT_RED=$'\033[48;5;248m'     # 위험 = 밝음
@@ -85,11 +76,9 @@ init_colors() {
         C_STATUS="$MONO_1"
         C_SYNC="$MONO_1"
         C_CTX=$'\033[1;38;5;255m'
-        CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
         # 컨텍스트 % 텍스트만 빨간색 (경고 강조)
         C_CTX_TEXT=$'\033[1;91m'
-        C_I_CTX=$'\033[1;91m'       # 아이콘도 빨간색 (nerd 모드용)
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         # 경고: 밝음
         C_BRANCH="$MONO_2"
@@ -99,11 +88,9 @@ init_colors() {
         C_STATUS="$MONO_2"
         C_SYNC="$MONO_2"
         C_CTX=$'\033[1;38;5;250m'
-        CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
         # 컨텍스트 % 텍스트만 주황색 (경고 강조)
         C_CTX_TEXT=$'\033[1;38;5;208m'
-        C_I_CTX=$'\033[1;38;5;208m' # 아이콘도 주황색 (nerd 모드용)
     else
         # 정상: 기본 글씨 통일
         C_BRANCH="$C_BASE"
@@ -113,10 +100,8 @@ init_colors() {
         C_STATUS="$C_BASE"
         C_SYNC="$C_BASE"
         C_CTX="$C_BASE"
-        CTX_ICON="${ICON_CTX_NORM:-🔋}"
         C_BAT_FILL="$C_BAT_GREEN"
         C_CTX_TEXT="$C_BASE"
-        C_I_CTX=$'\033[92m'         # 아이콘은 녹색 (nerd 모드용)
     fi
 }
 

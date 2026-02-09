@@ -2,12 +2,19 @@
 # Default Color Module - 기본 컬러 팔레트
 # 각 요소별 고유 색상 (노랑, 녹색, 시안, 마젠타 등)
 
+COLORS_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$COLORS_DIR/base_colors.sh"
+
 # ============================================================
 # 기본 색상 팔레트 (컨텍스트 상태별)
 # ============================================================
 
 init_colors() {
     RST=$'\033[0m'
+    _init_icon_colors
+    _init_box_colors
+    _init_battery_empty
+    _init_context_icon
 
     # Git 상태 색상 (고정)
     C_DIM_STATUS=$'\033[38;5;111m'
@@ -19,19 +26,6 @@ init_colors() {
     C_RATE=$'\033[38;5;229m'
     C_BURN=$'\033[38;5;216m'
     C_TIME=$'\033[38;5;75m'
-
-    # 아이콘 색상 (텍스트와 동일 - 컬러 모드에서는 구분 없음)
-    C_I_BRANCH=$'\033[93m'
-    C_I_TREE=$'\033[92m'
-    C_I_DIR=$'\033[96m'
-    C_I_MODEL=$'\033[95m'
-    C_I_STATUS=$'\033[38;5;111m'
-    C_I_SYNC=$'\033[38;5;141m'
-    # C_I_CTX는 컨텍스트 조건문에서 동적 설정
-    C_I_RATE=$'\033[38;5;229m'
-    C_I_BURN=$'\033[38;5;216m'
-    C_I_TIME=$'\033[38;5;75m'
-    C_I_THEME=$'\033[38;5;229m'
 
     # badges 레이아웃용 배경색 (글자색의 어두운 버전)
     C_BG_BRANCH=$'\033[48;5;58m'    # Yellow → Dark Yellow/Olive
@@ -47,21 +41,16 @@ init_colors() {
     C_BG_CTX_WARN=$'\033[48;5;94m'  # Context → Dark Orange (경고)
     C_BG_CTX_CRIT=$'\033[48;5;52m'  # Context → Dark Red (위험)
 
-    # 박스/칩 테두리 (고정)
-    C_BOX=$'\033[38;5;240m'
+    # 칩 테두리
     C_CHIP=$'\033[38;5;245m'
 
     # 칩/카드 배경색 (그룹별 색상 구분)
-    # LOC: Teal 계열 (위치 정보)
-    C_BG_LOC=$'\033[48;5;23m'   # Teal
-    # GIT: Blue 계열 (Git 상태)
-    C_BG_GIT=$'\033[48;5;24m'   # Blue
-    # SES: Purple 계열 (세션 정보)
-    C_BG_SES=$'\033[48;5;53m'   # Purple
+    C_BG_LOC=$'\033[48;5;23m'   # Teal (위치 정보)
+    C_BG_GIT=$'\033[48;5;24m'   # Blue (Git 상태)
+    C_BG_SES=$'\033[48;5;53m'   # Purple (세션 정보)
     C_BG=$'\033[48;5;235m'
 
     # 배터리 배경색 (고정)
-    C_BAT_EMPTY=$'\033[48;5;236m'
     C_BAT_GREEN=$'\033[48;5;23m'
     C_BAT_YELLOW=$'\033[48;5;94m'
     C_BAT_RED=$'\033[48;5;52m'
@@ -77,8 +66,6 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;183m'
         C_CTX=$'\033[1;91m'
         C_CTX_TEXT=$'\033[1;91m'
-        C_I_CTX=$'\033[1;91m'       # 아이콘도 빨간색 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_CRIT:-🔥}"
         C_BAT_FILL="$C_BAT_RED"
     elif [[ "$CONTEXT_PCT" -ge 50 ]]; then
         # 경고: 중간 밝기
@@ -90,8 +77,6 @@ init_colors() {
         C_SYNC=$'\033[1;38;5;147m'
         C_CTX=$'\033[1;38;5;208m'
         C_CTX_TEXT=$'\033[1;38;5;208m'
-        C_I_CTX=$'\033[1;38;5;208m' # 아이콘도 주황색 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_WARN:-🪫}"
         C_BAT_FILL="$C_BAT_YELLOW"
     else
         # 정상: 기본 색상
@@ -101,10 +86,8 @@ init_colors() {
         C_MODEL=$'\033[95m'
         C_STATUS=$'\033[38;5;111m'
         C_SYNC=$'\033[38;5;141m'
-        C_CTX=$'\033[92m'           # 아이콘: 녹색 (Nerd용)
-        C_CTX_TEXT=$'\033[0m'       # 텍스트: 기본(리셋)
-        C_I_CTX=$'\033[92m'         # 아이콘도 녹색 (nerd 모드용)
-        CTX_ICON="${ICON_CTX_NORM:-🔋}"
+        C_CTX=$'\033[92m'
+        C_CTX_TEXT=$'\033[0m'
         C_BAT_FILL="$C_BAT_GREEN"
     fi
 }

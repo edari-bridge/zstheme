@@ -60,24 +60,31 @@ parse_statusline_input() {
         return
     fi
 
-    MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"' 2>/dev/null || echo "Unknown")
-    DIR=$(echo "$input" | jq -r '.workspace.current_dir // ""' 2>/dev/null || echo "")
+    local tsv
+    tsv=$(echo "$input" | jq -r '[
+        (.model.display_name // "Unknown"),
+        (.workspace.current_dir // ""),
+        (.context_window.used_percentage // 0),
+        (.cost.total_duration_ms // 0),
+        (.cost.total_lines_added // 0),
+        (.cost.total_lines_removed // 0)
+    ] | @tsv' 2>/dev/null) || {
+        DIR_NAME="${PWD##*/}"
+        return
+    }
+
+    local context_raw
+    IFS=$'\t' read -r MODEL DIR context_raw SESSION_DURATION_MS LINES_ADDED LINES_REMOVED <<< "$tsv"
+
     DIR_NAME="${DIR##*/}"
     if [[ -z "$DIR_NAME" || "$DIR_NAME" == "$DIR" ]]; then
         DIR_NAME="${PWD##*/}"
     fi
 
-    local context_raw
-    context_raw=$(echo "$input" | jq -r '.context_window.used_percentage // 0' 2>/dev/null || echo "0")
     CONTEXT_PCT=$(_to_int "$context_raw" 0)
-
-    SESSION_DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0' 2>/dev/null || echo "0")
     SESSION_DURATION_MS=$(_to_int "$SESSION_DURATION_MS" 0)
     SESSION_DURATION_MIN=$((SESSION_DURATION_MS / 60000))
-
-    LINES_ADDED=$(echo "$input" | jq -r '.cost.total_lines_added // 0' 2>/dev/null || echo "0")
     LINES_ADDED=$(_to_int "$LINES_ADDED" 0)
-    LINES_REMOVED=$(echo "$input" | jq -r '.cost.total_lines_removed // 0' 2>/dev/null || echo "0")
     LINES_REMOVED=$(_to_int "$LINES_REMOVED" 0)
 }
 
@@ -227,9 +234,9 @@ collect_rate_info() {
     [[ -z "$ccusage_data" || "$ccusage_data" == "{}" ]] && return
 
     local active_block
-    active_block=$(echo "$ccusage_data" | jq -c '.blocks[]? | select(.isActive == true)' 2>/dev/null | head -n 1)
+    active_block=$(echo "$ccusage_data" | jq -c '[.blocks[]? | select(.isActive == true)] | first // empty' 2>/dev/null)
     if [[ -z "$active_block" ]]; then
-        active_block=$(echo "$ccusage_data" | jq -c '.blocks[]? | select(.projection != null)' 2>/dev/null | head -n 1)
+        active_block=$(echo "$ccusage_data" | jq -c '[.blocks[]? | select(.projection != null)] | first // empty' 2>/dev/null)
     fi
     [[ -z "$active_block" ]] && return
 
@@ -275,7 +282,14 @@ render_theme_output() {
     local theme_dir="${THEME_DIR:-$HOME/.claude/themes}"
     local theme_config="${THEME_CONFIG:-$HOME/.claude/theme-config.sh}"
 
-    [[ -f "$theme_config" ]] && source "$theme_config"
+    if [[ -f "$theme_config" ]]; then
+        local file_owner file_perms
+        file_owner=$(stat -f %u "$theme_config" 2>/dev/null || stat -c %u "$theme_config" 2>/dev/null || echo "")
+        file_perms=$(stat -f %Lp "$theme_config" 2>/dev/null || stat -c %a "$theme_config" 2>/dev/null || echo "")
+        if [[ "$file_owner" == "$(id -u)" || "$file_owner" == "0" ]] && [[ ! "$file_perms" =~ [2367]$ ]]; then
+            source "$theme_config"
+        fi
+    fi
     THEME_NAME="${CLAUDE_THEME:-2line}"
 
     export_statusline_variables

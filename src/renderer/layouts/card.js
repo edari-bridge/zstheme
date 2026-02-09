@@ -1,6 +1,6 @@
 // Card layout (ported from card.sh)
 import { colorizeText, colorizeFgSparkle, getAnimatedBatteryColor, getTimestampDecis } from '../animation.js';
-import { formatGitStatus, formatGitSync, isAnimated, stripAnsi } from '../helpers.js';
+import { applyAnimation, formatGitStatus, formatGitSync, isAnimated, stripAnsi } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
 const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
@@ -51,57 +51,28 @@ export function render(ctx) {
   const W = 24;
 
   // Left card content
-  let L1, L2, L3;
-  if (animationMode === 'lsd') {
-    L1 = `${colors.C_I_BRANCH}${colors.icons.BRANCH}${RST} ${colorizeFgSparkle(git.branch || 'branch', 0, bgOffset, colorMode)}`;
-    L2 = `${colors.C_I_TREE}${colors.icons.TREE}${RST} ${colorizeFgSparkle(git.worktree || 'worktree', 3, bgOffset, colorMode)}`;
-    L3 = `${colors.C_I_DIR}${colors.icons.DIR}${RST} ${colorizeFgSparkle(data.dirName, 6, bgOffset, colorMode)}`;
-  } else if (isAnimated(animationMode)) {
-    L1 = `${colors.C_I_BRANCH}${colors.icons.BRANCH}${RST} ${colorizeText(git.branch || 'branch', 0, colorOffset, animationMode, colorMode)}`;
-    L2 = `${colors.C_I_TREE}${colors.icons.TREE}${RST} ${colorizeText(git.worktree || 'worktree', 3, colorOffset, animationMode, colorMode)}`;
-    L3 = `${colors.C_I_DIR}${colors.icons.DIR}${RST} ${colorizeText(data.dirName, 6, colorOffset, animationMode, colorMode)}`;
-  } else {
-    L1 = `${colors.C_I_BRANCH}${colors.icons.BRANCH} ${colors.C_BRANCH}${git.branch || 'branch'}${RST}`;
-    L2 = `${colors.C_I_TREE}${colors.icons.TREE} ${colors.C_TREE}${git.worktree || 'worktree'}${RST}`;
-    L3 = `${colors.C_I_DIR}${colors.icons.DIR} ${colors.C_DIR}${data.dirName}${RST}`;
-  }
+  const L1 = applyAnimation(ctx, { type: 'text', text: git.branch || 'branch', offset: 0, iconColor: colors.C_I_BRANCH, icon: colors.icons.BRANCH, bgColor: '', textColor: colors.C_BRANCH });
+  const L2 = applyAnimation(ctx, { type: 'text', text: git.worktree || 'worktree', offset: 3, iconColor: colors.C_I_TREE, icon: colors.icons.TREE, bgColor: '', textColor: colors.C_TREE });
+  const L3 = applyAnimation(ctx, { type: 'text', text: data.dirName, offset: 6, iconColor: colors.C_I_DIR, icon: colors.icons.DIR, bgColor: '', textColor: colors.C_DIR });
   const L4 = formatGitStatus('  ', ctx);
   const L5 = formatGitSync('  ', ctx);
 
   // Right card content
-  let R1, R2, R3, R4, R5;
-  if (animationMode === 'lsd') {
-    R1 = `${colors.C_I_MODEL}${colors.icons.MODEL}${RST} ${colorizeFgSparkle(data.model, 9, bgOffset, colorMode)}`;
-    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
-      R2 = `${colors.C_I_RATE}${colors.icons.TIME}${RST} ${colorizeFgSparkle(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 12, bgOffset, colorMode)}`;
+  const R1 = applyAnimation(ctx, { type: 'text', text: data.model, offset: 9, iconColor: colors.C_I_MODEL, icon: colors.icons.MODEL, bgColor: '', textColor: colors.C_MODEL });
+  let R2;
+  if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
+    if (isAnimated(animationMode)) {
+      R2 = applyAnimation(ctx, { type: 'text', text: `${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, offset: 12, iconColor: colors.C_I_RATE, icon: colors.icons.TIME, bgColor: '', textColor: '' });
     } else {
-      R2 = '';
-    }
-    R3 = `${colors.C_I_TIME}${colors.icons.SESSION}${RST} ${colorizeFgSparkle(`${data.sessionDurationMin}m`, 22, bgOffset, colorMode)}`;
-    R4 = data.burnRate ? `${colors.C_I_BURN}${colors.icons.COST}${RST} ${colorizeFgSparkle(data.burnRate, 32, bgOffset, colorMode)}` : '';
-    R5 = `${colors.C_I_THEME}${colors.icons.THEME}${RST} ${colorizeText(data.themeName, 5, colorOffset, animationMode, colorMode)}`;
-  } else if (isAnimated(animationMode)) {
-    R1 = `${colors.C_I_MODEL}${colors.icons.MODEL}${RST} ${colorizeText(data.model, 9, colorOffset, animationMode, colorMode)}`;
-    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
-      R2 = `${colors.C_I_RATE}${colors.icons.TIME}${RST} ${colorizeText(`${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, 12, colorOffset, animationMode, colorMode)}`;
-    } else {
-      R2 = '';
-    }
-    R3 = `${colors.C_I_TIME}${colors.icons.SESSION}${RST} ${colorizeText(`${data.sessionDurationMin}m`, 22, colorOffset, animationMode, colorMode)}`;
-    R4 = data.burnRate ? `${colors.C_I_BURN}${colors.icons.COST}${RST} ${colorizeText(data.burnRate, 32, colorOffset, animationMode, colorMode)}` : '';
-    R5 = `${colors.C_I_THEME}${colors.icons.THEME}${RST} ${colorizeText(data.themeName, 5, colorOffset, animationMode, colorMode)}`;
-  } else {
-    R1 = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}${RST}`;
-    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
       const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
       R2 = `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)${RST}`;
-    } else {
-      R2 = '';
     }
-    R3 = `${colors.C_I_TIME}${colors.icons.SESSION} ${colors.C_TIME}${data.sessionDurationMin}m${RST}`;
-    R4 = data.burnRate ? `${colors.C_I_BURN}${colors.icons.COST} ${colors.C_BURN}${data.burnRate}${RST}` : '';
-    R5 = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
+  } else {
+    R2 = '';
   }
+  const R3 = applyAnimation(ctx, { type: 'text', text: `${data.sessionDurationMin}m`, offset: 22, iconColor: colors.C_I_TIME, icon: colors.icons.SESSION, bgColor: '', textColor: colors.C_TIME });
+  const R4 = data.burnRate ? applyAnimation(ctx, { type: 'text', text: data.burnRate, offset: 32, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: '', textColor: colors.C_BURN }) : '';
+  const R5 = applyAnimation(ctx, { type: 'text', text: data.themeName, offset: 5, iconColor: colors.C_I_THEME, icon: colors.icons.THEME, bgColor: '', textColor: colors.C_RATE });
 
   // Right card width: dynamic based on longest content (theme name can be long)
   const WR = Math.max(W, ...[R1, R2, R3, R4, R5].filter(Boolean).map(visibleWidth));

@@ -1,4 +1,5 @@
 import { renderStatusline } from '../renderer/index.js';
+import { parseThemeContract } from './themeContract.js';
 
 // 프리뷰용 Mock 입력(JSON)
 export const MOCK_DATA = {
@@ -54,7 +55,7 @@ export function renderThemePreviewAsync(themeName) {
  * 간단한 인라인 프리뷰 (renderer 호출 없이)
  */
 export function simplePreview(themeName, colors = null) {
-  const parsed = parseThemeForPreview(themeName);
+  const parsed = parseThemeContract(themeName);
   const lines = [];
 
   // 기본 색상 (256 color)
@@ -106,21 +107,4 @@ export function simplePreview(themeName, colors = null) {
   }
 
   return lines.join('\n');
-}
-
-function parseThemeForPreview(themeName) {
-  let name = themeName;
-  const result = { color: 'color', animation: 'static', layout: '2line', icon: 'emoji' };
-
-  if (name.startsWith('custom-')) { result.color = 'custom'; name = name.slice(7); }
-  if (name.startsWith('mono-')) { result.color = 'mono'; name = name.slice(5); }
-  if (name.startsWith('lsd-')) { result.animation = 'lsd'; name = name.slice(4); }
-  else if (name.startsWith('rainbow-')) { result.animation = 'rainbow'; name = name.slice(8); }
-  if (name.endsWith('-nerd')) { result.icon = 'nerd'; name = name.slice(0, -5); }
-
-  if (['1line', '2line', 'card', 'bars', 'badges'].includes(name)) {
-    result.layout = name;
-  }
-
-  return result;
 }

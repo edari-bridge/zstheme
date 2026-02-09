@@ -78,8 +78,9 @@ export function collectGitInfo(dir) {
     behind: 0,
   };
 
-  const opts = { stdio: 'pipe' };
-  const optsUtf = { encoding: 'utf-8', stdio: 'pipe' };
+  const GIT_TIMEOUT = 5000;
+  const opts = { stdio: 'pipe', timeout: GIT_TIMEOUT };
+  const optsUtf = { encoding: 'utf-8', stdio: 'pipe', timeout: GIT_TIMEOUT };
 
   try {
     execFileSync('git', gitArgs(dir, 'rev-parse', '--git-dir'), opts);
@@ -104,6 +105,7 @@ export function collectGitInfo(dir) {
       if (!line) continue;
       const xy = line.substring(0, 2);
       if (xy === '??' || xy.includes('A')) info.added++;
+      if (xy.includes('R') || xy.includes('C')) info.added++;
       if (xy.includes('M')) info.modified++;
       if (xy.includes('D')) info.deleted++;
     }

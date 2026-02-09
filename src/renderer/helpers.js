@@ -1,5 +1,5 @@
 // Common formatting helpers (ported from helpers.sh / common.sh)
-import { colorizeText, colorizeFgSparkle } from './animation.js';
+import { colorizeText, colorizeFgSparkle, colorizeBgSparkle } from './animation.js';
 
 export function isAnimated(animationMode) {
   return animationMode === 'lsd' || animationMode === 'rainbow';
@@ -71,6 +71,38 @@ export function makeChip(bg, content, chipStyle, colors) {
     return `${colors.C_CHIP}\u2503${colors.RST}${bg} ${content} ${colors.RST}${colors.C_CHIP}\u2503${colors.RST}`;
   }
   return `${bg} ${content} ${colors.RST}`;
+}
+
+// Unified animation content generator (lsd/rainbow/static)
+// type: "text" (icon + animated text), "chip" (make_chip wrapping), "bg_chip" (lsd: bg sparkle, else: chip)
+export function applyAnimation(ctx, { type, text, offset, iconColor, icon, bgColor, textColor }) {
+  const { animationMode, colorMode, colorOffset, bgOffset, colors } = ctx;
+  const chipStyle = process.env.CHIP_STYLE || 'badge';
+
+  if (animationMode === 'lsd') {
+    if (type === 'bg_chip') {
+      return colorizeBgSparkle(` ${icon} ${text} `, offset, bgOffset, colorMode, '\x1b[30m');
+    }
+    if (type === 'chip') {
+      return makeChip(bgColor, `${iconColor}${icon} ${colorizeText(text, offset, colorOffset, animationMode, colorMode)}`, chipStyle, colors);
+    }
+    // text
+    return `${iconColor}${icon}${colors.RST} ${colorizeFgSparkle(text, offset, bgOffset, colorMode)}`;
+  }
+
+  if (isAnimated(animationMode)) {
+    if (type === 'bg_chip' || type === 'chip') {
+      return makeChip(bgColor, `${iconColor}${icon} ${colorizeText(text, offset, colorOffset, animationMode, colorMode)}`, chipStyle, colors);
+    }
+    // text
+    return `${iconColor}${icon}${colors.RST} ${colorizeText(text, offset, colorOffset, animationMode, colorMode)}`;
+  }
+
+  // Static
+  if (type === 'bg_chip' || type === 'chip') {
+    return makeChip(bgColor, `${iconColor}${icon} ${textColor}${text}`, chipStyle, colors);
+  }
+  return `${iconColor}${icon} ${textColor}${text}${colors.RST}`;
 }
 
 export function formatContext(ctx) {
