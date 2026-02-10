@@ -8,7 +8,7 @@ import {
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
-import { LAYOUTS, ANIMATION_INTERVAL } from '../constants.js';
+import { LAYOUTS, ICONS, ANIMATION_INTERVAL } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -263,7 +263,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
         e(Box, { flexDirection: 'column' },
           e(Text, { color: focusArea === 0 && styleIndex === 1 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 1 }, focusArea === 0 && styleIndex === 1 ? '> Icon:' : '  Icon:'),
-          e(Text, { color: focusArea === 0 && styleIndex === 1 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 1 }, `  < ${iconType} >`)
+          e(Text, { color: focusArea === 0 && styleIndex === 1 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 1 }, `  < ${ICONS[iconType].MODEL}  ${iconType} >`)
         ),
 
       ),
