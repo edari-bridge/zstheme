@@ -3,14 +3,12 @@ import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { renderCustomPreview, renderLsdPreview } from '../utils/preview.js';
 import {
   FG_DEFAULTS,
-  BG_BADGES_DEFAULTS,
-  BG_BARS_DEFAULTS,
   LAYOUTS_WITH_BG,
   loadCustomColors,
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
-import { VERSION, LAYOUTS, ICONS, ANIMATION_INTERVAL } from '../constants.js';
+import { LAYOUTS, ANIMATION_INTERVAL } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -48,10 +46,10 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const [modified, setModified] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // Reset selectedIndex when layout or colorCategory changes
+  // Reset selectedIndex when layout changes
   useEffect(() => {
     setSelectedIndex(0);
-  }, [colorCategory, layout]);
+  }, [layout]);
 
   // LSD animation ticker
   const [previewTick, setPreviewTick] = useState(0);
@@ -64,18 +62,30 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   // --- Derived Data ---
   const fgKeys = Object.keys(FG_DEFAULTS);
   const hasBgSupport = LAYOUTS_WITH_BG.includes(layout);
-  const bgDefaults = layout === 'bars' ? BG_BARS_DEFAULTS : BG_BADGES_DEFAULTS;
 
-  // BG keys: bars uses bars keys, everything else uses badges keys (including non-BG layouts for display)
-  const currentBgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
-  const currentKeys = colorCategory === 0 ? fgKeys : currentBgKeys;
-  const currentColors = colorCategory === 0 ? fgColors : (layout === 'bars' ? bgBarsColors : bgBadgesColors);
-  const setBgColors = layout === 'bars' ? setBgBarsColors : setBgBadgesColors;
+  // 1line은 C_TIME, C_BURN 미포함
+  const LAYOUT_EXCLUDED_KEYS = { '1line': ['C_TIME', 'C_BURN'] };
+  const excludedKeys = LAYOUT_EXCLUDED_KEYS[layout] || [];
 
-  const safeIndex = Math.min(selectedIndex, Math.max(0, currentKeys.length - 1));
-  const currentKey = currentKeys[safeIndex];
+  // FG → BG 매핑: badges는 1:1, bars는 그룹 매핑
+  const fgToBgBadges = (fgKey) => fgKey.replace('C_', 'C_BG_');
+  const FG_TO_BG_BARS = {
+    C_BRANCH: 'C_BG_LOC', C_TREE: 'C_BG_LOC', C_DIR: 'C_BG_LOC',
+    C_STATUS: 'C_BG_GIT', C_SYNC: 'C_BG_GIT',
+    C_MODEL: 'C_BG_SES', C_RATE: 'C_BG_SES', C_TIME: 'C_BG_SES', C_BURN: 'C_BG_SES',
+  };
 
-  const icons = ICONS[iconType];
+  const getBgInfo = (fgKey) => {
+    if (!hasBgSupport) return { bgKey: null, bgVal: null };
+    if (layout === 'bars') {
+      const bgKey = FG_TO_BG_BARS[fgKey];
+      return { bgKey, bgVal: bgBarsColors[bgKey] };
+    }
+    const bgKey = fgToBgBadges(fgKey);
+    return { bgKey, bgVal: bgBadgesColors[bgKey] };
+  };
+
+  const safeIndex = Math.min(selectedIndex, Math.max(0, fgKeys.length - 1));
 
   // LSD mode: symbols cycle per tick
   const LSD_SYMBOLS = ['✦', '◈', '◇', '△', '○', '◎'];
@@ -130,18 +140,28 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         setSelectedIndex(prev => Math.max(0, prev - 1));
       }
       if (key.downArrow || input === 'j') {
-        setSelectedIndex(prev => Math.min(currentKeys.length - 1, prev + 1));
+        setSelectedIndex(prev => Math.min(fgKeys.length - 1, prev + 1));
       }
 
       const adjustValue = (delta) => {
-        if (!currentKey) return;
-        // Block adjustment for BG items on non-BG layouts
-        if (colorCategory === 1 && !hasBgSupport) return;
-        const setter = colorCategory === 0 ? setFgColors : setBgColors;
-        setter(prev => {
-          const newVal = ((prev[currentKey] + delta) % 256 + 256) % 256;
-          return { ...prev, [currentKey]: newVal };
-        });
+        const fgKey = fgKeys[safeIndex];
+        if (!fgKey || excludedKeys.includes(fgKey)) return;
+
+        if (colorCategory === 0) {
+          setFgColors(prev => {
+            const newVal = ((prev[fgKey] + delta) % 256 + 256) % 256;
+            return { ...prev, [fgKey]: newVal };
+          });
+        } else {
+          if (!hasBgSupport) return;
+          const { bgKey } = getBgInfo(fgKey);
+          if (!bgKey) return;
+          const setter = layout === 'bars' ? setBgBarsColors : setBgBadgesColors;
+          setter(prev => {
+            const newVal = ((prev[bgKey] + delta) % 256 + 256) % 256;
+            return { ...prev, [bgKey]: newVal };
+          });
+        }
         setModified(true);
       };
 
@@ -191,7 +211,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
   // 포커스된 탭은 항상 yellow로 조작 가능 상태 표시
-  const activeBorderColor = 'yellow';
+  const activeBorderColor = 'green';
   const titleColor = isLsdUnlocked ? lsdBorderColor : 'cyan';
 
   return e(Box, {
@@ -236,14 +256,14 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0, dimColor: styleIndex !== 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
-          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0, dimColor: styleIndex !== 0 }, `  < ${layout} >`)
+          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
+          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0 }, `  < ${layout} >`)
         ),
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1, dimColor: styleIndex !== 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
-          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1, dimColor: styleIndex !== 1 }, `  < ${iconType} >`)
+          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
+          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1 }, `  < ${iconType} >`)
         ),
 
       ),
@@ -259,22 +279,21 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { justifyContent: 'space-between', marginBottom: 1 },
           e(Text, { color: titleColor, bold: true, underline: true }, 'COLORS'),
           e(Box, {},
-            e(Text, colorCategory === 0 ? { color: 'green', bold: true } : { dimColor: true }, '[F]'),
-            e(Text, { dimColor: true }, ' / '),
-            e(Text, colorCategory === 1 ? { color: 'green', bold: true } : { dimColor: true }, '[B]')
+            e(Text, { color: colorCategory === 0 ? 'green' : 'white', bold: colorCategory === 0 }, '[F]'),
+            e(Text, { color: 'white' }, ' / '),
+            e(Text, { color: colorCategory === 1 && hasBgSupport ? 'green' : 'white', bold: colorCategory === 1 && hasBgSupport, dimColor: !hasBgSupport }, '[B]')
           )
         ),
 
         // Color List - Fixed 7-row grid with dedicated arrow rows
         (() => {
           const TOTAL_ROWS = 7;
-          const isNonBgLayout = colorCategory === 1 && !hasBgSupport;
-          const needsScroll = currentKeys.length > TOTAL_ROWS;
+          const needsScroll = fgKeys.length > TOTAL_ROWS;
 
           let showUp = false, showDown = false, visibleCount, scrollOff;
 
           if (!needsScroll) {
-            visibleCount = currentKeys.length;
+            visibleCount = fgKeys.length;
             scrollOff = 0;
           } else {
             const midCount = TOTAL_ROWS - 2; // 5 items when both arrows
@@ -286,11 +305,11 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
               scrollOff = 0;
               showDown = true;
               visibleCount = edgeCount;
-            } else if (off + midCount >= currentKeys.length) {
+            } else if (off + midCount >= fgKeys.length) {
               // Near bottom: no ↓
               showUp = true;
               visibleCount = edgeCount;
-              scrollOff = currentKeys.length - visibleCount;
+              scrollOff = fgKeys.length - visibleCount;
             } else {
               // Middle: both arrows
               showUp = true;
@@ -300,7 +319,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
             }
           }
 
-          const visibleSlice = currentKeys.slice(scrollOff, scrollOff + visibleCount);
+          const visibleSlice = fgKeys.slice(scrollOff, scrollOff + visibleCount);
           const arrowRows = (showUp ? 1 : 0) + (showDown ? 1 : 0);
           const padCount = Math.max(0, TOTAL_ROWS - visibleCount - arrowRows);
 
@@ -308,30 +327,35 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
             // ↑ arrow (dedicated row)
             showUp ? e(Text, { key: 'arrow-up', dimColor: true }, '  ↑') : null,
             // Visible item rows
-            ...visibleSlice.map((key, visIdx) => {
+            ...visibleSlice.map((fgKey, visIdx) => {
               const actualIdx = scrollOff + visIdx;
               const isSelected = actualIdx === selectedIndex;
-              const val = currentColors[key];
               const prefix = isSelected ? '> ' : '  ';
 
               if (isLsdUnlocked) {
                 const sym = LSD_SYMBOLS[(actualIdx + previewTick) % LSD_SYMBOLS.length];
-                return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
-                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${key}`),
+                return e(Box, { key: fgKey, flexDirection: 'row', justifyContent: 'space-between' },
+                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${fgKey}`),
                   e(Text, { color: lsdBorderColor, bold: true }, sym)
                 );
               }
 
-              if (isNonBgLayout) {
-                return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
-                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: !isSelected }, `${prefix}${key}`),
-                  e(Text, { dimColor: true }, '---')
-                );
-              }
+              const isExcluded = excludedKeys.includes(fgKey);
+              const fgVal = fgColors[fgKey];
+              const { bgVal } = getBgInfo(fgKey);
+              const fgActive = colorCategory === 0 && isSelected && !isExcluded;
+              const bgActive = colorCategory === 1 && isSelected && !isExcluded;
 
-              return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
-                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${key}`),
-                e(Text, { color: isSelected ? 'green' : 'white' }, `${val}`)
+              return e(Box, { key: fgKey, flexDirection: 'row', justifyContent: 'space-between' },
+                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: isExcluded && !isSelected }, `${prefix}${FG_DEFAULTS[fgKey].name}`),
+                e(Box, { flexDirection: 'row', gap: 2 },
+                  e(Text, { color: fgActive ? 'green' : 'white', bold: fgActive, dimColor: isExcluded || colorCategory !== 0 },
+                    isExcluded ? '---' : `${fgVal}`
+                  ),
+                  e(Text, { color: bgActive ? 'green' : 'white', bold: bgActive, dimColor: !hasBgSupport || isExcluded || colorCategory !== 1 },
+                    (!hasBgSupport || isExcluded) ? '---' : `${bgVal}`
+                  )
+                )
               );
             }),
             // ↓ arrow (dedicated row)
