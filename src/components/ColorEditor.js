@@ -256,14 +256,14 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0 }, styleIndex === 0 ? '> Layout:' : '  Layout:'),
-          e(Text, { color: styleIndex === 0 ? 'green' : 'white', bold: styleIndex === 0 }, `  < ${layout} >`)
+          e(Text, { color: focusArea === 0 && styleIndex === 0 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 0 }, focusArea === 0 && styleIndex === 0 ? '> Layout:' : '  Layout:'),
+          e(Text, { color: focusArea === 0 && styleIndex === 0 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 0 }, `  < ${layout} >`)
         ),
         e(Box, { height: 1 }),
 
         e(Box, { flexDirection: 'column' },
-          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1 }, styleIndex === 1 ? '> Icon:' : '  Icon:'),
-          e(Text, { color: styleIndex === 1 ? 'green' : 'white', bold: styleIndex === 1 }, `  < ${iconType} >`)
+          e(Text, { color: focusArea === 0 && styleIndex === 1 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 1 }, focusArea === 0 && styleIndex === 1 ? '> Icon:' : '  Icon:'),
+          e(Text, { color: focusArea === 0 && styleIndex === 1 ? 'green' : 'white', bold: focusArea === 0 && styleIndex === 1 }, `  < ${iconType} >`)
         ),
 
       ),
@@ -279,9 +279,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         e(Box, { justifyContent: 'space-between', marginBottom: 1 },
           e(Text, { color: titleColor, bold: true, underline: true }, 'COLORS'),
           e(Box, {},
-            e(Text, { color: colorCategory === 0 ? 'green' : 'white', bold: colorCategory === 0 }, '[F]'),
+            e(Text, { color: focusArea === 1 && colorCategory === 0 ? 'green' : 'white', bold: focusArea === 1 && colorCategory === 0 }, '[F]'),
             e(Text, { color: 'white' }, ' / '),
-            e(Text, { color: colorCategory === 1 && hasBgSupport ? 'green' : 'white', bold: colorCategory === 1 && hasBgSupport, dimColor: !hasBgSupport }, '[B]')
+            e(Text, { color: focusArea === 1 && colorCategory === 1 && hasBgSupport ? 'green' : 'white', bold: focusArea === 1 && colorCategory === 1 && hasBgSupport, dimColor: !hasBgSupport }, '[B]')
           )
         ),
 
@@ -329,7 +329,8 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
             // Visible item rows
             ...visibleSlice.map((fgKey, visIdx) => {
               const actualIdx = scrollOff + visIdx;
-              const isSelected = actualIdx === selectedIndex;
+              const isFocused = focusArea === 1;
+              const isSelected = isFocused && actualIdx === selectedIndex;
               const prefix = isSelected ? '> ' : '  ';
 
               if (isLsdUnlocked) {
@@ -343,16 +344,16 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
               const isExcluded = excludedKeys.includes(fgKey);
               const fgVal = fgColors[fgKey];
               const { bgVal } = getBgInfo(fgKey);
-              const fgActive = colorCategory === 0 && isSelected && !isExcluded;
-              const bgActive = colorCategory === 1 && isSelected && !isExcluded;
+              const fgActive = isFocused && colorCategory === 0 && isSelected && !isExcluded;
+              const bgActive = isFocused && colorCategory === 1 && isSelected && !isExcluded;
 
               return e(Box, { key: fgKey, flexDirection: 'row', justifyContent: 'space-between' },
-                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: isExcluded && !isSelected }, `${prefix}${FG_DEFAULTS[fgKey].name}`),
+                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: isFocused && isExcluded && !isSelected }, `${prefix}${FG_DEFAULTS[fgKey].name}`),
                 e(Box, { flexDirection: 'row', gap: 2 },
-                  e(Text, { color: fgActive ? 'green' : 'white', bold: fgActive, dimColor: isExcluded || colorCategory !== 0 },
+                  e(Text, { color: fgActive ? 'green' : 'white', bold: fgActive, dimColor: isFocused && (isExcluded || colorCategory !== 0) },
                     isExcluded ? '---' : `${fgVal}`
                   ),
-                  e(Text, { color: bgActive ? 'green' : 'white', bold: bgActive, dimColor: !hasBgSupport || isExcluded || colorCategory !== 1 },
+                  e(Text, { color: bgActive ? 'green' : 'white', bold: bgActive, dimColor: !hasBgSupport || (isFocused && (isExcluded || colorCategory !== 1)) },
                     (!hasBgSupport || isExcluded) ? '---' : `${bgVal}`
                   )
                 )
