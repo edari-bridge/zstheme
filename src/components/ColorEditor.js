@@ -35,8 +35,8 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const [layout, setLayout] = useState(initialColors.layout);
   const [iconType, setIconType] = useState(initialColors.iconType);
 
-  // Focus: 0=Settings(Left), 1=Colors(Right)
-  const [focusArea, setFocusArea] = useState(0);
+  // Focus: 0=Settings(Left), 1=Colors(Right) — default to Colors
+  const [focusArea, setFocusArea] = useState(1);
 
   // Style Navigation: 0=Layout, 1=Icon
   const [styleIndex, setStyleIndex] = useState(0);
@@ -47,6 +47,11 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
   const [modified, setModified] = useState(false);
   const [message, setMessage] = useState(null);
+
+  // Reset selectedIndex when layout or colorCategory changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [colorCategory, layout]);
 
   // LSD animation ticker
   const [previewTick, setPreviewTick] = useState(0);
@@ -60,9 +65,10 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   const fgKeys = Object.keys(FG_DEFAULTS);
   const hasBgSupport = LAYOUTS_WITH_BG.includes(layout);
   const bgDefaults = layout === 'bars' ? BG_BARS_DEFAULTS : BG_BADGES_DEFAULTS;
-  const bgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
 
-  const currentKeys = colorCategory === 0 ? fgKeys : (hasBgSupport ? bgKeys : []);
+  // BG keys: bars uses bars keys, everything else uses badges keys (including non-BG layouts for display)
+  const currentBgKeys = layout === 'bars' ? Object.keys(BG_BARS_DEFAULTS) : Object.keys(BG_BADGES_DEFAULTS);
+  const currentKeys = colorCategory === 0 ? fgKeys : currentBgKeys;
   const currentColors = colorCategory === 0 ? fgColors : (layout === 'bars' ? bgBarsColors : bgBadgesColors);
   const setBgColors = layout === 'bars' ? setBgBarsColors : setBgBadgesColors;
 
@@ -116,9 +122,8 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
     if (focusArea === 1) { // Colors
       if (input === 'f') setColorCategory(0);
-      if (input === 'b' && hasBgSupport) {
+      if (input === 'b') {
         setColorCategory(1);
-        setSelectedIndex(0);
       }
 
       if (key.upArrow || input === 'k') {
@@ -130,6 +135,8 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
 
       const adjustValue = (delta) => {
         if (!currentKey) return;
+        // Block adjustment for BG items on non-BG layouts
+        if (colorCategory === 1 && !hasBgSupport) return;
         const setter = colorCategory === 0 ? setFgColors : setBgColors;
         setter(prev => {
           const newVal = ((prev[currentKey] + delta) % 256 + 256) % 256;
@@ -251,42 +258,100 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       },
         e(Box, { justifyContent: 'space-between', marginBottom: 1 },
           e(Text, { color: titleColor, bold: true, underline: true }, 'COLORS'),
-          hasBgSupport && e(Text, { dimColor: true }, `[F] / [B]`)
+          e(Box, {},
+            e(Text, colorCategory === 0 ? { color: 'green', bold: true } : { dimColor: true }, '[F]'),
+            e(Text, { dimColor: true }, ' / '),
+            e(Text, colorCategory === 1 ? { color: 'green', bold: true } : { dimColor: true }, '[B]')
+          )
         ),
 
-        // Color List
-        e(Box, { flexDirection: 'column', flexGrow: 1 },
-          currentKeys.map((key, idx) => {
-            if (idx < selectedIndex - 5 || idx > selectedIndex + 5) return null;
-            const isSelected = idx === selectedIndex;
-            const val = currentColors[key];
-            if (isLsdUnlocked) {
-              const sym = LSD_SYMBOLS[(idx + previewTick) % LSD_SYMBOLS.length];
-              return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
-                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected },
-                  isSelected ? `> ${key}` : `  ${key}`
-                ),
-                e(Text, { color: lsdBorderColor, bold: true }, sym)
-              );
+        // Color List - Fixed 7-row grid with dedicated arrow rows
+        (() => {
+          const TOTAL_ROWS = 7;
+          const isNonBgLayout = colorCategory === 1 && !hasBgSupport;
+          const needsScroll = currentKeys.length > TOTAL_ROWS;
+
+          let showUp = false, showDown = false, visibleCount, scrollOff;
+
+          if (!needsScroll) {
+            visibleCount = currentKeys.length;
+            scrollOff = 0;
+          } else {
+            const midCount = TOTAL_ROWS - 2; // 5 items when both arrows
+            const edgeCount = TOTAL_ROWS - 1; // 6 items when one arrow
+            let off = selectedIndex - Math.floor(midCount / 2);
+
+            if (off <= 0) {
+              // Near top: no ↑
+              scrollOff = 0;
+              showDown = true;
+              visibleCount = edgeCount;
+            } else if (off + midCount >= currentKeys.length) {
+              // Near bottom: no ↓
+              showUp = true;
+              visibleCount = edgeCount;
+              scrollOff = currentKeys.length - visibleCount;
+            } else {
+              // Middle: both arrows
+              showUp = true;
+              showDown = true;
+              visibleCount = midCount;
+              scrollOff = off;
             }
-            return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
-              e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected },
-                isSelected ? `> ${key}` : `  ${key}`
-              ),
-              e(Text, { color: isSelected ? 'green' : 'white' }, `${val}`)
-            );
-          })
-        )
+          }
+
+          const visibleSlice = currentKeys.slice(scrollOff, scrollOff + visibleCount);
+          const arrowRows = (showUp ? 1 : 0) + (showDown ? 1 : 0);
+          const padCount = Math.max(0, TOTAL_ROWS - visibleCount - arrowRows);
+
+          return e(Box, { flexDirection: 'column', flexGrow: 1 },
+            // ↑ arrow (dedicated row)
+            showUp ? e(Text, { key: 'arrow-up', dimColor: true }, '  ↑') : null,
+            // Visible item rows
+            ...visibleSlice.map((key, visIdx) => {
+              const actualIdx = scrollOff + visIdx;
+              const isSelected = actualIdx === selectedIndex;
+              const val = currentColors[key];
+              const prefix = isSelected ? '> ' : '  ';
+
+              if (isLsdUnlocked) {
+                const sym = LSD_SYMBOLS[(actualIdx + previewTick) % LSD_SYMBOLS.length];
+                return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
+                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${key}`),
+                  e(Text, { color: lsdBorderColor, bold: true }, sym)
+                );
+              }
+
+              if (isNonBgLayout) {
+                return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
+                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: !isSelected }, `${prefix}${key}`),
+                  e(Text, { dimColor: true }, '---')
+                );
+              }
+
+              return e(Box, { key: key, flexDirection: 'row', justifyContent: 'space-between' },
+                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${key}`),
+                e(Text, { color: isSelected ? 'green' : 'white' }, `${val}`)
+              );
+            }),
+            // ↓ arrow (dedicated row)
+            showDown ? e(Text, { key: 'arrow-down', dimColor: true }, '  ↓') : null,
+            // Padding to fill TOTAL_ROWS
+            ...Array.from({ length: padCount }, (_, i) =>
+              e(Box, { key: `pad-${i}` }, e(Text, {}, ' '))
+            )
+          );
+        })()
       )
     ),
 
     // Help text (outside grid boxes, vertically centered in remaining space)
     e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1, paddingX: 1, alignItems: 'center' },
-      e(Box, { width: '35%' },
-        e(Text, {}, 'S Save  R Reset  Tab Switch  Q Quit')
+      e(Box, { width: '50%' },
+        e(Text, {}, 'S Save  R Reset  Esc/Q Quit  Tab Switch')
       ),
-      e(Box, { width: '65%' },
-        e(Text, {}, '↑↓ Select  ←→ Adjust  +/- ±10')
+      e(Box, { width: '50%' },
+        e(Text, {}, '↑↓ Select  ←→ Adjust  +/- ±10  F/B FG·BG')
       )
     ),
 

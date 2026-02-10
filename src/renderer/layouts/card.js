@@ -72,7 +72,7 @@ export function render(ctx) {
   }
   const R3 = applyAnimation(ctx, { type: 'text', text: `${data.sessionDurationMin}m`, offset: 22, iconColor: colors.C_I_TIME, icon: colors.icons.SESSION, bgColor: '', textColor: colors.C_TIME });
   const R4 = data.burnRate ? applyAnimation(ctx, { type: 'text', text: data.burnRate, offset: 32, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: '', textColor: colors.C_BURN }) : '';
-  const R5 = applyAnimation(ctx, { type: 'text', text: data.themeName, offset: 5, iconColor: colors.C_I_THEME, icon: colors.icons.THEME, bgColor: '', textColor: colors.C_RATE });
+  const R5 = applyAnimation(ctx, { type: 'text', text: data.themeName, offset: 5, iconColor: colors.C_I_THEME, icon: colors.icons.THEME, bgColor: '', textColor: colors.C_I_THEME });
 
   // Right card width: dynamic based on longest content (theme name can be long)
   const WR = Math.max(W, ...[R1, R2, R3, R4, R5].filter(Boolean).map(visibleWidth));

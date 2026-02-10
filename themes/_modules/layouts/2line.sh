@@ -69,7 +69,7 @@ render() {
     fi
 
     # 현재 테마
-    line2_parts+=("$(render_text "$C_I_THEME" "$ICON_THEME" "${THEME_NAME}" "$C_RATE" 5)")
+    line2_parts+=("$(render_text "$C_I_THEME" "$ICON_THEME" "${THEME_NAME}" "$C_I_THEME" 5)")
 
     # 출력
     local line1="" line2=""

@@ -163,7 +163,7 @@ render_static() {
     [[ -n "$BURN_RATE" ]] && ses_content="${ses_content}     ${C_I_BURN}${ICON_COST} ${C_BURN}${BURN_RATE}"
 
     local theme_display
-    theme_display="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
+    theme_display="${C_I_THEME}${ICON_THEME} ${C_I_THEME}${THEME_NAME}${RST}"
 
     local line2="$(make_chip "$bg_ses" "$ses_content")    ${theme_display}"
 

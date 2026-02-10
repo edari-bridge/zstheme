@@ -55,7 +55,7 @@ export function render(ctx) {
   if (isAnimated(ctx.animationMode)) {
     line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME}${colors.RST} ${colorizeText(data.themeName, 5, ctx.colorOffset, ctx.animationMode, ctx.colorMode)}`);
   } else {
-    line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${colors.RST}`);
+    line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${colors.RST}`);
   }
 
   const line1 = line1Parts.join('    ');

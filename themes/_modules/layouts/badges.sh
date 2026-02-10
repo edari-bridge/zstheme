@@ -155,7 +155,7 @@ render() {
     if is_animated; then
         chip_theme="$(colorize_text "${ICON_THEME} ${THEME_NAME}")"
     else
-        chip_theme="${C_I_THEME}${ICON_THEME} ${C_RATE}${THEME_NAME}${RST}"
+        chip_theme="${C_I_THEME}${ICON_THEME} ${C_I_THEME}${THEME_NAME}${RST}"
     fi
 
     local line2="${chip_model} ${chip_rate} ${chip_time} ${chip_burn}  ${chip_theme}"

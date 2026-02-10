@@ -5,17 +5,18 @@ import { parseThemeContract } from './themeContract.js';
 import { RAINBOW_COLORS, LSD_COLORS, MONO_CYCLE } from '../renderer/palette.js';
 
 // 전경색 기본값
+// 2line 시각 순서: Line1(BRANCH,TREE,DIR,STATUS,SYNC) Line2(MODEL,RATE,TIME,BURN)
+// CTX는 contextPct에 의한 고정값이므로 편집 대상 아님
 export const FG_DEFAULTS = {
   C_BRANCH: { name: 'Branch', code: 11 },
   C_TREE: { name: 'Worktree', code: 10 },
   C_DIR: { name: 'Directory', code: 14 },
-  C_MODEL: { name: 'Model', code: 13 },
   C_STATUS: { name: 'Status', code: 111 },
   C_SYNC: { name: 'Sync', code: 141 },
+  C_MODEL: { name: 'Model', code: 13 },
   C_RATE: { name: 'Rate', code: 229 },
-  C_BURN: { name: 'Burn', code: 216 },
   C_TIME: { name: 'Time', code: 75 },
-  C_CTX: { name: 'Context', code: 10 },
+  C_BURN: { name: 'Burn', code: 216 },
 };
 
 // badges용 배경색 기본값 (개별 요소)
@@ -82,9 +83,18 @@ export function loadCustomColors() {
   const fg = {};
   const bgBadges = {};
   const bgBars = {};
-  // 프리뷰용 기본값 (저장되지 않음)
-  const layout = '2line';
-  const iconType = 'nerd';
+  // 현재 활성 테마에서 layout/icon 감지 (미설정 시 2line-nerd 기본)
+  let currentTheme = '2line';
+  if (existsSync(PATHS.themeConfig)) {
+    try {
+      const content = readFileSync(PATHS.themeConfig, 'utf-8');
+      const match = content.match(/CLAUDE_THEME="([^"]+)"/);
+      if (match) currentTheme = match[1];
+    } catch { /* use default */ }
+  }
+  const parsed = parseThemeContract(currentTheme);
+  const layout = parsed.layout || '2line';
+  const iconType = parsed.icon || 'nerd';
 
   // 기본값으로 초기화
   for (const [key, val] of Object.entries(FG_DEFAULTS)) {

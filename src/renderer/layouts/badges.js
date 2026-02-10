@@ -94,7 +94,7 @@ export function render(ctx) {
   if (isAnimated(animationMode)) {
     chipTheme = colorizeText(`${colors.icons.THEME} ${data.themeName}`, 0, colorOffset, animationMode, colorMode);
   } else {
-    chipTheme = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
+    chipTheme = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${RST}`;
   }
 
   const line2Chips = [chipModel, chipRate, chipTime, chipBurn].filter(Boolean);

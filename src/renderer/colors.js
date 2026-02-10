@@ -224,7 +224,7 @@ function initCustomColors(contextPct, icons, iconMode, ctxIcon, ctxText, iCtx, b
       C_BG_BRANCH: bg(g('C_BG_BRANCH', 58)), C_BG_TREE: bg(g('C_BG_TREE', 22)),
       C_BG_DIR: bg(g('C_BG_DIR', 23)), C_BG_STATUS: bg(g('C_BG_STATUS', 24)),
       C_BG_SYNC: bg(g('C_BG_SYNC', 53)), C_BG_MODEL: bg(g('C_BG_MODEL', 53)),
-      C_BG_RATE: bg(58), C_BG_TIME: bg(24), C_BG_BURN: bg(94),
+      C_BG_RATE: bg(g('C_BG_RATE', 58)), C_BG_TIME: bg(g('C_BG_TIME', 24)), C_BG_BURN: bg(g('C_BG_BURN', 94)),
       C_BG_CTX: bg(22), C_BG_CTX_WARN: bg(94), C_BG_CTX_CRIT: bg(52),
     },
     bgBars: { C_BG_LOC: bg(g('C_BG_LOC', 23)), C_BG_GIT: bg(g('C_BG_GIT', 24)), C_BG_SES: bg(g('C_BG_SES', 53)) },

@@ -111,7 +111,7 @@ export function render(ctx) {
   sesContent += `     ${colors.C_I_TIME}${colors.icons.SESSION} ${colors.C_TIME}${data.sessionDurationMin}m`;
   if (data.burnRate) sesContent += `     ${colors.C_I_BURN}${colors.icons.COST} ${colors.C_BURN}${data.burnRate}`;
 
-  const themeDisplay = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_RATE}${data.themeName}${RST}`;
+  const themeDisplay = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${RST}`;
   const line2 = `${makeChip(bgSes, sesContent, chipStyle, colors)}     ${themeDisplay}`;
 
   return `${line1}\n${line2}`;

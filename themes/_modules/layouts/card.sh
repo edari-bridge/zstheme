@@ -107,7 +107,7 @@ render() {
     fi
     R3="$(make_animated_content "text" "${SESSION_DURATION_MIN}m" 22 "${C_I_TIME}" "${ICON_SESSION}" "" "${C_TIME}")"
     [[ -n "$BURN_RATE" ]] && R4="$(make_animated_content "text" "${BURN_RATE}" 32 "${C_I_BURN}" "${ICON_COST}" "" "${C_BURN}")" || R4=""
-    R5="$(make_animated_content "text" "${THEME_NAME}" 5 "${C_I_THEME}" "${ICON_THEME}" "" "${C_RATE}")"
+    R5="$(make_animated_content "text" "${THEME_NAME}" 5 "${C_I_THEME}" "${ICON_THEME}" "" "${C_I_THEME}")"
 
     # 오른쪽 카드 너비: R5(테마명)가 길 수 있으므로 동적 계산
     local WR=$W
