@@ -15,7 +15,7 @@ export function render(ctx) {
   else bgCtx = colors.C_BG_CTX;
 
   // Badge backgrounds
-  let bgBranch, bgTree, bgDir, bgStatus, bgSync, bgModel;
+  let bgBranch, bgTree, bgDir, bgStatus, bgSync, bgModel, bgRate, bgTime, bgBurn;
   if (isAnimated(animationMode)) {
     bgBranch = getAnimatedBadgeBg(0, bgOffset, animationMode, colorMode);
     bgTree = getAnimatedBadgeBg(1, bgOffset, animationMode, colorMode);
@@ -23,9 +23,13 @@ export function render(ctx) {
     bgStatus = getAnimatedBadgeBg(3, bgOffset, animationMode, colorMode);
     bgSync = getAnimatedBadgeBg(4, bgOffset, animationMode, colorMode);
     bgModel = getAnimatedBadgeBg(5, bgOffset, animationMode, colorMode);
+    bgRate = getAnimatedBadgeBg(6, bgOffset, animationMode, colorMode);
+    bgTime = getAnimatedBadgeBg(7, bgOffset, animationMode, colorMode);
+    bgBurn = getAnimatedBadgeBg(8, bgOffset, animationMode, colorMode);
   } else {
     bgBranch = colors.C_BG_BRANCH; bgTree = colors.C_BG_TREE; bgDir = colors.C_BG_DIR;
     bgStatus = colors.C_BG_STATUS; bgSync = colors.C_BG_SYNC; bgModel = colors.C_BG_MODEL;
+    bgRate = colors.C_BG_RATE; bgTime = colors.C_BG_TIME; bgBurn = colors.C_BG_BURN;
   }
 
   // === Line 1 chips ===
@@ -71,21 +75,21 @@ export function render(ctx) {
   // Rate limit
   if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     if (isAnimated(animationMode)) {
-      chipRate = applyAnimation(ctx, { type: 'bg_chip', text: `${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, offset: 60, iconColor: colors.C_I_RATE, icon: colors.icons.TIME, bgColor: colors.C_BG_RATE, textColor: '' });
+      chipRate = applyAnimation(ctx, { type: 'bg_chip', text: `${data.rateTimeLeft}\u00b7${data.rateResetTime} (${data.rateLimitPct}%)`, offset: 60, iconColor: colors.C_I_RATE, icon: colors.icons.TIME, bgColor: bgRate, textColor: '' });
     } else {
       const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
-      chipRate = makeChip(colors.C_BG_RATE, `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`, chipStyle, colors);
+      chipRate = makeChip(bgRate, `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`, chipStyle, colors);
     }
   } else {
     chipRate = '';
   }
 
   // Session time
-  chipTime = applyAnimation(ctx, { type: 'bg_chip', text: `${data.sessionDurationMin}m`, offset: 70, iconColor: colors.C_I_TIME, icon: colors.icons.SESSION, bgColor: colors.C_BG_TIME, textColor: colors.C_TIME });
+  chipTime = applyAnimation(ctx, { type: 'bg_chip', text: `${data.sessionDurationMin}m`, offset: 70, iconColor: colors.C_I_TIME, icon: colors.icons.SESSION, bgColor: bgTime, textColor: colors.C_TIME });
 
   // Burn rate
   if (data.burnRate) {
-    chipBurn = applyAnimation(ctx, { type: 'bg_chip', text: data.burnRate, offset: 80, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: colors.C_BG_BURN, textColor: colors.C_BURN });
+    chipBurn = applyAnimation(ctx, { type: 'bg_chip', text: data.burnRate, offset: 80, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: bgBurn, textColor: colors.C_BURN });
   } else {
     chipBurn = '';
   }

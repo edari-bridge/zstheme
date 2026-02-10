@@ -1,0 +1,34 @@
+#!/bin/bash
+# Test Theme - rainbow-badges 복제본 (임시 테스트용)
+# rainbow-badges와 동일: pastel 색상 + rainbow 애니메이션 + badges 레이아웃 + emoji 아이콘
+
+# 모듈 디렉토리 위치
+_TEST_SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$_TEST_SOURCE" ]]; do
+    _TEST_DIR="$(cd -P "$(dirname "$_TEST_SOURCE")" && pwd)"
+    _TEST_SOURCE="$(readlink "$_TEST_SOURCE")"
+    [[ "$_TEST_SOURCE" != /* ]] && _TEST_SOURCE="$_TEST_DIR/$_TEST_SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$_TEST_SOURCE")" && pwd)"
+
+# rainbow-badges 설정 하드코딩
+COLOR_MODE="pastel"
+ANIMATION_MODE="rainbow"
+LAYOUT_MODE="badges"
+ICON_MODE="emoji"
+
+# 모듈 로더에서 load_modules만 사용
+source "$SCRIPT_DIR/_modules/loader.sh"
+load_modules
+
+# init_colors 오버라이드: rate/time/burn 배지에도 애니메이션 배경 적용
+eval "$(declare -f init_colors | sed '1s/init_colors/_base_init_colors/')"
+
+init_colors() {
+    _base_init_colors
+    if is_animated; then
+        C_BG_RATE=$(get_animated_badge_bg 6)
+        C_BG_TIME=$(get_animated_badge_bg 7)
+        C_BG_BURN=$(get_animated_badge_bg 8)
+    fi
+}

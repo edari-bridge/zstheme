@@ -57,7 +57,7 @@ render() {
     fi
 
     # lsd/rainbow 모드: 배경색 순환, 글자색은 기존 유지
-    local bg_branch bg_tree bg_dir bg_status bg_sync bg_model
+    local bg_branch bg_tree bg_dir bg_status bg_sync bg_model bg_rate bg_time bg_burn
     if is_animated; then
         bg_branch=$(get_animated_badge_bg 0)
         bg_tree=$(get_animated_badge_bg 1)
@@ -65,6 +65,9 @@ render() {
         bg_status=$(get_animated_badge_bg 3)
         bg_sync=$(get_animated_badge_bg 4)
         bg_model=$(get_animated_badge_bg 5)
+        bg_rate=$(get_animated_badge_bg 6)
+        bg_time=$(get_animated_badge_bg 7)
+        bg_burn=$(get_animated_badge_bg 8)
     else
         bg_branch="$C_BG_BRANCH"
         bg_tree="$C_BG_TREE"
@@ -72,6 +75,9 @@ render() {
         bg_status="$C_BG_STATUS"
         bg_sync="$C_BG_SYNC"
         bg_model="$C_BG_MODEL"
+        bg_rate="$C_BG_RATE"
+        bg_time="$C_BG_TIME"
+        bg_burn="$C_BG_BURN"
     fi
 
     # Line 1: 각 요소별 개별 칩
@@ -132,21 +138,21 @@ render() {
     # Rate limit 칩
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
         if is_animated; then
-            chip_rate="$(make_animated_content "bg_chip" "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60 "${C_I_RATE}" "${ICON_TIME}" "$C_BG_RATE" "")"
+            chip_rate="$(make_animated_content "bg_chip" "${RATE_TIME_LEFT}·${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)" 60 "${C_I_RATE}" "${ICON_TIME}" "$bg_rate" "")"
         else
             local rate_color=$(get_rate_color)
-            chip_rate="$(make_chip "$C_BG_RATE" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)")"
+            chip_rate="$(make_chip "$bg_rate" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)")"
         fi
     else
         chip_rate=""
     fi
 
     # 세션 시간 칩
-    chip_time="$(make_animated_content "bg_chip" "${SESSION_DURATION_MIN}m" 70 "${C_I_TIME}" "${ICON_SESSION}" "$C_BG_TIME" "${C_TIME}")"
+    chip_time="$(make_animated_content "bg_chip" "${SESSION_DURATION_MIN}m" 70 "${C_I_TIME}" "${ICON_SESSION}" "$bg_time" "${C_TIME}")"
 
     # 번레이트 칩
     if [[ -n "$BURN_RATE" ]]; then
-        chip_burn="$(make_animated_content "bg_chip" "${BURN_RATE}" 80 "${C_I_BURN}" "${ICON_COST}" "$C_BG_BURN" "${C_BURN}")"
+        chip_burn="$(make_animated_content "bg_chip" "${BURN_RATE}" 80 "${C_I_BURN}" "${ICON_COST}" "$bg_burn" "${C_BURN}")"
     else
         chip_burn=""
     fi
