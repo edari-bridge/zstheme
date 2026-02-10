@@ -370,13 +370,19 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       )
     ),
 
-    // Help text (outside grid boxes, vertically centered in remaining space)
-    e(Box, { flexDirection: 'row', flexGrow: 1, width: '100%', gap: 1, paddingX: 1, alignItems: 'center' },
-      e(Box, { width: '50%' },
-        e(Text, {}, 'S Save  R Reset  Esc/Q Quit  Tab Switch')
+    // Help text
+    e(Box, { flexGrow: 1, width: '100%', paddingX: 1, alignItems: 'center', justifyContent: 'space-between' },
+      e(Box, {},
+        e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Select '),
+        e(Text, { color: 'green' }, '←→'), e(Text, { dimColor: true }, ' Adjust '),
+        e(Text, { color: 'green' }, '+/-'), e(Text, { dimColor: true }, ' ±10 '),
+        e(Text, { color: 'cyan' }, 'F/B'), e(Text, { dimColor: true }, ' FG·BG '),
+        e(Text, { color: 'cyan' }, 'TAB'), e(Text, { dimColor: true }, ' Switch')
       ),
-      e(Box, { width: '50%' },
-        e(Text, {}, '↑↓ Select  ←→ Adjust  +/- ±10  F/B FG·BG')
+      e(Box, {},
+        e(Text, { color: 'magenta' }, 'S'), e(Text, { dimColor: true }, ' Save '),
+        e(Text, { color: 'magenta' }, 'R'), e(Text, { dimColor: true }, ' Reset '),
+        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Quit')
       )
     ),
 
