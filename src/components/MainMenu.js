@@ -8,7 +8,6 @@ import { ResetSettings } from './ResetSettings.js';
 import { VERSION, LSD_COLORS } from '../constants.js';
 import { useEasterEgg } from '../hooks/useEasterEgg.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
-import { isZsthemeActive, getOriginalStatusline, toggleStatusline } from '../utils/shell.js';
 import { getCurrentTheme } from '../utils/themes.js';
 import { isSkillInstalled } from '../utils/skills.js';
 import { getThemeColorPalette, PASTEL_HEX } from '../utils/colors.js';
@@ -16,12 +15,6 @@ import { parseThemeContract } from '../utils/themeContract.js';
 
 
 const e = React.createElement;
-
-// Check if original statusline backup exists
-const hasBackup = getOriginalStatusline() !== undefined;
-
-// hasBackup는 앱 시작 시 1회 평가 (변경 안 됨)
-// skillsInstalled는 컴포넌트 내부 상태로 이동 (Dashboard 동기화)
 
 export function MainMenu() {
     const { exit } = useApp();
@@ -32,7 +25,6 @@ export function MainMenu() {
     // States
     const [activeTab, setActiveTab] = useState('menu');
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [zsthemeActive, setZsthemeActive] = useState(() => isZsthemeActive());
     const [skillsInstalled, setSkillsInstalled] = useState(() => isSkillInstalled('dashboard'));
 
     // Dynamic Data
@@ -45,13 +37,7 @@ export function MainMenu() {
         { id: 'themes', label: 'Theme Explorer', icon: '🎨', desc: 'Browse & Apply Themes' },
         { id: 'editor', label: 'Color Editor', icon: '✏️ ', desc: 'Customize Colors' },
         { id: 'dashboard', label: 'Dashboard', icon: '📊', desc: 'Usage & Costs' },
-        { id: 'reset', label: 'Reset Settings', icon: '⚙️ ', desc: 'Factory Reset' },
-        ...(hasBackup ? [{
-            id: 'statusline-toggle',
-            label: zsthemeActive ? 'Statusline: Active' : 'Statusline: Inactive',
-            icon: zsthemeActive ? '✅' : '⏸️',
-            desc: 'Toggle Shell Integration'
-        }] : []),
+        { id: 'reset', label: 'Reset Settings', icon: '⚙️ ', desc: 'Reset & Uninstall' },
         { id: 'exit', label: 'Exit', icon: '🚪', desc: 'Close Manager' },
     ];
 
@@ -93,11 +79,6 @@ export function MainMenu() {
             else if (selected.id === 'editor') setActiveTab('editor');
             else if (selected.id === 'dashboard') setActiveTab('dashboard');
             else if (selected.id === 'reset') setActiveTab('reset');
-            else if (selected.id === 'statusline-toggle') {
-                const newMode = zsthemeActive ? 'original' : 'zstheme';
-                const result = toggleStatusline(newMode);
-                if (result.success) setZsthemeActive(!zsthemeActive);
-            }
             resetCounts();
         }
 

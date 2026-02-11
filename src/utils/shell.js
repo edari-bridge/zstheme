@@ -74,27 +74,36 @@ export function saveThemeToShellConfig(theme) {
 }
 
 export function resetTheme() {
-  const configPath = getShellConfigPath();
+  // Restore original statusline from backup
+  return toggleStatusline('original');
+}
 
-  if (!fs.existsSync(configPath)) {
-    return { success: true };
+export function uninstallZstheme() {
+  // 1. Restore original statusline
+  const restored = toggleStatusline('original');
+
+  // 2. Remove CLAUDE_THEME from shell config
+  const configPath = getShellConfigPath();
+  if (fs.existsSync(configPath)) {
+    let content = fs.readFileSync(configPath, 'utf8');
+    content = content.replace(/\n?# zstheme - Claude Code statusline theme\nexport CLAUDE_THEME=.*\n?/g, '\n');
+    content = content.replace(/^export CLAUDE_THEME=.*\n?/m, '');
+    fs.writeFileSync(configPath, content);
   }
 
-  let content = fs.readFileSync(configPath, 'utf8');
-
-  // Remove CLAUDE_THEME line and comment
-  content = content.replace(/\n?# zstheme - Claude Code statusline theme\nexport CLAUDE_THEME=.*\n?/g, '\n');
-  content = content.replace(/^export CLAUDE_THEME=.*\n?/m, '');
-
-  fs.writeFileSync(configPath, content);
-
-  // Also remove theme-config.sh
+  // 3. Remove theme-config.sh
   const themeConfigPath = getThemeConfigPath();
   if (fs.existsSync(themeConfigPath)) {
     fs.unlinkSync(themeConfigPath);
   }
 
-  return { success: true };
+  // 4. Clean up ~/.config/zstheme/
+  const zsthemeConfigDir = PATHS.customColorDir;
+  if (fs.existsSync(zsthemeConfigDir)) {
+    fs.rmSync(zsthemeConfigDir, { recursive: true, force: true });
+  }
+
+  return { success: true, restored: restored.success };
 }
 
 export function isZsthemeActive() {

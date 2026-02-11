@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
-import { resetTheme } from '../utils/shell.js';
+import { resetTheme, uninstallZstheme } from '../utils/shell.js';
 import { uninstallAllSkills } from '../utils/skills.js';
 import { LSD_COLORS, VERSION } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
@@ -8,13 +8,15 @@ import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 const e = React.createElement;
 
 const MENU_ITEMS = [
-  { id: 'header_reset', label: 'RESET OPTIONS', type: 'header' },
-  { id: 'theme', label: 'Reset Theme Only' },
-  { id: 'skills', label: 'Uninstall All Skills' },
-  { id: 'all', label: 'Factory Reset (All Settings)' },
-  { id: 'header_nav', label: 'NAVIGATION', type: 'header' },
-  { id: 'back', label: 'Cancel & Return', type: 'action' },
+  { id: 'reset-theme', label: 'Reset Theme' },
+  { id: 'uninstall', label: 'Uninstall zstheme' },
+  { id: 'back', label: 'Exit Reset', type: 'action' },
 ];
+
+const CONFIRM_MESSAGES = {
+  'reset-theme': 'Statusline will be restored to original.',
+  'uninstall': 'All zstheme settings, skills, and configs will be removed.',
+};
 
 export function ResetSettings({ onBack, isLsdUnlocked = false }) {
   const { stdout } = useStdout();
@@ -31,52 +33,66 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [message, setMessage] = useState(null);
+  const [confirming, setConfirming] = useState(null);
 
-  // 헤더 제외한 네비게이션 가능 아이템 필터링
-  const navigableItems = MENU_ITEMS.filter(item => item.type !== 'header');
+  // 실제 리셋 실행
+  const executeReset = (id) => {
+    let text = '';
+
+    if (id === 'reset-theme') {
+      const result = resetTheme();
+      text = result.success
+        ? '✓ Statusline restored to original'
+        : '✗ No backup found — run install.sh first';
+    } else if (id === 'uninstall') {
+      uninstallAllSkills();
+      const result = uninstallZstheme();
+      text = result.success
+        ? '✓ zstheme uninstalled — you can now remove the directory'
+        : '✓ zstheme uninstalled (statusline backup not found)';
+    }
+
+    setConfirming(null);
+    setMessage({ type: 'success', text });
+    setTimeout(() => setMessage(null), 3000);
+  };
 
   useInput((input, key) => {
+    // 확인 대기 상태
+    if (confirming) {
+      if (input === 'y') {
+        executeReset(confirming);
+      } else if (input === 'n' || key.escape) {
+        setConfirming(null);
+      }
+      return;
+    }
+
     if (key.escape || input === 'q') {
       onBack();
       return;
     }
 
     if (key.upArrow) {
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : navigableItems.length - 1));
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : MENU_ITEMS.length - 1));
       setMessage(null);
     }
 
     if (key.downArrow) {
-      setSelectedIndex(prev => (prev < navigableItems.length - 1 ? prev + 1 : 0));
+      setSelectedIndex(prev => (prev < MENU_ITEMS.length - 1 ? prev + 1 : 0));
       setMessage(null);
     }
 
     if (key.return) {
-      const selected = navigableItems[selectedIndex];
+      const selected = MENU_ITEMS[selectedIndex];
 
       if (selected.id === 'back') {
         onBack();
         return;
       }
 
-      let results = [];
-
-      if (selected.id === 'theme' || selected.id === 'all') {
-        resetTheme();
-        results.push('Theme');
-      }
-
-      if (selected.id === 'skills' || selected.id === 'all') {
-        const skillResult = uninstallAllSkills();
-        if (skillResult.count > 0) {
-          results.push(`Skills (${skillResult.count})`);
-        } else {
-          results.push('Skills');
-        }
-      }
-
-      setMessage({ type: 'success', text: `✓ ${results.join(' & ')} reset successfully!` });
-      setTimeout(() => setMessage(null), 2000);
+      setConfirming(selected.id);
+      setMessage(null);
     }
   });
 
@@ -85,7 +101,7 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
     width,
     height,
     borderStyle: 'double',
-    borderColor: borderColor, // 위험 색상 혹은 LSD
+    borderColor: borderColor,
     paddingX: 1
   },
     // Header
@@ -121,22 +137,20 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
         borderLeft: false,
         borderColor: 'gray'
       },
-        ...MENU_ITEMS.map((item) => {
-          // 헤더 처리
-          if (item.type === 'header') {
-            return e(Box, { key: item.id, marginTop: 1, marginBottom: 0 },
-              e(Text, { dimColor: true, underline: true }, item.label)
+        ...MENU_ITEMS.map((item, index) => {
+          const isSelected = index === selectedIndex;
+
+          if (item.type === 'action') {
+            return e(Box, { key: item.id, marginTop: 1 },
+              e(Text, {
+                color: isSelected ? 'red' : 'gray',
+                bold: isSelected
+              }, isSelected ? `> ${item.label}` : `  ${item.label}`)
             );
           }
-
-          const navIndex = navigableItems.indexOf(item);
-          const isSelected = navIndex === selectedIndex;
-
-          // 실제 메뉴 아이템
-          return e(Box, { key: item.id },
+          return e(Box, { key: item.id, marginTop: index === 0 ? 1 : 0 },
             e(Text, {
-              // 선택 시 배경 빨강(경고), 글자 검정
-              color: isSelected ? 'black' : (item.type === 'action' ? 'white' : 'red'),
+              color: isSelected ? 'black' : 'red',
               backgroundColor: isSelected ? 'red' : undefined,
               bold: isSelected
             }, isSelected ? ` > ${item.label} ` : `   ${item.label} `)
@@ -152,8 +166,30 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
         justifyContent: 'center',
         alignItems: 'center'
       },
-        // Warning Card
-        e(Box, {
+        // Confirm Dialog
+        confirming ? e(Box, {
+          borderStyle: 'round',
+          borderColor: 'red',
+          padding: 1,
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: 2,
+          width: '100%'
+        },
+          e(Text, { color: 'red', bold: true }, '⚠️  ARE YOU SURE?  ⚠️'),
+          e(Box, { height: 1 }),
+          e(Text, { color: 'white' }, CONFIRM_MESSAGES[confirming]),
+          e(Text, { color: 'white', dimColor: true }, 'This action cannot be undone.'),
+          e(Box, { height: 1 }),
+          e(Box, null,
+            e(Text, { color: 'red', bold: true }, 'Y'),
+            e(Text, { dimColor: true }, ' Yes  '),
+            e(Text, { color: 'green', bold: true }, 'N'),
+            e(Text, { dimColor: true }, ' No')
+          )
+        )
+        // Default Warning Card
+        : e(Box, {
           borderStyle: 'round',
           borderColor: 'yellow',
           padding: 1,
@@ -164,20 +200,17 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
         },
           e(Text, { color: 'yellow', bold: true }, '⚠️  WARNING  ⚠️'),
           e(Box, { height: 1 }),
-          e(Text, { color: 'white', dimColor: true }, 'This action cannot be undone.'),
-          e(Text, { color: 'white', dimColor: true }, 'Your custom themes and skills'),
-          e(Text, { color: 'white', dimColor: true }, 'will be permanently deleted.')
+          e(Text, { color: 'white', dimColor: true }, 'These actions may change your'),
+          e(Text, { color: 'white', dimColor: true }, 'Claude Code configuration.')
         ),
 
         // Toast Message Area
         message && e(Box, {
           borderStyle: 'single',
-          borderColor: message.type === 'success' ? 'green' : 'red',
+          borderColor: 'green',
           paddingX: 2
         },
-          e(Text, { color: message.type === 'success' ? 'green' : 'red', bold: true },
-            message.text
-          )
+          e(Text, { color: 'green', bold: true }, message.text)
         )
       )
     ),
@@ -203,8 +236,8 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
         e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate')
       ),
       e(Box, {},
-        e(Text, { color: 'red', bold: true }, 'ENTER'), e(Text, { dimColor: true }, ' Confirm '),
-        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Cancel')
+        e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Select '),
+        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Back')
       )
     )
   );
