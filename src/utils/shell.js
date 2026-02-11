@@ -157,6 +157,14 @@ export function toggleStatusline(mode) {
     return { success: false, error: `Unknown mode: ${mode}` };
   }
 
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-  return { success: true, mode };
+  try {
+    const settingsDir = path.dirname(settingsPath);
+    if (!fs.existsSync(settingsDir)) {
+      fs.mkdirSync(settingsDir, { recursive: true });
+    }
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+    return { success: true, mode };
+  } catch (error) {
+    return { success: false, error: `Failed to write settings.json: ${error.message}` };
+  }
 }

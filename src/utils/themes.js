@@ -52,17 +52,21 @@ export function isValidTheme(theme, options = {}) {
  * 현재 설정된 테마 가져오기
  */
 export function getCurrentTheme() {
-  if (!existsSync(PATHS.themeConfig)) {
-    return '2line';
+  if (existsSync(PATHS.themeConfig)) {
+    try {
+      const content = readFileSync(PATHS.themeConfig, 'utf-8');
+      const match = content.match(/^\s*(?:export\s+)?CLAUDE_THEME=(?:"([^"]+)"|'([^']+)'|([^\s#]+))/m);
+      const themeFromConfig = match?.[1] || match?.[2] || match?.[3] || '';
+      if (themeFromConfig) return themeFromConfig;
+    } catch {
+      // Ignore parse errors and fall back to env/default.
+    }
   }
 
-  try {
-    const content = readFileSync(PATHS.themeConfig, 'utf-8');
-    const match = content.match(/CLAUDE_THEME="([^"]+)"/);
-    return match ? match[1] : '2line';
-  } catch {
-    return '2line';
-  }
+  const themeFromEnv = process.env.CLAUDE_THEME?.trim();
+  if (themeFromEnv) return themeFromEnv;
+
+  return '2line';
 }
 
 /**
