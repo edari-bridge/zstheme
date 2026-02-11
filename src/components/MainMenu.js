@@ -131,7 +131,11 @@ export function MainMenu() {
             paddingBottom: 0
         },
             // Left: Title
-            e(Text, { color: isLsdUnlocked ? 'magenta' : 'cyan', bold: true }, isLsdUnlocked ? ' ZSTHEME [LSD]' : ' ZSTHEME'),
+            isLsdUnlocked
+                ? e(Text, null, ...' ZSTHEME'.split('').map((ch, i) =>
+                    e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
+                  ))
+                : e(Text, { color: 'cyan', bold: true }, ' ZSTHEME'),
             // Right: Version
             e(Text, { dimColor: true }, `v${VERSION}`)
         ),

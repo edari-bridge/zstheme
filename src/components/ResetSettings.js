@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { resetTheme } from '../utils/shell.js';
 import { uninstallAllSkills } from '../utils/skills.js';
+import { LSD_COLORS } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -94,11 +95,15 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
       borderTop: false,
       borderLeft: false,
       borderRight: false,
-      borderColor: borderColor,
+      borderColor: 'gray',
       paddingBottom: 0,
       marginBottom: 1
     },
-      e(Text, { bold: true, color: borderColor }, ' 🔄 FACTORY RESET SETTINGS 🔄 ')
+      isLsdUnlocked
+        ? e(Text, null, ...[...' 💀 Reset Settings'].map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { bold: true, color: 'red' }, ' ⚙️ Reset Settings')
     ),
 
     // Main Content
@@ -178,7 +183,11 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
 
     // Footer - Mode label
     e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
-      e(Text, { color: 'red', dimColor: true }, 'MODE: DESTRUCTIVE')
+      isLsdUnlocked
+        ? e(Text, null, ...[...'🌈 LSD MODE ACTIVE 🌈'].map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { dimColor: true }, 'MODE: STANDARD')
     ),
 
     // Footer - Keybindings

@@ -195,12 +195,16 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
       borderTop: false,
       borderLeft: false,
       borderRight: false,
-      borderColor: 'cyan',
+      borderColor: 'gray',
       paddingBottom: 0,
       marginBottom: 1,
       paddingX: 1
     },
-      e(Text, { bold: true, color: 'cyan' }, ' 📊 Dashboard'),
+      isLsdUnlocked
+        ? e(Text, null, ...[...' 🔮 Dashboard'].map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { bold: true, color: 'cyan' }, ' 📊 Dashboard'),
       e(Text, { dimColor: true }, `${new Date().toISOString().split('T')[0]}`)
     ),
 

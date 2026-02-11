@@ -267,10 +267,6 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   // Grid height: 2 rows × (1 line + 1 marginBottom) + padding 2 + border 2
   const gridHeight = GRID_VISIBLE_ROWS * 2 + 4;
 
-  // Header text with LSD animation
-  const headerColor = isLsdUnlocked ? lsdBorderColor : borderColor;
-  const headerText = isLsdUnlocked ? ' ✨ Theme Explorer ✨ ' : ' 🎨 Theme Explorer 🎨 ';
-
   return e(Box, {
     flexDirection: 'column',
     width,
@@ -286,11 +282,15 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       borderTop: false,
       borderLeft: false,
       borderRight: false,
-      borderColor: borderColor,
+      borderColor: 'gray',
       paddingBottom: 0,
       marginBottom: 1
     },
-      e(Text, { bold: true, color: headerColor }, headerText)
+      isLsdUnlocked
+        ? e(Text, null, ...[...' ✨ Theme Explorer'].map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { bold: true, color: 'cyan' }, ' 🎨 Theme Explorer')
     ),
 
     // Main Content

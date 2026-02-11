@@ -227,12 +227,16 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       justifyContent: 'center',
       borderStyle: 'single',
       borderTop: false, borderLeft: false, borderRight: false,
-      borderColor: borderColor,
+      borderColor: 'gray',
       paddingBottom: 0,
       marginBottom: 1,
       width: '100%'
     },
-      e(Text, { bold: true, color: borderColor }, ' 🎨 COLOR EDITOR 🎨 ')
+      isLsdUnlocked
+        ? e(Text, null, ...[...' 🌈 Color Editor'].map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { bold: true, color: 'cyan' }, ' ✏️ Color Editor')
     ),
 
     // Main Content (flexGrow pushes footer to bottom)
