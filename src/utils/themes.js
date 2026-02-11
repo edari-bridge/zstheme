@@ -4,6 +4,7 @@ import {
   LAYOUTS,
   COLOR_MODES,
   ICON_MODES,
+  STANDALONE_THEMES,
   getAllAnimations,
   parseThemeContract,
   isValidTheme as isValidThemeContract,
@@ -27,6 +28,13 @@ export function getAllThemes(includeHidden = false) {
           themes.push(`${color}${anim}${layout}${icon}`);
         }
       }
+    }
+  }
+
+  // 독립 테마 추가
+  for (const [name, meta] of Object.entries(STANDALONE_THEMES)) {
+    if (includeHidden || !meta.hidden) {
+      themes.push(name);
     }
   }
 
@@ -138,8 +146,8 @@ export function filterThemesByCategory(themes, category = 'All') {
  */
 export function sortThemes(themes, isLsdMode = false) {
   const layoutOrder = ['1line', '2line', 'badges', 'bars', 'card'];
-  const normalOrder = ['static', 'rainbow', 'lsd'];
-  const lsdOrder = ['lsd', 'static', 'rainbow'];
+  const normalOrder = ['static', 'rainbow', 'lsd', 'p.lsd'];
+  const lsdOrder = ['lsd', 'static', 'rainbow', 'p.lsd'];
 
   const getAnimationWeight = (animation) => {
     const order = isLsdMode ? lsdOrder : normalOrder;
@@ -190,7 +198,10 @@ export function filterThemesByTab(themes, tab, isLsdUnlocked = false) {
   if (tab === 'Custom') return themes.filter(t => t.startsWith('custom-'));
   if (tab === 'LSD') {
     if (!isLsdUnlocked) return [];
-    return themes.filter(t => parseThemeName(t).animation === 'lsd');
+    return themes.filter(t => {
+      const p = parseThemeName(t);
+      return p.animation === 'lsd' || p.animation === 'p.lsd';
+    });
   }
   // 레이아웃 탭: 해당 레이아웃만, custom/lsd 제외
   return themes.filter(t => {

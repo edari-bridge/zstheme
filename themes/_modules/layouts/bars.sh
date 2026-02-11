@@ -49,7 +49,9 @@ render_animated() {
 
     local chip_loc
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        chip_loc=$(colorize_bg_lsd "$raw_loc" 0 "\033[30m")
+        chip_loc="$(make_chip "$bg_loc" "$(colorize_text_dark "${ICON_BRANCH} ${BRANCH:-branch}    ${ICON_TREE} ${WORKTREE:-worktree}    ${ICON_DIR} ${DIR_NAME}" 0)")"
+    elif [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+        chip_loc="$(make_chip "$C_BG_LOC" "$(colorize_text_dark "${ICON_BRANCH} ${BRANCH:-branch}    ${ICON_TREE} ${WORKTREE:-worktree}    ${ICON_DIR} ${DIR_NAME}" 0)")"
     else
         chip_loc="$(make_chip "$C_BG_LOC" "${C_I_BRANCH}${ICON_BRANCH} $(colorize_text "${BRANCH:-branch}" 0)    ${C_I_TREE}${ICON_TREE} $(colorize_text "${WORKTREE:-worktree}" 10)    ${C_I_DIR}${ICON_DIR} $(colorize_text "${DIR_NAME}" 20)")"
     fi
@@ -69,16 +71,19 @@ render_animated() {
 
         local chip_git
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30m")
+            chip_git="$(make_chip "$bg_git" "$(colorize_text_dark "${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind}" 30)")"
+        elif [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+            chip_git="$(make_chip "$C_BG_GIT" "$(colorize_text_dark "${ICON_GIT_STATUS} ${add}  ${mod}  ${del}    ${ICON_SYNC} ${ahead}  ${behind}" 30)")"
         else
             chip_git="$(make_chip "$C_BG_GIT" "${C_I_STATUS}${ICON_GIT_STATUS} $(colorize_text "${add}  ${mod}  ${del}" 30)    ${C_I_SYNC}${ICON_SYNC} $(colorize_text "${ahead}  ${behind}" 40)")"
         fi
         line1_chips+="${chip_git}    "
     else
-        local raw_git=" ${ICON_GIT_STATUS} ---    ${ICON_SYNC} --- "
         local chip_git
         if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-            chip_git=$(colorize_bg_lsd "$raw_git" 30 "\033[30;2m")
+            chip_git="$(make_chip "$bg_git" "$(colorize_text_dark "${ICON_GIT_STATUS} ---    ${ICON_SYNC} ---" 30)")"
+        elif [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+            chip_git="$(make_chip "$C_BG_GIT" "$(colorize_text_dark "${ICON_GIT_STATUS} ---    ${ICON_SYNC} ---" 30)")"
         else
             chip_git="$(make_chip "$C_BG_GIT" "${C_DIM_STATUS}${ICON_GIT_STATUS} ---    ${C_DIM_SYNC}${ICON_SYNC} ---")"
         fi
@@ -101,7 +106,21 @@ render_animated() {
 
     local chip_ses
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        chip_ses=$(colorize_bg_lsd "$ses_raw" 50 "\033[30m")
+        local ses_lsd_text="${ICON_MODEL} ${MODEL}"
+        if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+            ses_lsd_text+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
+        fi
+        ses_lsd_text+="     ${ICON_SESSION} ${SESSION_DURATION_MIN}m"
+        [[ -n "$BURN_RATE" ]] && ses_lsd_text+="     ${ICON_COST} ${BURN_RATE}"
+        chip_ses="$(make_chip "$bg_ses" "$(colorize_text_dark "$ses_lsd_text" 50)")"
+    elif [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+        local ses_raw_text="${ICON_MODEL} ${MODEL}"
+        if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
+            ses_raw_text+="     ${ICON_TIME} ${RATE_TIME_LEFT} · ${RATE_RESET_TIME} (${RATE_LIMIT_PCT}%)"
+        fi
+        ses_raw_text+="     ${ICON_SESSION} ${SESSION_DURATION_MIN}m"
+        [[ -n "$BURN_RATE" ]] && ses_raw_text+="     ${ICON_COST} ${BURN_RATE}"
+        chip_ses="$(make_chip "$C_BG_SES" "$(colorize_text_dark "$ses_raw_text" 50)")"
     else
         local ses_animated="${C_I_MODEL}${ICON_MODEL} $(colorize_text "${MODEL}" 50)"
         if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_RESET_TIME" && -n "$RATE_LIMIT_PCT" ]]; then
@@ -173,6 +192,13 @@ render_static() {
 
 render() {
     init_colors
+
+    # p.lsd: bars에 badge 스타일 배경 적용
+    if [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+        C_BG_LOC=$(get_animated_badge_bg 0)
+        C_BG_GIT=$(get_animated_badge_bg 3)
+        C_BG_SES=$(get_animated_badge_bg 6)
+    fi
 
     if is_animated; then
         render_animated

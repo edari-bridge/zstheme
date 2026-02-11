@@ -1,8 +1,8 @@
 // Common formatting helpers (ported from helpers.sh / common.sh)
-import { colorizeText, colorizeFgSparkle, colorizeBgSparkle } from './animation.js';
+import { colorizeText, colorizeTextDark, colorizeFgSparkle } from './animation.js';
 
 export function isAnimated(animationMode) {
-  return animationMode === 'lsd' || animationMode === 'rainbow';
+  return animationMode === 'lsd' || animationMode === 'rainbow' || animationMode === 'p.lsd';
 }
 
 export function stripAnsi(str) {
@@ -80,14 +80,19 @@ export function applyAnimation(ctx, { type, text, offset, iconColor, icon, bgCol
   const chipStyle = process.env.CHIP_STYLE || 'badge';
 
   if (animationMode === 'lsd') {
-    if (type === 'bg_chip') {
-      return colorizeBgSparkle(` ${icon} ${text} `, offset, bgOffset, colorMode, '\x1b[30m');
-    }
-    if (type === 'chip') {
-      return makeChip(bgColor, `${iconColor}${icon} ${colorizeText(text, offset, colorOffset, animationMode, colorMode)}`, chipStyle, colors);
+    if (type === 'bg_chip' || type === 'chip') {
+      return makeChip(bgColor, colorizeTextDark(`${icon} ${text}`, offset, colorOffset, animationMode, colorMode), chipStyle, colors);
     }
     // text
     return `${iconColor}${icon}${colors.RST} ${colorizeFgSparkle(text, offset, bgOffset, colorMode)}`;
+  }
+
+  if (animationMode === 'p.lsd') {
+    if (type === 'bg_chip' || type === 'chip') {
+      return makeChip(bgColor, colorizeTextDark(`${icon} ${text}`, offset, colorOffset, animationMode, colorMode), chipStyle, colors);
+    }
+    // text (theme 등): rainbow 텍스트 유지
+    return `${iconColor}${icon}${colors.RST} ${colorizeText(text, offset, colorOffset, animationMode, colorMode)}`;
   }
 
   if (isAnimated(animationMode)) {

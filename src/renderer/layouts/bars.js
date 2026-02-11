@@ -1,5 +1,5 @@
 // Bars layout (ported from bars.sh)
-import { colorizeText, colorizeBgSparkle } from '../animation.js';
+import { colorizeText, colorizeTextDark, getAnimatedBg, getAnimatedBadgeBg } from '../animation.js';
 import { formatContext, isAnimated, makeChip } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
@@ -11,15 +11,30 @@ export function render(ctx) {
   if (isAnimated(animationMode)) {
     // === Animated path ===
 
-    // Line 1: Location chip + Git chip + Context
-    const rawLoc = ` ${colors.icons.BRANCH} ${git.branch || 'branch'}    ${colors.icons.TREE} ${git.worktree || 'worktree'}    ${colors.icons.DIR} ${data.dirName} `;
-
-    let chipLoc;
+    // 애니메이션 모드별 배경 선택
+    let bgLoc, bgGit, bgSes;
     if (animationMode === 'lsd') {
-      chipLoc = colorizeBgSparkle(rawLoc, 0, bgOffset, colorMode, '\x1b[30m');
+      bgLoc = getAnimatedBg(0, bgOffset, animationMode, colorMode);
+      bgGit = getAnimatedBg(1, bgOffset, animationMode, colorMode);
+      bgSes = getAnimatedBg(2, bgOffset, animationMode, colorMode);
+    } else if (animationMode === 'p.lsd') {
+      bgLoc = getAnimatedBadgeBg(0, bgOffset, animationMode, colorMode);
+      bgGit = getAnimatedBadgeBg(3, bgOffset, animationMode, colorMode);
+      bgSes = getAnimatedBadgeBg(6, bgOffset, animationMode, colorMode);
+    } else {
+      bgLoc = colors.C_BG_LOC;
+      bgGit = colors.C_BG_GIT;
+      bgSes = colors.C_BG_SES;
+    }
+
+    // Line 1: Location chip + Git chip + Context
+    let chipLoc;
+    if (animationMode === 'lsd' || animationMode === 'p.lsd') {
+      const locContent = colorizeTextDark(`${colors.icons.BRANCH} ${git.branch || 'branch'}    ${colors.icons.TREE} ${git.worktree || 'worktree'}    ${colors.icons.DIR} ${data.dirName}`, 0, colorOffset, animationMode, colorMode);
+      chipLoc = makeChip(bgLoc, locContent, chipStyle, colors);
     } else {
       const locContent = `${colors.C_I_BRANCH}${colors.icons.BRANCH} ${colorizeText(git.branch || 'branch', 0, colorOffset, animationMode, colorMode)}    ${colors.C_I_TREE}${colors.icons.TREE} ${colorizeText(git.worktree || 'worktree', 10, colorOffset, animationMode, colorMode)}    ${colors.C_I_DIR}${colors.icons.DIR} ${colorizeText(data.dirName, 20, colorOffset, animationMode, colorMode)}`;
-      chipLoc = makeChip(colors.C_BG_LOC, locContent, chipStyle, colors);
+      chipLoc = makeChip(bgLoc, locContent, chipStyle, colors);
     }
 
     let chipGit;
@@ -29,20 +44,19 @@ export function render(ctx) {
       const del = git.deleted > 0 ? `-${git.deleted}` : '-0';
       const ahead = git.ahead > 0 ? `\u2191 ${git.ahead}` : '\u2191 0';
       const behind = git.behind > 0 ? `\u2193 ${git.behind}` : '\u2193 0';
-      const rawGit = ` ${colors.icons.GIT_STATUS} ${add}  ${mod}  ${del}    ${colors.icons.SYNC} ${ahead}  ${behind} `;
 
-      if (animationMode === 'lsd') {
-        chipGit = colorizeBgSparkle(rawGit, 30, bgOffset, colorMode, '\x1b[30m');
+      if (animationMode === 'lsd' || animationMode === 'p.lsd') {
+        const gitContent = colorizeTextDark(`${colors.icons.GIT_STATUS} ${add}  ${mod}  ${del}    ${colors.icons.SYNC} ${ahead}  ${behind}`, 30, colorOffset, animationMode, colorMode);
+        chipGit = makeChip(bgGit, gitContent, chipStyle, colors);
       } else {
         const gitContent = `${colors.C_I_STATUS}${colors.icons.GIT_STATUS} ${colorizeText(`${add}  ${mod}  ${del}`, 30, colorOffset, animationMode, colorMode)}    ${colors.C_I_SYNC}${colors.icons.SYNC} ${colorizeText(`${ahead}  ${behind}`, 40, colorOffset, animationMode, colorMode)}`;
-        chipGit = makeChip(colors.C_BG_GIT, gitContent, chipStyle, colors);
+        chipGit = makeChip(bgGit, gitContent, chipStyle, colors);
       }
     } else {
-      const rawGit = ` ${colors.icons.GIT_STATUS} status    ${colors.icons.SYNC} sync `;
-      if (animationMode === 'lsd') {
-        chipGit = colorizeBgSparkle(rawGit, 30, bgOffset, colorMode, '\x1b[30;2m');
+      if (animationMode === 'lsd' || animationMode === 'p.lsd') {
+        chipGit = makeChip(bgGit, colorizeTextDark(`${colors.icons.GIT_STATUS} ---    ${colors.icons.SYNC} ---`, 30, colorOffset, animationMode, colorMode), chipStyle, colors);
       } else {
-        chipGit = makeChip(colors.C_BG_GIT, `${colors.C_DIM_STATUS}${colors.icons.GIT_STATUS} ---    ${colors.C_DIM_SYNC}${colors.icons.SYNC} ---`, chipStyle, colors);
+        chipGit = makeChip(bgGit, `${colors.C_DIM_STATUS}${colors.icons.GIT_STATUS} ---    ${colors.C_DIM_SYNC}${colors.icons.SYNC} ---`, chipStyle, colors);
       }
     }
 
@@ -50,17 +64,15 @@ export function render(ctx) {
     const line1 = `${chipLoc}    ${chipGit}    ${ctxDisplay}`;
 
     // Line 2: Session chip + Theme
-    let sesRaw = ` ${colors.icons.MODEL} ${data.model}`;
-    if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
-      sesRaw += `     ${colors.icons.TIME} ${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`;
-    }
-    sesRaw += `     ${colors.icons.SESSION} ${data.sessionDurationMin}m`;
-    if (data.burnRate) sesRaw += `     ${colors.icons.COST} ${data.burnRate}`;
-    sesRaw += ' ';
-
     let chipSes;
-    if (animationMode === 'lsd') {
-      chipSes = colorizeBgSparkle(sesRaw, 50, bgOffset, colorMode, '\x1b[30m');
+    if (animationMode === 'lsd' || animationMode === 'p.lsd') {
+      let sesRawText = `${colors.icons.MODEL} ${data.model}`;
+      if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
+        sesRawText += `     ${colors.icons.TIME} ${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`;
+      }
+      sesRawText += `     ${colors.icons.SESSION} ${data.sessionDurationMin}m`;
+      if (data.burnRate) sesRawText += `     ${colors.icons.COST} ${data.burnRate}`;
+      chipSes = makeChip(bgSes, colorizeTextDark(sesRawText, 50, colorOffset, animationMode, colorMode), chipStyle, colors);
     } else {
       let sesAnimated = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colorizeText(data.model, 50, colorOffset, animationMode, colorMode)}`;
       if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
@@ -70,7 +82,7 @@ export function render(ctx) {
       if (data.burnRate) {
         sesAnimated += `     ${colors.C_I_BURN}${colors.icons.COST} ${colorizeText(data.burnRate, 80, colorOffset, animationMode, colorMode)}`;
       }
-      chipSes = makeChip(colors.C_BG_SES, sesAnimated, chipStyle, colors);
+      chipSes = makeChip(bgSes, sesAnimated, chipStyle, colors);
     }
 
     const chipTheme = colorizeText(`${colors.icons.THEME} ${data.themeName}`, 0, colorOffset, animationMode, colorMode);

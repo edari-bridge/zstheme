@@ -1,0 +1,19 @@
+#!/bin/bash
+# p.lsd-badges - Pastel LSD (Badges)
+# badges 레이아웃에 p.lsd 애니메이션 (badge 스타일 파스텔 배경)
+
+_PLSD_SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$_PLSD_SOURCE" ]]; do
+    _PLSD_DIR="$(cd -P "$(dirname "$_PLSD_SOURCE")" && pwd)"
+    _PLSD_SOURCE="$(readlink "$_PLSD_SOURCE")"
+    [[ "$_PLSD_SOURCE" != /* ]] && _PLSD_SOURCE="$_PLSD_DIR/$_PLSD_SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$_PLSD_SOURCE")" && pwd)"
+
+COLOR_MODE="pastel"
+ANIMATION_MODE="p.lsd"
+LAYOUT_MODE="badges"
+ICON_MODE="emoji"
+
+source "$SCRIPT_DIR/_modules/loader.sh"
+load_modules

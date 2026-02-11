@@ -26,7 +26,7 @@ export function computeOffsets(animationMode, colorMode) {
   if (animationMode === 'lsd') {
     colorOffset = (ts * 41) % PALETTE_SIZE;
     bgOffset = (ts * 37) % PALETTE_SIZE;
-  } else if (animationMode === 'rainbow') {
+  } else if (animationMode === 'rainbow' || animationMode === 'p.lsd') {
     colorOffset = (ts * 41) % PALETTE_SIZE;
     bgOffset = (colorOffset + 30) % PALETTE_SIZE;
   } else {
@@ -53,6 +53,27 @@ export function colorizeText(text, startIdx = 0, colorOffset = 0, animationMode 
     const idx = ((startIdx + i * CHAR_STRIDE + colorOffset) % PALETTE_SIZE + PALETTE_SIZE) % PALETTE_SIZE;
     const [r, g, b] = palette[idx];
     result += `${ESC}[1;38;2;${r};${g};${b}m${chars[i]}`;
+  }
+
+  return result + `${ESC}[22;39m`;
+}
+
+// Dark Rainbow: 어두운 톤 빠른 글자 색상 순환 (p.lsd/lsd 공용)
+// 단색 배경 위에서 사용 (bg는 호출 측에서 설정)
+const DARK_STRIDE = 11;
+
+export function colorizeTextDark(text, startIdx = 0, colorOffset = 0, animationMode = 'rainbow', colorMode = 'pastel') {
+  const palette = getPalette(animationMode, colorMode);
+  const chars = [...text];
+  let result = '';
+
+  for (let i = 0; i < chars.length; i++) {
+    const idx = ((startIdx + i * DARK_STRIDE + colorOffset) % PALETTE_SIZE + PALETTE_SIZE) % PALETTE_SIZE;
+    const [r, g, b] = palette[idx];
+    const dr = Math.floor(r * 0.4);
+    const dg = Math.floor(g * 0.4);
+    const db = Math.floor(b * 0.4);
+    result += `${ESC}[38;2;${dr};${dg};${db}m${chars[i]}`;
   }
 
   return result + `${ESC}[22;39m`;

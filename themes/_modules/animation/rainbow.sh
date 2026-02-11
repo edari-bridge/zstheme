@@ -98,6 +98,36 @@ colorize_text() {
     echo -e "${result}\033[22;39m"
 }
 
+# Dark Rainbow: 어두운 톤 빠른 글자 색상 순환 (p.lsd/lsd 공용)
+# 단색 배경 위에서 사용 (bg는 호출 측에서 설정)
+colorize_text_dark() {
+    local text="$1"
+    local start_idx="${2:-0}"
+    local result=""
+    local len=${#text}
+
+    for ((i=0; i<len; i++)); do
+        local char="${text:$i:1}"
+
+        # Stride 11 (빠른 순환)
+        local color_idx=$(( (start_idx + (i * 11) + COLOR_OFFSET) % 60 ))
+
+        local rgb
+        if [[ "$COLOR_MODE" == "mono" ]]; then
+            rgb="${MONO_CYCLE[$color_idx]}"
+        elif [[ "$ANIMATION_MODE" == "lsd" ]]; then
+            rgb="${LSD_COLORS[$color_idx]}"
+        else
+            rgb="${RAINBOW_COLORS[$color_idx]}"
+        fi
+        IFS=';' read -r r g b <<< "$rgb"
+        r=$(( r * 2 / 5 )); g=$(( g * 2 / 5 )); b=$(( b * 2 / 5 ))
+        result+="\033[38;2;${r};${g};${b}m${char}"
+    done
+
+    echo -e "${result}\033[22;39m"
+}
+
 get_animated_color() {
     local idx="$1"
     local actual_idx=$(( (idx + COLOR_OFFSET) % 60 ))

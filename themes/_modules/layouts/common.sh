@@ -4,7 +4,7 @@
 
 # Animation mode check (shared by all layouts)
 is_animated() {
-    [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" ]]
+    [[ "$ANIMATION_MODE" == "lsd" || "$ANIMATION_MODE" == "rainbow" || "$ANIMATION_MODE" == "p.lsd" ]]
 }
 
 # Render text with animation or static color
@@ -74,8 +74,14 @@ make_animated_content() {
 
     if [[ "$ANIMATION_MODE" == "lsd" ]]; then
         case "$type" in
-            bg_chip) colorize_bg_lsd " ${icon} ${text} " "$offset" "\033[30m" ;;
+            bg_chip) make_chip "$bg_color" "$(colorize_text_dark "${icon} ${text}" "$offset")" ;;
             chip) make_chip "$bg_color" "${icon_color}${icon} $(colorize_text "$text" "$offset")" ;;
+            text) echo "${icon_color}${icon}${RST} $(colorize_text "$text" "$offset")" ;;
+        esac
+    elif [[ "$ANIMATION_MODE" == "p.lsd" ]]; then
+        case "$type" in
+            bg_chip) make_chip "$bg_color" "$(colorize_text_dark "${icon} ${text}" "$offset")" ;;
+            chip) make_chip "$bg_color" "$(colorize_text_dark "${icon} ${text}" "$offset")" ;;
             text) echo "${icon_color}${icon}${RST} $(colorize_text "$text" "$offset")" ;;
         esac
     elif is_animated; then

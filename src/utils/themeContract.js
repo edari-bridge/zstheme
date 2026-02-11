@@ -7,6 +7,15 @@ export const ICON_MODES = ['', '-nerd'];
 
 const ALL_ANIMATIONS = [...ANIMATION_MODES, ...HIDDEN_ANIMATION_MODES];
 
+// 독립 테마: contract 네이밍 규칙을 따르지 않는 특수 테마
+// 독립 테마: contract 네이밍 규칙을 따르지 않는 특수 테마
+export const STANDALONE_THEMES = {
+  'p.lsd-bars': { color: 'pastel', animation: 'p.lsd', layout: 'bars', icon: 'emoji', hidden: true },
+  'p.lsd-bars-nerd': { color: 'pastel', animation: 'p.lsd', layout: 'bars', icon: 'nerd', hidden: true },
+  'p.lsd-badges': { color: 'pastel', animation: 'p.lsd', layout: 'badges', icon: 'emoji', hidden: true },
+  'p.lsd-badges-nerd': { color: 'pastel', animation: 'p.lsd', layout: 'badges', icon: 'nerd', hidden: true },
+};
+
 function stripColorPrefix(themeName) {
   if (themeName.startsWith('custom-')) return { color: 'custom', rest: themeName.slice(7) };
   if (themeName.startsWith('mono-')) return { color: 'mono', rest: themeName.slice(5) };
@@ -24,6 +33,12 @@ function stripAnimationPrefix(themeName) {
 }
 
 export function parseThemeContract(themeName) {
+  // 독립 테마 우선 확인
+  if (STANDALONE_THEMES[themeName]) {
+    const { hidden, ...meta } = STANDALONE_THEMES[themeName];
+    return meta;
+  }
+
   let name = themeName;
   let icon = 'emoji';
 
@@ -44,6 +59,10 @@ export function parseThemeContract(themeName) {
 }
 
 export function isValidTheme(themeName, { includeHidden = true } = {}) {
+  if (STANDALONE_THEMES[themeName]) {
+    return includeHidden || !STANDALONE_THEMES[themeName].hidden;
+  }
+
   const parsed = parseThemeContract(themeName);
   if (!parsed.layout) return false;
 

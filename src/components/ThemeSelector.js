@@ -22,9 +22,9 @@ function isSep(item) {
   return item && typeof item === 'string' && item.startsWith(SEP_PREFIX);
 }
 
-// All 탭: 레이아웃 그룹 사이에 padding + separator row 삽입
+// All / LSD 탭: 레이아웃 그룹 사이에 padding + separator row 삽입
 function buildDisplayList(themes, activeTab) {
-  if (activeTab !== 'All') return themes;
+  if (activeTab !== 'All' && activeTab !== 'LSD') return themes;
 
   const result = [];
   let lastLayout = null;
@@ -91,7 +91,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const [toast, setToast] = useState(null);
 
   // Filter + display list (All 탭: separator 포함)
-  const filteredThemes = useMemo(() => filterThemesByTab(allThemes, activeTab, isLsdUnlocked), [allThemes, activeTab, isLsdUnlocked]);
+  const filteredThemes = useMemo(() => {
+    const filtered = filterThemesByTab(allThemes, activeTab, isLsdUnlocked);
+    return activeTab === 'LSD' ? sortThemes(filtered, true) : filtered;
+  }, [allThemes, activeTab, isLsdUnlocked]);
   const displayList = useMemo(() => buildDisplayList(filteredThemes, activeTab), [filteredThemes, activeTab]);
 
   const safeIndex = useMemo(() => {
@@ -108,7 +111,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const isAnimatedTheme = useMemo(() => {
     if (!selectedTheme) return false;
     const parsed = parseThemeName(selectedTheme);
-    return parsed.animation === 'rainbow' || parsed.animation === 'lsd';
+    return parsed.animation !== 'static';
   }, [selectedTheme]);
 
   const [previewTick, setPreviewTick] = useState(0);
@@ -234,7 +237,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       const layoutName = theme.slice(SEP_PREFIX.length + 2);
       let content;
       if (pos === 'L') {
-        content = e(Text, { dimColor: true }, `  `, e(Text, { italic: true }, layoutName), ` ────`);
+        content = e(Text, { dimColor: true }, `  ____`, e(Text, { italic: true }, layoutName), `____`);
       } else {
         content = null;
       }

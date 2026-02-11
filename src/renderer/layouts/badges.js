@@ -1,5 +1,5 @@
 // Badges layout (ported from badges.sh)
-import { colorizeText, colorizeBgSparkle, getAnimatedBadgeBg } from '../animation.js';
+import { colorizeText, getAnimatedBadgeBg } from '../animation.js';
 import { applyAnimation, formatContext, isAnimated, makeChip } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
@@ -14,9 +14,9 @@ export function render(ctx) {
   else if (data.contextPct >= 50) bgCtx = colors.C_BG_CTX_WARN;
   else bgCtx = colors.C_BG_CTX;
 
-  // Badge backgrounds
+  // Badge backgrounds: lsd만 animated, rainbow는 정적 배경
   let bgBranch, bgTree, bgDir, bgStatus, bgSync, bgModel, bgRate, bgTime, bgBurn;
-  if (isAnimated(animationMode)) {
+  if (animationMode === 'lsd' || animationMode === 'p.lsd') {
     bgBranch = getAnimatedBadgeBg(0, bgOffset, animationMode, colorMode);
     bgTree = getAnimatedBadgeBg(1, bgOffset, animationMode, colorMode);
     bgDir = getAnimatedBadgeBg(2, bgOffset, animationMode, colorMode);

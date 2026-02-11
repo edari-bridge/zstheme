@@ -48,7 +48,7 @@ load_modules() {
 
     # 3. 애니메이션 모듈 로드
     case "$ANIMATION_MODE" in
-        lsd|rainbow)
+        lsd|rainbow|p.lsd)
             source "$MODULES_DIR/animation/rainbow.sh"
             ;;
         *)
