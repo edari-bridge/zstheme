@@ -16,39 +16,108 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 ## Quick Start
 
 ```bash
-# One-line install (requires Node.js 18+)
+# 1. Install (requires Node.js 18+)
 curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
 
-# Select a theme interactively
+# 2. Pick a theme
 zstheme
+
+# 3. Restart Claude Code
 ```
 
-## Theme System
+## Usage
 
-### Theme Format
+### Pick a Theme
+
+```bash
+zstheme                       # Interactive selector (arrow keys + live preview)
+zstheme rainbow-bars-nerd     # Apply directly by name
+```
+
+Theme names follow this pattern:
 
 ```
 [mono-|custom-][rainbow-]{layout}[-nerd]
 ```
 
-| Component | Options | Description |
-|-----------|---------|-------------|
-| **Layout** | `1line`, `2line`, `card`, `bars`, `badges` | Required - Visual layout |
-| **Color** | (none)=pastel, `mono-`, `custom-` | Color palette (pick one) |
-| **Animation** | (none)=static, `rainbow-` | Animation effect |
-| **Icons** | (none), `-nerd` | Icon set (requires Nerd Font) |
-
-### Examples
+| Part | Options | Default |
+|------|---------|---------|
+| Color | `mono-`, `custom-` | pastel |
+| Animation | `rainbow-` | static |
+| Layout | `1line`, `2line`, `card`, `bars`, `badges` | (required) |
+| Icons | `-nerd` | emoji |
 
 ```bash
-zstheme 2line              # Classic 2-line layout
-zstheme bars-nerd          # Grouped bars with Nerd Font
-zstheme mono-card          # Monochrome card style
-zstheme rainbow-badges-nerd # Rainbow animation with Nerd Font
-zstheme custom-2line       # Your custom colors + 2-line layout
+# Examples
+zstheme 2line                  # Pastel + static + 2line + emoji
+zstheme mono-card              # Monochrome card
+zstheme rainbow-badges-nerd    # Rainbow animation + Nerd Font
+zstheme custom-2line           # Your custom colors
 ```
 
-### Layout Previews
+### Browse & Filter
+
+```bash
+zstheme --list                 # List all 50 themes
+zstheme --list --bars          # List only bars layouts
+zstheme --list --mono          # List only mono themes
+zstheme --preview              # Preview sample themes
+zstheme --preview-all          # Preview all themes
+```
+
+Filters: `--1line` `--2line` `--card` `--bars` `--badges` `--mono` `--custom` `--rainbow` `--nerd`
+
+### Color Editor
+
+```bash
+zstheme --edit                 # Launch interactive color editor
+```
+
+| Key | Action |
+|-----|--------|
+| `↑↓` / `j/k` | Navigate elements |
+| `←→` | Adjust color (±1) |
+| `+/-` | Adjust color (±10) |
+| `Tab` | Switch foreground/background |
+| `s` | Save |
+| `r` | Reset to defaults |
+| `q` | Quit |
+
+Colors are saved to `~/.config/zstheme/custom-color.sh`. Use with any layout: `zstheme custom-bars`
+
+### Usage Stats
+
+```bash
+zstheme --status               # Full usage statistics
+zstheme --dashboard            # Compact dashboard
+```
+
+Claude Code skills (type inside Claude Code):
+
+```
+/dashboard                     # Same as zstheme --dashboard
+/dashboard-full                # Same as zstheme --status
+```
+
+<details>
+<summary>Install skills</summary>
+
+```bash
+mkdir -p ~/.claude/commands
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/commands/dashboard.md
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/commands/dashboard-full.md
+```
+
+</details>
+
+### Enable / Disable
+
+```bash
+zstheme --disable              # Disable zstheme (restore original statusline)
+zstheme --enable               # Re-enable zstheme
+```
+
+## Layouts
 
 **2line** - Classic two-line layout
 ```
@@ -82,75 +151,6 @@ zstheme custom-2line       # Your custom colors + 2-line layout
  🔱 main   🌿 project   📂 src    💾 +2 ~1 -0   🔮 ↑1 ↓0    🔋 35%
  🧠 Opus 4.5   ⏳ 2h·04:00 42%   💬 42m   💰 $4.76/h    🎨 badges
 ```
-
-## CLI Commands
-
-```bash
-zstheme              # Interactive theme selector
-zstheme <theme>      # Show how to apply a theme
-zstheme --list       # List all public theme combinations
-zstheme --preview    # Preview sample themes
-zstheme --preview-all # Preview all themes
-zstheme --edit       # Launch color editor
-zstheme --status      # Show full usage statistics
-zstheme --dashboard   # Show compact usage dashboard
-zstheme --help       # Show help
-zstheme --version    # Show version
-```
-
-### Filter Options
-
-| Option | Description |
-|--------|-------------|
-| `--1line` | Show only 1line layout themes |
-| `--2line` | Show only 2line layout themes |
-| `--card` | Show only card layout themes |
-| `--bars` | Show only bars layout themes |
-| `--badges` | Show only badges layout themes |
-| `--mono` | Show only monochrome themes |
-| `--custom` | Show only custom color themes |
-| `--rainbow` | Show only rainbow animation themes |
-| `--nerd` | Show only Nerd Font themes |
-
-### Statusline Toggle
-
-```bash
-zstheme --disable    # Disable zstheme (restore original statusline)
-zstheme --enable     # Enable zstheme statusline
-```
-
-### Claude Code Skills
-
-Use skills directly in Claude Code:
-
-```bash
-# In Claude Code, type:
-/dashboard       # Compact dashboard (zstheme --dashboard)
-/dashboard-full  # Full status view (zstheme --status)
-```
-
-To install the skills:
-```bash
-mkdir -p ~/.claude/commands
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/commands/dashboard.md
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/commands/dashboard-full.md
-```
-
-## Color Editor
-
-Customize your own color scheme with the interactive editor:
-
-```bash
-zstheme --edit
-```
-
-- Navigate with `↑↓` or `j/k`
-- Adjust colors with `←→` (±1) or `+/-` (±10)
-- Switch between foreground/background with `Tab`
-- Save with `s`, reset with `r`, quit with `q`
-
-Colors are saved to `~/.config/zstheme/custom-color.sh`.
-Use with any layout: `export CLAUDE_THEME="custom-2line"`
 
 ## Installation
 
