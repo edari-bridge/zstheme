@@ -66,7 +66,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   const height = Math.max(28, rows - 4);
   const lsdBorderColor = useLsdBorderAnimation(isLsdUnlocked);
 
-  const baseBorderColor = 'magenta';
+  const baseBorderColor = 'cyan';
   const borderColor = isLsdUnlocked ? lsdBorderColor : baseBorderColor;
 
   const currentThemeName = getCurrentTheme();
@@ -287,10 +287,10 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       marginBottom: 1
     },
       isLsdUnlocked
-        ? e(Text, null, ...[...' ✨ Theme Explorer'].map((ch, i) =>
+        ? e(Text, null, ...[...' ✨ Theme Explorer ✨ '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' 🎨 Theme Explorer')
+        : e(Text, { bold: true, color: 'cyan' }, ' Theme Explorer')
     ),
 
     // Main Content

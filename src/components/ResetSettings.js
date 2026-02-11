@@ -100,10 +100,10 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
       marginBottom: 1
     },
       isLsdUnlocked
-        ? e(Text, null, ...[...' 💀 Reset Settings'].map((ch, i) =>
+        ? e(Text, null, ...[...' 💀 Reset Settings 💀 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'red' }, ' ⚙️ Reset Settings')
+        : e(Text, { bold: true, color: 'red' }, ' Reset Settings')
     ),
 
     // Main Content
@@ -184,7 +184,7 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
     // Footer - Mode label
     e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
       isLsdUnlocked
-        ? e(Text, null, ...[...'🌈 LSD MODE ACTIVE 🌈'].map((ch, i) =>
+        ? e(Text, null, ...'🌈 LSD MODE ACTIVE 🌈'.split('').map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
         : e(Text, { dimColor: true }, 'MODE: STANDARD')

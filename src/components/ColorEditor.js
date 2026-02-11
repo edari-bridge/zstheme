@@ -233,10 +233,10 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       width: '100%'
     },
       isLsdUnlocked
-        ? e(Text, null, ...[...' 🌈 Color Editor'].map((ch, i) =>
+        ? e(Text, null, ...[...' 🌈 Color Editor 🌈 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' ✏️ Color Editor')
+        : e(Text, { bold: true, color: 'cyan' }, ' Color Editor')
     ),
 
     // Main Content (flexGrow pushes footer to bottom)

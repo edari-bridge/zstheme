@@ -185,27 +185,25 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
     width,
     height,
     borderStyle: 'double',
-    borderColor: focusArea === 'menu' ? 'cyan' : 'gray',
+    borderColor: isLsdUnlocked ? lsdBorderColor : (focusArea === 'menu' ? 'cyan' : 'gray'),
     paddingX: 1
   },
     // Header
     e(Box, {
-      justifyContent: 'space-between',
+      justifyContent: 'center',
       borderStyle: 'single',
       borderTop: false,
       borderLeft: false,
       borderRight: false,
       borderColor: 'gray',
       paddingBottom: 0,
-      marginBottom: 1,
-      paddingX: 1
+      marginBottom: 1
     },
       isLsdUnlocked
-        ? e(Text, null, ...[...' 🔮 Dashboard'].map((ch, i) =>
+        ? e(Text, null, ...[...' 🔮 Dashboard 🔮 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' 📊 Dashboard'),
-      e(Text, { dimColor: true }, `${new Date().toISOString().split('T')[0]}`)
+        : e(Text, { bold: true, color: 'cyan' }, ' Dashboard')
     ),
 
     // Main Layout
