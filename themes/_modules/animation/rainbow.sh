@@ -169,15 +169,16 @@ get_animated_battery_color() {
         local idx=$(( (TIMESTAMP % 8) ))
         echo "\033[48;5;$((236 + idx))m"
     elif [[ "$ANIMATION_MODE" == "lsd" ]]; then
-        # LSD Battery: 넓은 범위 + 빠른 사이클(3x) + RANDOM 섭동
-        # Normal(>50%): Green  indices 40-59 (range 20)
-        # Warn(20-50%): Yellow indices 0-15  (range 16)
-        # Crit(<20%):   Red    indices 5-25  (range 21)
+        # LSD Battery: 빠른 사이클(3x) + RANDOM 섭동
+        # Thresholds match static mode (CONTEXT_PCT: >=70 red, >=50 yellow, else green)
+        # Normal(<50%): Green  indices 40-59 (range 20)
+        # Warn(50-70%): Yellow indices 0-15  (range 16)
+        # Crit(>=70%):  Red    indices 5-25  (range 21)
         local start_i=40
         local range=20
-        if [[ "${BATTERY_PCT:-100}" -le 20 ]]; then
+        if [[ "${CONTEXT_PCT:-0}" -ge 70 ]]; then
              start_i=5; range=21
-        elif [[ "${BATTERY_PCT:-100}" -le 50 ]]; then
+        elif [[ "${CONTEXT_PCT:-0}" -ge 50 ]]; then
              start_i=0; range=16
         fi
 
@@ -186,9 +187,23 @@ get_animated_battery_color() {
 
         echo "\033[48;2;${LSD_COLORS[$final_idx]}m"
     else
-        # Rainbow: Full Spectrum Cycle
-        local idx=$(( TIMESTAMP % 60 ))
-        echo "\033[48;2;${RAINBOW_COLORS[$idx]}m"
+        # Rainbow: Context-Aware Pastel Cycle
+        # Thresholds match static mode (CONTEXT_PCT: >=70 red, >=50 yellow, else green)
+        # Normal(<50%): Green/Cyan    indices 44-56 (range 13)
+        # Warn(50-70%): Yellow/Orange indices 7-16  (range 10)
+        # Crit(>=70%):  Salmon/Rose   indices 18-27 (range 10)
+        local start_i=44
+        local range=13
+        if [[ "${CONTEXT_PCT:-0}" -ge 70 ]]; then
+             start_i=18; range=10
+        elif [[ "${CONTEXT_PCT:-0}" -ge 50 ]]; then
+             start_i=7; range=10
+        fi
+
+        local offset=$(( TIMESTAMP % range ))
+        local final_idx=$(( (start_i + offset) % 60 ))
+
+        echo "\033[48;2;${RAINBOW_COLORS[$final_idx]}m"
     fi
 }
 

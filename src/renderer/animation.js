@@ -123,6 +123,9 @@ export function getAnimatedBadgeBg(elementIdx, bgOffset, animationMode, colorMod
 }
 
 // Animated battery color for card layout (get_animated_battery_color)
+// batteryPct = remaining = 100 - contextPct (higher = healthier)
+// Thresholds match static mode: contextPct>=70 → critical, >=50 → warning
+// In remaining terms: <=30 → critical, <=50 → warning
 export function getAnimatedBatteryColor(timestamp, animationMode, colorMode, batteryPct = 100) {
   // Intentional: 2% white flash for sparkle visual effect
   if (Math.random() < FLASH_PROBABILITY) {
@@ -135,8 +138,9 @@ export function getAnimatedBatteryColor(timestamp, animationMode, colorMode, bat
   }
 
   if (animationMode === 'lsd') {
+    // LSD: fast cycle(3x) + random perturbation within context-aware range
     let startI = 40, range = 20;
-    if (batteryPct <= 20) { startI = 5; range = 21; }
+    if (batteryPct <= 30) { startI = 5; range = 21; }
     else if (batteryPct <= 50) { startI = 0; range = 16; }
     const offset = ((timestamp * LSD_SPEED_MULTIPLIER + Math.floor(Math.random() * LSD_RANDOM_PERTURBATION)) % range + range) % range;
     const finalIdx = (startI + offset) % PALETTE_SIZE;
@@ -144,9 +148,16 @@ export function getAnimatedBatteryColor(timestamp, animationMode, colorMode, bat
     return `${ESC}[48;2;${r};${g};${b}m`;
   }
 
-  // Rainbow: full spectrum cycle
-  const idx = timestamp % PALETTE_SIZE;
-  const [r, g, b] = RAINBOW_COLORS[idx];
+  // Rainbow: context-aware pastel cycle
+  // Normal(>50%): Green/Cyan    indices 44-56 (range 13)
+  // Warn(30-50%): Yellow/Orange indices 7-16  (range 10)
+  // Crit(<=30%):  Salmon/Rose   indices 18-27 (range 10)
+  let startI = 44, range = 13;
+  if (batteryPct <= 30) { startI = 18; range = 10; }
+  else if (batteryPct <= 50) { startI = 7; range = 10; }
+  const offset = ((timestamp % range) + range) % range;
+  const finalIdx = (startI + offset) % PALETTE_SIZE;
+  const [r, g, b] = RAINBOW_COLORS[finalIdx];
   return `${ESC}[48;2;${r};${g};${b}m`;
 }
 
