@@ -27,6 +27,12 @@ if ($ScriptDir -and (Test-Path "$ScriptDir\statusline.sh") -and (Test-Path "$Scr
 }
 
 if ($RemoteInstall) {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-Host "Error: git is required but not installed." -ForegroundColor Red
+        Write-Host "Please install git: https://git-scm.com"
+        exit 1
+    }
+
     Write-Host "Installing to: $InstallDir" -ForegroundColor Blue
     if (Test-Path $InstallDir) {
         Write-Host "Updating existing installation..." -ForegroundColor Yellow
