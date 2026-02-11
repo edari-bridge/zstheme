@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
 import { getUsageStats, getDashboardPreview } from '../utils/stats.js';
-import { formatCurrency, formatNumber } from '../constants.js';
+import { formatCurrency, formatNumber, LSD_COLORS } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -268,7 +268,16 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
       )
     ),
 
-    // Footer
+    // Footer - Mode label
+    e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
+      isLsdUnlocked
+        ? e(Text, null, ...'🌈 LSD MODE ACTIVE 🌈'.split('').map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { dimColor: true }, 'MODE: STANDARD')
+    ),
+
+    // Footer - Keybindings
     e(Box, {
       borderStyle: 'single',
       borderBottom: false, borderLeft: false, borderRight: false,

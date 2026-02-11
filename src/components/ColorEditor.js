@@ -8,7 +8,7 @@ import {
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
-import { LAYOUTS, ICONS, ANIMATION_INTERVAL } from '../constants.js';
+import { LAYOUTS, ICONS, ANIMATION_INTERVAL, LSD_COLORS } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -373,6 +373,15 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       )
     ),
     ), // end Main Content
+
+    // Footer - Mode label
+    e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
+      isLsdUnlocked
+        ? e(Text, null, ...'🌈 LSD MODE ACTIVE 🌈'.split('').map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { dimColor: true }, 'MODE: STANDARD')
+    ),
 
     // Help text
     e(Box, { width: '100%', paddingX: 1, alignItems: 'center', justifyContent: 'space-between', borderStyle: 'single', borderBottom: false, borderLeft: false, borderRight: false, borderColor: 'gray' },

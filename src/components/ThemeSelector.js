@@ -4,7 +4,7 @@ import { getAllThemes, getCurrentTheme, sortThemes, parseThemeName, filterThemes
 import { renderThemePreview } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
-import { ANIMATION_INTERVAL } from '../constants.js';
+import { ANIMATION_INTERVAL, LSD_COLORS } from '../constants.js';
 
 const e = React.createElement;
 
@@ -331,8 +331,11 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
 
     // Footer - MODE label
     e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
-      e(Text, { dimColor: true, color: isLsdUnlocked ? lsdBorderColor : undefined },
-        isLsdUnlocked ? 'MODE: LSD ACTIVE' : 'MODE: STANDARD')
+      isLsdUnlocked
+        ? e(Text, null, ...'🌈 LSD MODE ACTIVE 🌈'.split('').map((ch, i) =>
+            e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
+          ))
+        : e(Text, { dimColor: true }, 'MODE: STANDARD')
     ),
 
     // Footer - Keybindings
