@@ -1,7 +1,7 @@
 {
   "name": "zstheme",
   "version": "2.1.0",
-  "description": "Claude Code Statusline Theme Manager - 60+ customizable themes",
+  "description": "Claude Code Statusline Theme Manager - 50 customizable themes",
   "main": "src/index.js",
   "bin": {
     "zstheme": "./bin/zstheme.js"

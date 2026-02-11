@@ -6,7 +6,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 ## Features
 
-- **60+ Theme Combinations** - Mix layouts, colors, animations, and icons
+- **50 Theme Combinations** - Mix layouts, colors, animations, and icons
 - **Interactive Selector** - Preview themes in real-time with arrow keys
 - **Color Editor** - Customize colors with tweakcc-style interface
 - **Git Integration** - Branch, worktree, file changes, push/pull status
@@ -110,14 +110,13 @@ zstheme --version    # Show version
 | `--mono` | Show only monochrome themes |
 | `--custom` | Show only custom color themes |
 | `--rainbow` | Show only rainbow animation themes |
-| `--lsd` | Show only LSD animation themes |
 | `--nerd` | Show only Nerd Font themes |
 
 ### Statusline Toggle
 
 ```bash
-zstheme --original   # Restore original statusline (before zstheme)
-zstheme --activate   # Re-activate zstheme statusline
+zstheme --disable    # Disable zstheme (restore original statusline)
+zstheme --enable     # Enable zstheme statusline
 ```
 
 ### Claude Code Skills
