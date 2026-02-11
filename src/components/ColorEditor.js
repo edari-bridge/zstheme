@@ -8,7 +8,7 @@ import {
   saveCustomColors,
   resetToDefaults
 } from '../utils/colors.js';
-import { LAYOUTS, ICONS, ANIMATION_INTERVAL, LSD_COLORS } from '../constants.js';
+import { LAYOUTS, ICONS, ANIMATION_INTERVAL, LSD_COLORS, VERSION } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -224,7 +224,7 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
   },
     // Header
     e(Box, {
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       borderStyle: 'single',
       borderTop: false, borderLeft: false, borderRight: false,
       borderColor: 'gray',
@@ -236,7 +236,8 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         ? e(Text, null, ...[...' 🌈 Color Editor 🌈 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' Color Editor')
+        : e(Text, { bold: true, color: 'cyan' }, ' Color Editor'),
+      e(Text, { dimColor: true }, `v${VERSION}`)
     ),
 
     // Main Content (flexGrow pushes footer to bottom)

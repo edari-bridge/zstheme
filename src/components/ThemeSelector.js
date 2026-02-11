@@ -4,7 +4,7 @@ import { getAllThemes, getCurrentTheme, sortThemes, parseThemeName, filterThemes
 import { renderThemePreview } from '../utils/preview.js';
 import { saveThemeToShellConfig } from '../utils/shell.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
-import { ANIMATION_INTERVAL, LSD_COLORS } from '../constants.js';
+import { ANIMATION_INTERVAL, LSD_COLORS, VERSION } from '../constants.js';
 
 const e = React.createElement;
 
@@ -277,7 +277,7 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
   },
     // Header
     e(Box, {
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       borderStyle: 'single',
       borderTop: false,
       borderLeft: false,
@@ -290,7 +290,8 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
         ? e(Text, null, ...[...' ✨ Theme Explorer ✨ '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' Theme Explorer')
+        : e(Text, { bold: true, color: 'cyan' }, ' Theme Explorer'),
+      e(Text, { dimColor: true }, `v${VERSION}`)
     ),
 
     // Main Content

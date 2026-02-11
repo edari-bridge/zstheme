@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { resetTheme } from '../utils/shell.js';
 import { uninstallAllSkills } from '../utils/skills.js';
-import { LSD_COLORS } from '../constants.js';
+import { LSD_COLORS, VERSION } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -90,7 +90,7 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
   },
     // Header
     e(Box, {
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       borderStyle: 'single',
       borderTop: false,
       borderLeft: false,
@@ -103,7 +103,8 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
         ? e(Text, null, ...[...' 💀 Reset Settings 💀 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'red' }, ' Reset Settings')
+        : e(Text, { bold: true, color: 'red' }, ' Reset Settings'),
+      e(Text, { dimColor: true }, `v${VERSION}`)
     ),
 
     // Main Content

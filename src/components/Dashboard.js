@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
 import { getUsageStats, getDashboardPreview, loadRateLimitAsync } from '../utils/stats.js';
-import { formatCurrency, formatNumber, LSD_COLORS } from '../constants.js';
+import { formatCurrency, formatNumber, LSD_COLORS, VERSION } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
@@ -188,7 +188,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
   },
     // Header
     e(Box, {
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       borderStyle: 'single',
       borderTop: false,
       borderLeft: false,
@@ -201,7 +201,8 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         ? e(Text, null, ...[...' 🔮 Dashboard 🔮 '].map((ch, i) =>
             e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(lsdBorderColor)) % LSD_COLORS.length], bold: true }, ch)
           ))
-        : e(Text, { bold: true, color: 'cyan' }, ' Dashboard')
+        : e(Text, { bold: true, color: 'cyan' }, ' Dashboard'),
+      e(Text, { dimColor: true }, `v${VERSION}`)
     ),
 
     // Main Layout
