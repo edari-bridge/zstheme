@@ -142,18 +142,23 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
 
           if (item.type === 'action') {
             return e(Box, { key: item.id, marginTop: 1 },
+              e(Text, { color: isSelected ? (isLsdUnlocked ? lsdBorderColor : 'red') : 'gray' },
+                isSelected ? '▸ ' : '  '
+              ),
               e(Text, {
                 color: isSelected ? 'red' : 'gray',
                 bold: isSelected
-              }, isSelected ? `> ${item.label}` : `  ${item.label}`)
+              }, item.label)
             );
           }
           return e(Box, { key: item.id, marginTop: index === 0 ? 1 : 0 },
+            e(Text, { color: isSelected ? (isLsdUnlocked ? lsdBorderColor : 'red') : 'gray' },
+              isSelected ? '▸ ' : '  '
+            ),
             e(Text, {
-              color: isSelected ? 'black' : 'red',
-              backgroundColor: isSelected ? 'red' : undefined,
+              color: isSelected ? 'red' : 'white',
               bold: isSelected
-            }, isSelected ? ` > ${item.label} ` : `   ${item.label} `)
+            }, item.label)
           );
         })
       ),

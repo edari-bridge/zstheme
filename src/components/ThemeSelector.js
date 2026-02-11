@@ -254,12 +254,14 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       height: 1,
       marginBottom: 1,
     },
+      e(Text, { color: isSelected ? (isLsdUnlocked ? borderColor : 'cyan') : 'gray' },
+        isSelected ? '▸ ' : '  '
+      ),
       e(Text, {
-        color: isSelected ? 'black' : (isCurrent ? 'green' : 'white'),
-        backgroundColor: isSelected ? 'cyan' : undefined,
+        color: isCurrent ? 'green' : (isSelected ? 'white' : 'gray'),
         bold: isSelected || isCurrent
       },
-        isSelected ? `> ${theme}` : (isCurrent ? `* ${theme}` : `  ${theme}`)
+        isCurrent && !isSelected ? `* ${theme}` : theme
       )
     );
   };

@@ -7,6 +7,12 @@ import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
 const e = React.createElement;
 
+// ANSI color code map for LSD border color replacement
+const ANSI_COLORS = {
+  red: '\x1b[31m', yellow: '\x1b[33m', green: '\x1b[32m',
+  blue: '\x1b[34m', magenta: '\x1b[35m', cyan: '\x1b[36m',
+};
+
 export function Dashboard({ onBack, isLsdUnlocked = false }) {
   const { stdout } = useStdout();
   const columns = stdout?.columns || 120;
@@ -231,18 +237,24 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
           }
           if (item.type === 'action') {
             return e(Box, { key: item.id, marginTop: 1 },
+              e(Text, { color: isSelected ? (isLsdUnlocked ? borderColor : 'red') : 'gray' },
+                isSelected ? '▸ ' : '  '
+              ),
               e(Text, {
                 color: isSelected ? 'red' : 'gray',
                 bold: isSelected
-              }, isSelected ? `> ${item.label}` : `  ${item.label}`)
+              }, item.label)
             );
           }
+          const isActive = item.id === dashboardType;
           return e(Box, { key: item.id },
+            e(Text, { color: isSelected ? (isLsdUnlocked ? borderColor : 'cyan') : 'gray' },
+              isSelected ? '▸ ' : '  '
+            ),
             e(Text, {
-              color: isSelected ? 'cyan' : 'white',
-              bold: isSelected
-            },
-              isSelected ? `● ${item.label}` : `○ ${item.label}`)
+              color: isActive ? 'cyan' : 'white',
+              bold: isActive
+            }, `${isActive ? '●' : '○'} ${item.label}`)
           );
         }),
         // Skills card
@@ -269,13 +281,19 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         borderColor: focusArea === 'preview' ? 'cyan' : 'gray'
       },
         e(Box, { marginBottom: 1 },
-          e(Text, { dimColor: true }, 'PREVIEW')
+          e(Text, { color: focusArea === 'preview' ? 'cyan' : undefined, dimColor: focusArea !== 'preview', bold: focusArea === 'preview' }, 'PREVIEW')
         ),
         dashboardType === 'simple'
           ? renderSimpleDashboard()
           : e(Box, { flexDirection: 'column' },
             e(Text, { dimColor: true }, `Scroll: ${scrollY}/${maxScroll}`),
-            e(Text, {}, previewLines.slice(scrollY, scrollY + visibleLines).join('\n'))
+            e(Text, {}, (() => {
+              const raw = previewLines.slice(scrollY, scrollY + visibleLines).join('\n');
+              if (!isLsdUnlocked || !ANSI_COLORS[borderColor]) return raw;
+              return raw
+                .replaceAll(ANSI_COLORS.cyan, ANSI_COLORS[borderColor])
+                .replaceAll(ANSI_COLORS.yellow, ANSI_COLORS[borderColor]);
+            })())
           )
       )
     ),

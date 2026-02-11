@@ -294,7 +294,7 @@ export function cmdDashboard() {
   console.log('');
 }
 
-export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
+export function cmdStats({ skipRateLimit = false, maxWidth, borderColor } = {}) {
   const statsPath = join(homedir(), '.claude', 'stats-cache.json');
 
   if (!existsSync(statsPath)) {
@@ -432,6 +432,7 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
   };
 
   // 박스 그리기 (maxWidth가 있으면 프리뷰 영역에 맞춤)
+  const bc = borderColor ? chalk.keyword(borderColor) : chalk.cyan;
   const W = maxWidth ? Math.max(50, maxWidth - 2) : 68; // 내부 너비 (-2 for ║ borders)
   const TOP = '╔' + '═'.repeat(W) + '╗';
   const MID = '╠' + '═'.repeat(W) + '╣';
@@ -464,46 +465,46 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
   };
 
   console.log('');
-  console.log(chalk.cyan(TOP));
-  console.log(chalk.cyan(center('📊 USAGE SUMMARY')));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(valueLine('📅 Period:', `${startDate} ~ ${endDate} (${days} days)`)));
-  console.log(chalk.cyan(valueLine('🕐 First Session:', firstSession)));
-  console.log(chalk.cyan(valueLine('📁 Sessions:', formatNumber(totalSessions))));
-  console.log(chalk.cyan(valueLine('💬 Messages:', formatNumber(totalMessages))));
-  console.log(chalk.cyan(valueLine('🔧 Tool Calls:', formatNumber(totalToolCalls))));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(center('TOKEN USAGE')));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(valueLine('📥 Input:', formatNumber(inputTokens))));
-  console.log(chalk.cyan(valueLine('📤 Output:', formatNumber(outputTokens))));
-  console.log(chalk.cyan(valueLine('💾 Cache Read:', formatNumber(cacheRead))));
-  console.log(chalk.cyan(valueLine('🔨 Cache Create:', formatNumber(cacheCreate))));
-  console.log(chalk.cyan(DIV));
-  console.log(chalk.cyan(valueLine('📊 Total Tokens:', formatNumber(totalTokens))));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(center(`💰 ESTIMATED COST (${modelName})`)));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(valueLine('📥 Input:', formatCurrency(inputCost))));
-  console.log(chalk.cyan(valueLine('📤 Output:', formatCurrency(outputCost))));
-  console.log(chalk.cyan(valueLine('💾 Cache Read:', formatCurrency(cacheReadCost))));
-  console.log(chalk.cyan(valueLine('🔨 Cache Create:', formatCurrency(cacheCreateCost))));
-  console.log(chalk.cyan(DIV));
-  console.log(chalk.yellow(valueLine('💵 Total:', formatCurrency(totalCost))));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(center('📈 STATS')));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(valueLine('📆 Daily Avg Cost:', formatCurrency(dailyAvgCost))));
-  console.log(chalk.cyan(valueLine('📆 Daily Avg Tokens:', formatNumber(Math.round(dailyAvgTokens)))));
-  console.log(chalk.cyan(valueLine('📆 Daily Avg Messages:', formatNumber(Math.round(dailyAvgMessages)))));
-  console.log(chalk.cyan(valueLine('📅 Est. Monthly:', formatCurrency(estMonthly))));
-  console.log(chalk.cyan(valueLine('⚡ Efficiency:', `${formatNumber(efficiency)} tok/$`)));
-  console.log(chalk.cyan(valueLine('🎯 O/I Ratio:', `${oiRatio}:1`)));
-  console.log(chalk.cyan(valueLine('💾 Cache Hit Rate:', `${cacheHitRate}%`)));
-  console.log(chalk.cyan(valueLine('🏆 Longest Session:', `${formatNumber(longestMessages)} messages / ${longestHours} hours`)));
-  console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(center('⏰ ACTIVITY BY HOUR')));
-  console.log(chalk.cyan(MID));
+  console.log(bc(TOP));
+  console.log(bc(center('📊 USAGE SUMMARY')));
+  console.log(bc(MID));
+  console.log(bc(valueLine('📅 Period:', `${startDate} ~ ${endDate} (${days} days)`)));
+  console.log(bc(valueLine('🕐 First Session:', firstSession)));
+  console.log(bc(valueLine('📁 Sessions:', formatNumber(totalSessions))));
+  console.log(bc(valueLine('💬 Messages:', formatNumber(totalMessages))));
+  console.log(bc(valueLine('🔧 Tool Calls:', formatNumber(totalToolCalls))));
+  console.log(bc(MID));
+  console.log(bc(center('TOKEN USAGE')));
+  console.log(bc(MID));
+  console.log(bc(valueLine('📥 Input:', formatNumber(inputTokens))));
+  console.log(bc(valueLine('📤 Output:', formatNumber(outputTokens))));
+  console.log(bc(valueLine('💾 Cache Read:', formatNumber(cacheRead))));
+  console.log(bc(valueLine('🔨 Cache Create:', formatNumber(cacheCreate))));
+  console.log(bc(DIV));
+  console.log(bc(valueLine('📊 Total Tokens:', formatNumber(totalTokens))));
+  console.log(bc(MID));
+  console.log(bc(center(`💰 ESTIMATED COST (${modelName})`)));
+  console.log(bc(MID));
+  console.log(bc(valueLine('📥 Input:', formatCurrency(inputCost))));
+  console.log(bc(valueLine('📤 Output:', formatCurrency(outputCost))));
+  console.log(bc(valueLine('💾 Cache Read:', formatCurrency(cacheReadCost))));
+  console.log(bc(valueLine('🔨 Cache Create:', formatCurrency(cacheCreateCost))));
+  console.log(bc(DIV));
+  console.log(bc(valueLine('💵 Total:', formatCurrency(totalCost))));
+  console.log(bc(MID));
+  console.log(bc(center('📈 STATS')));
+  console.log(bc(MID));
+  console.log(bc(valueLine('📆 Daily Avg Cost:', formatCurrency(dailyAvgCost))));
+  console.log(bc(valueLine('📆 Daily Avg Tokens:', formatNumber(Math.round(dailyAvgTokens)))));
+  console.log(bc(valueLine('📆 Daily Avg Messages:', formatNumber(Math.round(dailyAvgMessages)))));
+  console.log(bc(valueLine('📅 Est. Monthly:', formatCurrency(estMonthly))));
+  console.log(bc(valueLine('⚡ Efficiency:', `${formatNumber(efficiency)} tok/$`)));
+  console.log(bc(valueLine('🎯 O/I Ratio:', `${oiRatio}:1`)));
+  console.log(bc(valueLine('💾 Cache Hit Rate:', `${cacheHitRate}%`)));
+  console.log(bc(valueLine('🏆 Longest Session:', `${formatNumber(longestMessages)} messages / ${longestHours} hours`)));
+  console.log(bc(MID));
+  console.log(bc(center('⏰ ACTIVITY BY HOUR')));
+  console.log(bc(MID));
 
   // 시간대별 막대 그래프 출력
   const bar1 = `00-05: ${makeBar(hourGroups[0].count, maxGroupCount)}`;
@@ -515,15 +516,15 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
   const activityLine1 = `${bar1}    ${bar2}`;
   const activityLine2 = `${bar3}    ${bar4}`;
 
-  console.log(chalk.cyan('║  ' + padRight(activityLine1, W - 4) + '  ║'));
-  console.log(chalk.cyan('║  ' + padRight(activityLine2, W - 4) + '  ║'));
-  console.log(chalk.cyan(valueLine('🕐 Peak Hour:', `${String(peakHour).padStart(2, '0')}:00 (${peakCount} sessions)`)));
+  console.log(bc('║  ' + padRight(activityLine1, W - 4) + '  ║'));
+  console.log(bc('║  ' + padRight(activityLine2, W - 4) + '  ║'));
+  console.log(bc(valueLine('🕐 Peak Hour:', `${String(peakHour).padStart(2, '0')}:00 (${peakCount} sessions)`)));
 
   // 최근 7일 토큰 추이 그래프
   if (recentTokens.length > 0) {
-    console.log(chalk.cyan(MID));
-    console.log(chalk.cyan(center('📊 DAILY TOKENS (Last 7 days)')));
-    console.log(chalk.cyan(MID));
+    console.log(bc(MID));
+    console.log(bc(center('📊 DAILY TOKENS (Last 7 days)')));
+    console.log(bc(MID));
 
     // 막대 그래프 라인
     const bars = recentTokens.map(d => getBarChar(d.tokens, maxDailyTokens));
@@ -537,48 +538,48 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
     const maxT = Math.max(...recentTokens.map(d => d.tokens));
     const minT = Math.min(...recentTokens.map(d => d.tokens));
 
-    console.log(chalk.cyan('║  ' + padRight(graphLine, W - 4) + '  ║'));
-    console.log(chalk.cyan('║  ' + padRight(dateLine, W - 4) + '  ║'));
-    console.log(chalk.cyan(DIV));
-    console.log(chalk.cyan(valueLine('📈 Max:', formatNumber(maxT))));
-    console.log(chalk.cyan(valueLine('📉 Min:', formatNumber(minT))));
+    console.log(bc('║  ' + padRight(graphLine, W - 4) + '  ║'));
+    console.log(bc('║  ' + padRight(dateLine, W - 4) + '  ║'));
+    console.log(bc(DIV));
+    console.log(bc(valueLine('📈 Max:', formatNumber(maxT))));
+    console.log(bc(valueLine('📉 Min:', formatNumber(minT))));
   }
 
   // Rate Limit 정보 (ccusage) - skipRateLimit 시 캐시만 확인
   const rateInfo = skipRateLimit ? (_rateLimitCache.loaded ? _rateLimitCache.data : null) : getRateLimitInfo();
   if (rateInfo) {
-    console.log(chalk.cyan(MID));
-    console.log(chalk.cyan(center('⏳ RATE LIMIT (ccusage)')));
-    console.log(chalk.cyan(MID));
+    console.log(bc(MID));
+    console.log(bc(center('⏳ RATE LIMIT (ccusage)')));
+    console.log(bc(MID));
 
     if (rateInfo.ratePct !== null) {
-      console.log(chalk.cyan(valueLine('📊 Usage:', `${rateInfo.ratePct}%`)));
+      console.log(bc(valueLine('📊 Usage:', `${rateInfo.ratePct}%`)));
     }
     if (rateInfo.burnRateStr) {
-      console.log(chalk.cyan(valueLine('🔥 Burn Rate:', rateInfo.burnRateStr)));
+      console.log(bc(valueLine('🔥 Burn Rate:', rateInfo.burnRateStr)));
     }
     if (rateInfo.timeLeft) {
-      console.log(chalk.cyan(valueLine('⏱️ Time Left:', rateInfo.timeLeft)));
+      console.log(bc(valueLine('⏱️ Time Left:', rateInfo.timeLeft)));
     }
     if (rateInfo.resetTime) {
-      console.log(chalk.cyan(valueLine('🔄 Reset At:', rateInfo.resetTime)));
+      console.log(bc(valueLine('🔄 Reset At:', rateInfo.resetTime)));
     }
-    console.log(chalk.cyan(valueLine('💵 Block Cost:', formatCurrency(rateInfo.costUSD))));
+    console.log(bc(valueLine('💵 Block Cost:', formatCurrency(rateInfo.costUSD))));
   }
 
   // 현재 세션 정보
   const sessionInfo = getCurrentSessionInfo();
   if (sessionInfo) {
-    console.log(chalk.cyan(MID));
-    console.log(chalk.cyan(center('🔄 CURRENT SESSION')));
-    console.log(chalk.cyan(MID));
-    console.log(chalk.cyan(valueLine('💬 Messages:', `${formatNumber(sessionInfo.messages)} (👤 ${sessionInfo.userMessages} / 🤖 ${sessionInfo.assistantMessages})`)));
+    console.log(bc(MID));
+    console.log(bc(center('🔄 CURRENT SESSION')));
+    console.log(bc(MID));
+    console.log(bc(valueLine('💬 Messages:', `${formatNumber(sessionInfo.messages)} (👤 ${sessionInfo.userMessages} / 🤖 ${sessionInfo.assistantMessages})`)));
     if (sessionInfo.duration) {
-      console.log(chalk.cyan(valueLine('⏱️ Duration:', sessionInfo.duration)));
+      console.log(bc(valueLine('⏱️ Duration:', sessionInfo.duration)));
     }
-    console.log(chalk.cyan(valueLine('🔑 Session ID:', sessionInfo.sessionFile + '...')));
+    console.log(bc(valueLine('🔑 Session ID:', sessionInfo.sessionFile + '...')));
   }
 
-  console.log(chalk.cyan(BOT));
+  console.log(bc(BOT));
   console.log('');
 }

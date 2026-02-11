@@ -131,21 +131,15 @@ export function MainMenu() {
                     const isSelected = index === selectedIndex;
                     return e(Box, {
                         key: item.id,
-                        paddingX: 1,
-                        paddingY: 0,
-                        borderStyle: isSelected ? 'round' : undefined,
-                        borderColor: isSelected ? (isLsdUnlocked ? borderColor : 'green') : undefined,
                         marginBottom: 1
                     },
-                        e(Text, { color: isSelected ? 'green' : 'gray' },
-                            isSelected ? '◉ ' : '○ '
+                        e(Text, { color: isSelected ? (isLsdUnlocked ? borderColor : 'green') : 'gray' },
+                            isSelected ? '▸ ' : '  '
                         ),
                         e(Text, {
                             color: isSelected ? 'white' : 'gray',
                             bold: isSelected,
-                        },
-                            ` ${item.label}`
-                        )
+                        }, item.label)
                     );
                 }),
 

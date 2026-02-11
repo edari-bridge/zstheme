@@ -339,12 +339,15 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
               const actualIdx = scrollOff + visIdx;
               const isFocused = focusArea === 1;
               const isSelected = isFocused && actualIdx === selectedIndex;
-              const prefix = isSelected ? '> ' : '  ';
+              const cursorColor = isSelected ? (isLsdUnlocked ? lsdBorderColor : 'green') : 'gray';
 
               if (isLsdUnlocked) {
                 const sym = LSD_SYMBOLS[(actualIdx + previewTick) % LSD_SYMBOLS.length];
                 return e(Box, { key: fgKey, flexDirection: 'row', justifyContent: 'space-between' },
-                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, `${prefix}${fgKey}`),
+                  e(Box, { flexDirection: 'row' },
+                    e(Text, { color: cursorColor }, isSelected ? '▸ ' : '  '),
+                    e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected }, fgKey)
+                  ),
                   e(Text, { color: lsdBorderColor, bold: true }, sym)
                 );
               }
@@ -356,7 +359,10 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
               const bgActive = isFocused && colorCategory === 1 && isSelected && !isExcluded;
 
               return e(Box, { key: fgKey, flexDirection: 'row', justifyContent: 'space-between' },
-                e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: isFocused && isExcluded && !isSelected }, `${prefix}${FG_DEFAULTS[fgKey].name}`),
+                e(Box, { flexDirection: 'row' },
+                  e(Text, { color: cursorColor }, isSelected ? '▸ ' : '  '),
+                  e(Text, { color: isSelected ? 'green' : 'white', bold: isSelected, dimColor: isFocused && isExcluded && !isSelected }, FG_DEFAULTS[fgKey].name)
+                ),
                 e(Box, { flexDirection: 'row', gap: 2 },
                   e(Text, { color: fgActive ? 'green' : 'white', bold: fgActive, dimColor: isFocused && (isExcluded || colorCategory !== 0) },
                     isExcluded ? '---' : `${fgVal}`
