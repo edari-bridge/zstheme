@@ -228,7 +228,7 @@ export function ansi256ToHex(code) {
 }
 
 // Pastel FG: 렌더러 실제 색상 기준 (basic ANSI bright + ANSI 256)
-const PASTEL_HEX = [
+export const PASTEL_HEX = [
   '#ffff00',  // BRANCH: \033[93m bright yellow
   '#00ff00',  // TREE: \033[92m bright green
   '#00ffff',  // DIR: \033[96m bright cyan

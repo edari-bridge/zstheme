@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { Logo } from './Logo.js';
 import { ThemeSelector } from './ThemeSelector.js';
@@ -11,7 +11,9 @@ import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 import { isZsthemeActive, getOriginalStatusline, toggleStatusline } from '../utils/shell.js';
 import { getCurrentTheme } from '../utils/themes.js';
 import { isSkillInstalled } from '../utils/skills.js';
-import { getThemeColorPalette } from '../utils/colors.js';
+import { getThemeColorPalette, PASTEL_HEX } from '../utils/colors.js';
+import { parseThemeContract } from '../utils/themeContract.js';
+
 
 const e = React.createElement;
 
@@ -34,6 +36,8 @@ export function MainMenu() {
 
     // Dynamic Data
     const currentTheme = getCurrentTheme();
+    const isAnimatedTheme = parseThemeContract(currentTheme).animation !== 'static';
+    const [themeTick, setThemeTick] = useState(0);
 
     // Menu Definitions
     const MENU_ITEMS = [
@@ -57,6 +61,12 @@ export function MainMenu() {
     // Easter Egg + Border Animation
     const { isLsdUnlocked, handleArrowKey, resetCounts } = useEasterEgg();
     const borderColor = useLsdBorderAnimation(isLsdUnlocked);
+
+    useEffect(() => {
+        if (!isAnimatedTheme && !isLsdUnlocked) return;
+        const timer = setInterval(() => setThemeTick(t => t + 1), 200);
+        return () => clearInterval(timer);
+    }, [isAnimatedTheme, isLsdUnlocked]);
 
     useInput((input, key) => {
         if (activeTab !== 'menu') return;
@@ -173,16 +183,16 @@ export function MainMenu() {
                 // B. Theme & Skills Info (Simple Text)
                 e(Box, { flexDirection: 'column', alignItems: 'center', marginBottom: 1 },
                     e(Box, null,
-                        e(Text, { dimColor: true }, 'Theme: '),
+                        e(Text, { color: '#aaa' }, 'Theme: '),
                         ...(() => {
-                            const palette = getThemeColorPalette(currentTheme);
+                            const BRIGHT = ['yellow', 'green', 'cyan', 'magenta', '#87afff', '#af87ff', '#ffffaf', '#ffaf87', '#5fafff'];
                             return currentTheme.split('').map((ch, i) =>
-                                e(Text, { key: i, color: palette[i % palette.length], bold: true }, ch)
+                                e(Text, { key: i, color: BRIGHT[(i + themeTick) % BRIGHT.length], bold: true }, ch)
                             );
                         })()
                     ),
                     e(Box, null,
-                        e(Text, { dimColor: true }, 'Skills: '),
+                        e(Text, { color: '#aaa' }, 'Skills: '),
                         e(Text, { color: skillsInstalled ? 'green' : 'yellow' }, skillsInstalled ? 'Installed' : 'Not Installed')
                     )
                 ),
