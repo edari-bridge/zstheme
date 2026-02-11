@@ -137,7 +137,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         ),
 
         // Row 1: High Level
-        e(Box, { marginBottom: 0 },
+        e(Box, { marginBottom: 0, flexWrap: 'wrap' },
           e(Text, {}, '💵 Total Cost: '), e(Text, { color: 'yellow', bold: true }, formatCurrency(stats.totalCost || 0)),
           e(Separator),
           e(Text, {}, '📅 Period: '), e(Text, { color: 'white' }, `${stats.days || 1} days`),
@@ -146,7 +146,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         ),
 
         // Row 2: Token Breakdown
-        e(Box, { marginBottom: 1 },
+        e(Box, { marginBottom: 1, flexWrap: 'wrap' },
           e(Text, {}, '📥 Input: '), e(Text, { color: 'cyan' }, formatNumber(stats.inputTokens || 0)),
           e(Separator),
           e(Text, {}, '📤 Output: '), e(Text, { color: 'cyan' }, formatNumber(stats.outputTokens || 0)),
@@ -158,7 +158,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         e(Box, { height: 1, borderStyle: 'single', borderLeft: false, borderRight: false, borderBottom: false, borderColor: 'gray' }),
 
         // Row 3: Efficiency & Ratios
-        e(Box, { marginTop: 0 },
+        e(Box, { marginTop: 0, flexWrap: 'wrap' },
           e(Text, { color: 'magenta' }, '⚡ Efficiency: '), e(Text, {}, `${formatNumber(stats.efficiency || 0)} tok/$`),
           e(Separator),
           e(Text, { color: 'blue' }, '📊 O/I Ratio: '), e(Text, {}, `${stats.oiRatio || 0}:1`),
@@ -167,7 +167,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
         ),
 
         // Row 4: Averages
-        e(Box, { marginTop: 0 },
+        e(Box, { marginTop: 0, flexWrap: 'wrap' },
           e(Text, {}, '🗓️ Daily Avg: '), e(Text, { color: 'green' }, formatCurrency(stats.dailyAvgCost || 0)),
           e(Text, { dimColor: true }, ` (${formatNumber(stats.dailyAvgTokens || 0)} tokens)`),
           e(Separator),

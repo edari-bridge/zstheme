@@ -1,4 +1,5 @@
 // Common formatting helpers (ported from helpers.sh / common.sh)
+import stringWidth from 'string-width';
 import { colorizeText, colorizeTextDark, colorizeFgSparkle } from './animation.js';
 
 export function isAnimated(animationMode) {
@@ -9,12 +10,8 @@ export function stripAnsi(str) {
   return str.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
-const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
-
 export function visibleWidth(text) {
-  const plain = stripAnsi(text);
-  const emojiCount = (plain.match(emojiRe) || []).length;
-  return [...plain].length + emojiCount;
+  return stringWidth(text);
 }
 
 export function alignTwoLines(line1Parts, line2Parts, minSep = 2) {

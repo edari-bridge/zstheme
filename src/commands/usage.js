@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import stringWidth from 'string-width';
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -10,30 +11,8 @@ function formatDuration(ms) {
   return `${hours} hours`;
 }
 
-// 문자열 디스플레이 너비 계산 (이모지, 한글 등은 2칸 차지)
 function getDisplayWidth(str) {
-  let width = 0;
-  for (const char of str) {
-    const code = char.codePointAt(0);
-    // 이모지 범위
-    if (code >= 0x1F300 && code <= 0x1FAD6) {
-      width += 2;
-    } else if (code >= 0x2600 && code <= 0x27BF) {
-      width += 2;
-    // 한글 범위
-    } else if (code >= 0xAC00 && code <= 0xD7AF) {
-      width += 2;
-    // 한글 자모
-    } else if (code >= 0x1100 && code <= 0x11FF) {
-      width += 2;
-    // CJK 통합 한자 등
-    } else if (code >= 0x4E00 && code <= 0x9FFF) {
-      width += 2;
-    } else {
-      width += 1;
-    }
-  }
-  return width;
+  return stringWidth(str);
 }
 
 function padRight(str, len) {
@@ -254,15 +233,24 @@ export function cmdDashboard() {
     ? ((cacheRead / (cacheRead + inputTokens)) * 100).toFixed(1)
     : '0';
 
-  // 박스 그리기
-  const W = 72;
+  // Row 콘텐츠 준비
+  const r1 = `💵 Total Cost: ${chalk.yellow(formatCurrency(totalCost))}  │  📅 Period: ${chalk.white(days + ' days')}  │  🎯 Total Tokens: ${chalk.white(formatNumber(totalTokens))}`;
+  const r2 = `📥 Input: ${chalk.white(formatNumber(inputTokens))}  │  📤 Output: ${chalk.white(formatNumber(outputTokens))}  │  💾 Cache: ${chalk.white(formatNumber(cacheTotal))}`;
+  const r3 = `⚡ Efficiency: ${chalk.white(formatNumber(efficiency) + ' tok/$')}  │  📊 O/I Ratio: ${chalk.white(oiRatio + ':1')}  │  🎯 Cache Hit: ${chalk.white(cacheHitRate + '%')}`;
+  const r4 = `📆 Daily Avg: ${chalk.white(formatCurrency(dailyAvgCost))} (${formatNumber(Math.round(dailyAvgTokens))} tokens)  │  💡 Est. Monthly: ${chalk.yellow(formatCurrency(estMonthly))}`;
+
+  // 박스 너비: 콘텐츠 최대 폭에 맞춤 (최소 72)
+  const contentWidth = Math.max(
+    getDisplayWidth(chalk.bold('💰 COST & USAGE SUMMARY')),
+    ...[r1, r2, r3, r4].map(r => getDisplayWidth(r))
+  );
+  const W = Math.max(72, contentWidth + 1);
   const TOP = '┌' + '─'.repeat(W) + '┐';
   const MID = '├' + '─'.repeat(W) + '┤';
   const BOT = '└' + '─'.repeat(W) + '┘';
 
   const row = (content) => {
-    const stripped = content.replace(/\x1b\[[0-9;]*m/g, '');
-    const displayWidth = getDisplayWidth(stripped);
+    const displayWidth = getDisplayWidth(content);
     const pad = Math.max(0, W - displayWidth - 1);
     return '│ ' + content + ' '.repeat(pad) + '│';
   };
@@ -271,25 +259,11 @@ export function cmdDashboard() {
   console.log(chalk.cyan(TOP));
   console.log(chalk.cyan(row(chalk.bold('💰 COST & USAGE SUMMARY'))));
   console.log(chalk.cyan(MID));
-
-  // Row 1: Total Cost | Period | Total Tokens
-  const r1 = `💵 Total Cost: ${chalk.yellow(formatCurrency(totalCost))}  │  📅 Period: ${chalk.white(days + ' days')}  │  🎯 Total Tokens: ${chalk.white(formatNumber(totalTokens))}`;
   console.log(chalk.cyan(row(r1)));
-
-  // Row 2: Input | Output | Cache
-  const r2 = `📥 Input: ${chalk.white(formatNumber(inputTokens))}  │  📤 Output: ${chalk.white(formatNumber(outputTokens))}  │  💾 Cache: ${chalk.white(formatNumber(cacheTotal))}`;
   console.log(chalk.cyan(row(r2)));
-
   console.log(chalk.cyan(MID));
-
-  // Row 3: Efficiency | O/I Ratio | Cache Hit
-  const r3 = `⚡ Efficiency: ${chalk.white(formatNumber(efficiency) + ' tok/$')}  │  📊 O/I Ratio: ${chalk.white(oiRatio + ':1')}  │  🎯 Cache Hit: ${chalk.white(cacheHitRate + '%')}`;
   console.log(chalk.cyan(row(r3)));
-
-  // Row 4: Daily Avg | Est. Monthly
-  const r4 = `📆 Daily Avg: ${chalk.white(formatCurrency(dailyAvgCost))} (${formatNumber(Math.round(dailyAvgTokens))} tokens)  │  💡 Est. Monthly: ${chalk.yellow(formatCurrency(estMonthly))}`;
   console.log(chalk.cyan(row(r4)));
-
   console.log(chalk.cyan(BOT));
   console.log('');
 }

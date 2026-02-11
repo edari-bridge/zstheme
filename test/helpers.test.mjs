@@ -148,6 +148,34 @@ test('visibleWidth counts emoji as 2 characters', () => {
   assert.equal(width, 2);
 });
 
+test('visibleWidth: ⏳ (U+23F3) hourglass = 2', () => {
+  assert.equal(visibleWidth('⏳'), 2);
+});
+
+test('visibleWidth: ⏰ (U+23F0) alarm clock = 2', () => {
+  assert.equal(visibleWidth('⏰'), 2);
+});
+
+test('visibleWidth: VS16 not overcounted (⚡️ = 2, not 3)', () => {
+  // ⚡ (U+26A1) + VS16 (U+FE0F) → display width 2
+  assert.equal(visibleWidth('⚡️'), 2);
+});
+
+test('visibleWidth: ZWJ sequence 🗓️ = 2', () => {
+  assert.equal(visibleWidth('🗓️'), 2);
+});
+
+test('visibleWidth: mixed text and emoji', () => {
+  // "Hello ⏰ World" = 5 + 1 + 2 + 1 + 5 = 14
+  assert.equal(visibleWidth('Hello ⏰ World'), 14);
+});
+
+test('visibleWidth: ANSI + emoji combined', () => {
+  const text = '\x1b[33m⏳ Loading\x1b[0m';
+  // ⏳(2) + space(1) + Loading(7) = 10
+  assert.equal(visibleWidth(text), 10);
+});
+
 // --- alignTwoLines ---
 
 test('alignTwoLines aligns two sets of parts to equal width', () => {
