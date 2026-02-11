@@ -176,22 +176,25 @@ export function ResetSettings({ onBack, isLsdUnlocked = false }) {
       )
     ),
 
-    // Footer
+    // Footer - Mode label
+    e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
+      e(Text, { color: 'red', dimColor: true }, 'MODE: DESTRUCTIVE')
+    ),
+
+    // Footer - Keybindings
     e(Box, {
       borderStyle: 'single',
-      borderBottom: false,
-      borderLeft: false,
-      borderRight: false,
+      borderBottom: false, borderLeft: false, borderRight: false,
       borderColor: 'gray',
-      marginTop: 0,
       justifyContent: 'space-between',
       width: '100%'
     },
-      e(Text, { dimColor: true }, 'MODE: DESTRUCTIVE'),
       e(Box, {},
-        e(Text, { color: 'cyan' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate '),
+        e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate')
+      ),
+      e(Box, {},
         e(Text, { color: 'red', bold: true }, 'ENTER'), e(Text, { dimColor: true }, ' Confirm '),
-        e(Text, { color: 'white' }, 'Q'), e(Text, { dimColor: true }, ' Cancel')
+        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Cancel')
       )
     )
   );

@@ -270,14 +270,20 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
 
     // Footer
     e(Box, {
-      marginTop: 1,
-      justifyContent: 'center'
+      borderStyle: 'single',
+      borderBottom: false, borderLeft: false, borderRight: false,
+      borderColor: 'gray',
+      justifyContent: 'space-between',
+      width: '100%'
     },
-      e(Text, { dimColor: true }, '[ '),
-      e(Text, { color: 'green' }, 'TAB'), e(Text, { dimColor: true }, ' Focus ] [ '),
-      e(Text, { color: 'cyan' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate ] [ '),
-      e(Text, { color: 'yellow' }, 'ENTER'), e(Text, { dimColor: true }, ' Select ] [ '),
-      e(Text, { color: 'red' }, 'Q'), e(Text, { dimColor: true }, ' Back ]')
+      e(Box, {},
+        e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate '),
+        e(Text, { color: 'cyan' }, 'TAB'), e(Text, { dimColor: true }, ' Focus')
+      ),
+      e(Box, {},
+        e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Select '),
+        e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Back')
+      )
     )
   );
 }

@@ -235,6 +235,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
       e(Text, { bold: true, color: borderColor }, ' 🎨 COLOR EDITOR 🎨 ')
     ),
 
+    // Main Content (flexGrow pushes footer to bottom)
+    e(Box, { flexDirection: 'column', flexGrow: 1, width: '100%' },
+
     // Top Preview (Real Renderer)
     e(Box, { flexDirection: 'column', width: '100%', height: 11, paddingX: 2, marginBottom: 1, alignItems: 'center' },
       e(Text, { dimColor: true, underline: true }, isLsdUnlocked ? 'PREVIEW (lsd style)' : `PREVIEW (${layout} style)`),
@@ -285,9 +288,9 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
           )
         ),
 
-        // Color List - Fixed 7-row grid with dedicated arrow rows
+        // Color List - Fixed 5-row grid with dedicated arrow rows
         (() => {
-          const TOTAL_ROWS = 7;
+          const TOTAL_ROWS = 5;
           const needsScroll = fgKeys.length > TOTAL_ROWS;
 
           let showUp = false, showDown = false, visibleCount, scrollOff;
@@ -369,9 +372,10 @@ export function ColorEditor({ onBack, isLsdUnlocked = false }) {
         })()
       )
     ),
+    ), // end Main Content
 
     // Help text
-    e(Box, { flexGrow: 1, width: '100%', paddingX: 1, alignItems: 'center', justifyContent: 'space-between' },
+    e(Box, { width: '100%', paddingX: 1, alignItems: 'center', justifyContent: 'space-between', borderStyle: 'single', borderBottom: false, borderLeft: false, borderRight: false, borderColor: 'gray' },
       e(Box, {},
         e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Select '),
         e(Text, { color: 'green' }, '←→'), e(Text, { dimColor: true }, ' Adjust '),

@@ -329,22 +329,27 @@ export function ThemeSelector({ onBack, isLsdUnlocked = false }) {
       )
     ),
 
-    // Footer
+    // Footer - MODE label
+    e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
+      e(Text, { dimColor: true, color: isLsdUnlocked ? lsdBorderColor : undefined },
+        isLsdUnlocked ? 'MODE: LSD ACTIVE' : 'MODE: STANDARD')
+    ),
+
+    // Footer - Keybindings
     e(Box, {
       borderStyle: 'single',
       borderBottom: false,
       borderLeft: false,
       borderRight: false,
       borderColor: 'gray',
-      marginTop: 0,
       justifyContent: 'space-between',
       width: '100%'
     },
-      e(Text, { dimColor: true, color: isLsdUnlocked ? lsdBorderColor : undefined },
-        isLsdUnlocked ? 'MODE: LSD ACTIVE' : 'MODE: STANDARD'),
       e(Box, {},
         e(Text, { color: 'green' }, 'ARROWS'), e(Text, { dimColor: true }, ' Navigate '),
-        e(Text, { color: 'cyan' }, 'TAB/S-TAB'), e(Text, { dimColor: true }, ' Category '),
+        e(Text, { color: 'cyan' }, 'TAB/S-TAB'), e(Text, { dimColor: true }, ' Category')
+      ),
+      e(Box, {},
         e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Apply '),
         e(Text, { color: 'red' }, 'ESC/Q'), e(Text, { dimColor: true }, ' Back')
       )

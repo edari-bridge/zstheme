@@ -109,8 +109,7 @@ export function MainMenu() {
         height: height,
         borderStyle: 'double',
         borderColor: borderColor,
-        paddingX: 2,
-        paddingY: 1
+        paddingX: 1
     },
         // 1. Header (Simple Text Header)
         e(Box, {
@@ -192,22 +191,30 @@ export function MainMenu() {
             )
         ),     // Quick Stats
 
-        // 3. Footer
-        e(Box, {
-            marginTop: 1,
-            borderStyle: 'single',
-            borderLeft: false, borderRight: false, borderBottom: false,
-            borderColor: borderColor,
-            justifyContent: 'center',
-            paddingTop: 0
-        },
-            isLsdUnlocked
-                ? e(Text, null,
-                    ...'🌈 LSD MODE ACTIVE - EPILEPSY WARNING 🌈'.split('').map((ch, i) =>
-                        e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
-                    )
+        // 3. Footer - Mode label
+        isLsdUnlocked && e(Box, { justifyContent: 'flex-end', width: '100%', paddingX: 1 },
+            e(Text, null,
+                ...'🌈 LSD MODE ACTIVE 🌈'.split('').map((ch, i) =>
+                    e(Text, { key: i, color: LSD_COLORS[(i + LSD_COLORS.indexOf(borderColor)) % LSD_COLORS.length], bold: true }, ch)
                 )
-                : e(Text, { dimColor: true }, 'Use ↑ /↓ to Navigate, Enter to Select, Q to Quit')
+            )
+        ),
+
+        // 3. Footer - Keybindings
+        e(Box, {
+            borderStyle: 'single',
+            borderBottom: false, borderLeft: false, borderRight: false,
+            borderColor: 'gray',
+            justifyContent: 'space-between',
+            width: '100%'
+        },
+            e(Box, {},
+                e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate')
+            ),
+            e(Box, {},
+                e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Select '),
+                e(Text, { color: 'red' }, 'Q'), e(Text, { dimColor: true }, ' Quit')
+            )
         )
     );
 }
