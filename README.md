@@ -132,9 +132,9 @@ Use skills directly in Claude Code:
 
 To install the skills:
 ```bash
-mkdir -p ~/.claude/skills/dashboard ~/.claude/skills/dashboard-full
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/skills/dashboard/SKILL.md
-curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/skills/dashboard-full/SKILL.md
+mkdir -p ~/.claude/commands
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard.md -o ~/.claude/commands/dashboard.md
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/dashboard-full.md -o ~/.claude/commands/dashboard-full.md
 ```
 
 ## Color Editor
