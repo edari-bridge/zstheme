@@ -59,6 +59,12 @@ else
 fi
 
 if [[ "$REMOTE_INSTALL" == true ]]; then
+    if ! command -v git &>/dev/null; then
+        echo "${RED}Error: git is required but not installed.${RST}"
+        echo "Please install git: https://git-scm.com"
+        exit 1
+    fi
+
     echo "${BLUE}Installing to: $INSTALL_DIR${RST}"
     if [[ -d "$INSTALL_DIR" ]]; then
         echo "${YELLOW}Updating existing installation...${RST}"
