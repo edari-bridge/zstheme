@@ -16,7 +16,11 @@ done < <(
         echo "statusline.sh"
         echo "install.sh"
         echo "uninstall.sh"
-        rg --files themes -g '*.sh'
+        if command -v rg &>/dev/null; then
+            rg --files themes -g '*.sh'
+        else
+            find themes -name '*.sh' -type f
+        fi
     } | sort -u
 )
 

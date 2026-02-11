@@ -90,3 +90,29 @@ test('getRateColor mono < 50 returns grayscale', () => {
   const color = getRateColor(30, 'mono', {});
   assert.ok(color.includes('245'), 'mono low rate should use 245');
 });
+
+// --- initColors custom ---
+
+test('initColors custom mode includes ANSI color codes', () => {
+  const c = initColors('custom', 'nerd', 25, 'static');
+  assert.ok(c.C_BRANCH.includes('38;5;'), 'custom branch should have fg ANSI code');
+  assert.ok(c.C_MODEL.includes('38;5;'), 'custom model should have fg ANSI code');
+});
+
+// --- Context 50% bold ---
+
+test('initColors context 50% uses bold colors', () => {
+  const c = initColors('pastel', 'emoji', 55, 'static');
+  // At 50%+, pastel uses bold: \x1b[1;33m etc
+  assert.ok(c.C_BRANCH.includes('[1;'), 'branch should be bold at 50%+');
+  assert.equal(c.CTX_ICON, '\u{1FAB3}'); // 🪫
+});
+
+// --- Context 70% bold + red ---
+
+test('initColors context 70% uses bold+red CTX', () => {
+  const c = initColors('pastel', 'emoji', 75, 'static');
+  assert.ok(c.C_CTX_TEXT.includes('91'), 'CTX text should be bright red (91) at 70%+');
+  assert.ok(c.C_BRANCH.includes('[1;'), 'branch should be bold at 70%+');
+  assert.equal(c.CTX_ICON, '\u{1F525}'); // 🔥
+});

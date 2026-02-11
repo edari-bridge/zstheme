@@ -65,6 +65,7 @@ if [[ "$REMOTE_INSTALL" == true ]]; then
         cd "$INSTALL_DIR"
         git pull --ff-only 2>/dev/null || {
             echo "${YELLOW}Git pull failed, removing and re-cloning...${RST}"
+            echo "${RED}Warning: Removing existing installation at $INSTALL_DIR${RST}" >&2
             rm -rf "$INSTALL_DIR"
             git clone "$REPO_URL" "$INSTALL_DIR"
         }

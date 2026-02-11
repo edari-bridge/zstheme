@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stripAnsi, isAnimated, formatGitStatus, formatGitSync, formatContext, renderText, makeChip } from '../src/renderer/helpers.js';
+import { stripAnsi, isAnimated, formatGitStatus, formatGitSync, formatContext, renderText, makeChip, visibleWidth, alignTwoLines, applyAnimation } from '../src/renderer/helpers.js';
 import { createMockCtx } from './fixtures.mjs';
 
 // --- stripAnsi ---
@@ -130,4 +130,70 @@ test('makeChip pipe style wraps content with pipe characters', () => {
   const plain = stripAnsi(result);
   assert.ok(plain.includes('\u2503'), 'should contain pipe character');
   assert.ok(plain.includes('hello'), 'should contain content');
+});
+
+// --- visibleWidth ---
+
+test('visibleWidth returns length for plain text', () => {
+  assert.equal(visibleWidth('hello'), 5);
+});
+
+test('visibleWidth ignores ANSI escape codes', () => {
+  const ansiText = '\x1b[38;5;111mhello\x1b[0m';
+  assert.equal(visibleWidth(ansiText), 5);
+});
+
+test('visibleWidth counts emoji as 2 characters', () => {
+  const width = visibleWidth('🔱');
+  assert.equal(width, 2);
+});
+
+// --- alignTwoLines ---
+
+test('alignTwoLines aligns two sets of parts to equal width', () => {
+  const { line1, line2 } = alignTwoLines(['hello', 'world'], ['a', 'b']);
+  // Both lines should have the same visible width
+  assert.equal(visibleWidth(line1), visibleWidth(line2));
+});
+
+test('alignTwoLines handles asymmetric parts', () => {
+  const { line1, line2 } = alignTwoLines(['short'], ['much longer text here']);
+  assert.ok(line1.length > 0);
+  assert.ok(line2.length > 0);
+});
+
+test('alignTwoLines respects minSep', () => {
+  const { line1 } = alignTwoLines(['a', 'b'], ['c', 'd'], 4);
+  // With minSep=4, the separator between 'a' and 'b' should be at least 4 spaces
+  assert.ok(line1.includes('    '), 'should have at least 4 spaces between parts');
+});
+
+// --- applyAnimation ---
+
+test('applyAnimation static returns icon + text with color codes', () => {
+  const ctx = createMockCtx();
+  const result = applyAnimation(ctx, {
+    type: 'text',
+    text: 'main',
+    offset: 0,
+    iconColor: ctx.colors.C_I_BRANCH,
+    icon: ctx.colors.icons.BRANCH,
+    textColor: ctx.colors.C_BRANCH,
+  });
+  const plain = stripAnsi(result);
+  assert.ok(plain.includes('main'));
+});
+
+test('applyAnimation rainbow returns RGB sequences', () => {
+  const ctx = createMockCtx({ animationMode: 'rainbow' });
+  const result = applyAnimation(ctx, {
+    type: 'text',
+    text: 'main',
+    offset: 0,
+    iconColor: ctx.colors.C_I_BRANCH,
+    icon: ctx.colors.icons.BRANCH,
+    bgColor: ctx.colors.C_BG_BRANCH,
+    textColor: ctx.colors.C_BRANCH,
+  });
+  assert.ok(/\x1b\[1;38;2;\d+;\d+;\d+m/.test(result), 'should contain RGB ANSI codes');
 });

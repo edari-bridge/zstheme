@@ -161,6 +161,7 @@ Use with any layout: `export CLAUDE_THEME="custom-2line"`
 - **Claude Code** - The CLI this themes
 - **jq** (optional) - For automatic settings.json update
 - **ccusage** (optional) - For rate limit display
+- **ripgrep** (optional) - Faster file search in development scripts
 
 ### Install Steps (macOS / Linux)
 
