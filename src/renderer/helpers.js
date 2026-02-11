@@ -9,6 +9,35 @@ export function stripAnsi(str) {
   return str.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
+const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+
+export function visibleWidth(text) {
+  const plain = stripAnsi(text);
+  const emojiCount = (plain.match(emojiRe) || []).length;
+  return [...plain].length + emojiCount;
+}
+
+export function alignTwoLines(line1Parts, line2Parts, minSep = 2) {
+  const measure = (parts) =>
+    parts.reduce((s, p) => s + visibleWidth(p), 0) + (parts.length - 1) * minSep;
+  const targetWidth = Math.max(measure(line1Parts), measure(line2Parts));
+
+  const joinAligned = (parts) => {
+    if (parts.length <= 1) return parts.join('');
+    const contentWidth = parts.reduce((sum, p) => sum + visibleWidth(p), 0);
+    const totalSep = Math.max(targetWidth - contentWidth, (parts.length - 1) * minSep);
+    const sepCount = parts.length - 1;
+    const baseSep = Math.floor(totalSep / sepCount);
+    const extra = totalSep % sepCount;
+    return parts.map((p, i) => {
+      if (i === sepCount) return p;
+      return p + ' '.repeat(baseSep + (i < extra ? 1 : 0));
+    }).join('');
+  };
+
+  return { line1: joinAligned(line1Parts), line2: joinAligned(line2Parts) };
+}
+
 export function renderText(iconColor, icon, text, colorVar, offset, ctx) {
   if (ctx.animationMode === 'lsd') {
     return `${iconColor}${icon}${ctx.colors.RST} ${colorizeFgSparkle(text, offset, ctx.bgOffset, ctx.colorMode)}`;

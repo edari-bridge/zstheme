@@ -42,6 +42,8 @@ render() {
     if [[ -n "$RATE_TIME_LEFT" && -n "$RATE_LIMIT_PCT" ]]; then
         local rate_color=$(get_rate_color)
         parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT} (${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
+    else
+        parts+=("${C_DIM_STATUS}${ICON_TIME} ---${RST}")
     fi
 
     # 출력

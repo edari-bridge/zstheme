@@ -127,7 +127,7 @@ render() {
         chip_ctx="${CTX_ICON} ${C_CTX_TEXT}${CONTEXT_PCT}%${RST}"
     fi
 
-    local line1="${chip_branch} ${chip_tree} ${chip_dir}  ${chip_status} ${chip_sync}  ${chip_ctx}"
+    # line1 parts는 아래에서 align_two_lines로 처리
 
     # Line 2: 각 요소별 개별 칩
     local chip_model chip_rate chip_time chip_burn chip_theme
@@ -144,7 +144,7 @@ render() {
             chip_rate="$(make_chip "$bg_rate" "${C_I_RATE}${ICON_TIME} ${C_RATE}${RATE_TIME_LEFT}·${RATE_RESET_TIME} ${rate_color}(${RATE_LIMIT_PCT}%)")"
         fi
     else
-        chip_rate=""
+        chip_rate="$(make_chip "$bg_rate" "${C_DIM_STATUS}${ICON_TIME} ---")"
     fi
 
     # 세션 시간 칩
@@ -154,7 +154,7 @@ render() {
     if [[ -n "$BURN_RATE" ]]; then
         chip_burn="$(make_animated_content "bg_chip" "${BURN_RATE}" 80 "${C_I_BURN}" "${ICON_COST}" "$bg_burn" "${C_BURN}")"
     else
-        chip_burn=""
+        chip_burn="$(make_chip "$bg_burn" "${C_DIM_STATUS}${ICON_COST} ---")"
     fi
 
     # 테마 (배경 없음, 텍스트 그라데이션)
@@ -164,10 +164,11 @@ render() {
         chip_theme="${C_I_THEME}${ICON_THEME} ${C_I_THEME}${THEME_NAME}${RST}"
     fi
 
-    local line2="${chip_model} ${chip_rate} ${chip_time} ${chip_burn}  ${chip_theme}"
-    # 빈 칩 제거
-    line2=$(echo "$line2" | sed 's/  */ /g')
+    local badge_line1_parts=("$chip_branch" "$chip_tree" "$chip_dir" "$chip_status" "$chip_sync" "$chip_ctx")
+    local badge_line2_parts=("$chip_model" "$chip_rate" "$chip_time" "$chip_burn" "$chip_theme")
 
-    echo -e "$line1"
-    echo -e "$line2"
+    align_two_lines badge_line1_parts badge_line2_parts
+
+    echo -e "$ALIGNED_LINE1"
+    echo -e "$ALIGNED_LINE2"
 }

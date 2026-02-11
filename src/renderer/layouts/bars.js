@@ -1,6 +1,6 @@
 // Bars layout (ported from bars.sh)
 import { colorizeText, colorizeTextDark, getAnimatedBg, getAnimatedBadgeBg } from '../animation.js';
-import { formatContext, isAnimated, makeChip } from '../helpers.js';
+import { formatContext, isAnimated, makeChip, alignTwoLines } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
 export function render(ctx) {
@@ -61,7 +61,6 @@ export function render(ctx) {
     }
 
     const ctxDisplay = formatContext(ctx);
-    const line1 = `${chipLoc}    ${chipGit}    ${ctxDisplay}`;
 
     // Line 2: Session chip + Theme
     let chipSes;
@@ -69,24 +68,33 @@ export function render(ctx) {
       let sesRawText = `${colors.icons.MODEL} ${data.model}`;
       if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
         sesRawText += `     ${colors.icons.TIME} ${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`;
+      } else {
+        sesRawText += `     ${colors.icons.TIME} ---`;
       }
       sesRawText += `     ${colors.icons.SESSION} ${data.sessionDurationMin}m`;
-      if (data.burnRate) sesRawText += `     ${colors.icons.COST} ${data.burnRate}`;
+      sesRawText += `     ${colors.icons.COST} ${data.burnRate || '---'}`;
       chipSes = makeChip(bgSes, colorizeTextDark(sesRawText, 50, colorOffset, animationMode, colorMode), chipStyle, colors);
     } else {
       let sesAnimated = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colorizeText(data.model, 50, colorOffset, animationMode, colorMode)}`;
       if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
         sesAnimated += `     ${colors.C_I_RATE}${colors.icons.TIME} ${colorizeText(`${data.rateTimeLeft} \u00b7 ${data.rateResetTime} (${data.rateLimitPct}%)`, 60, colorOffset, animationMode, colorMode)}`;
+      } else {
+        sesAnimated += `     ${colors.C_DIM_STATUS}${colors.icons.TIME} ---`;
       }
       sesAnimated += `     ${colors.C_I_TIME}${colors.icons.SESSION} ${colorizeText(`${data.sessionDurationMin}m`, 70, colorOffset, animationMode, colorMode)}`;
       if (data.burnRate) {
         sesAnimated += `     ${colors.C_I_BURN}${colors.icons.COST} ${colorizeText(data.burnRate, 80, colorOffset, animationMode, colorMode)}`;
+      } else {
+        sesAnimated += `     ${colors.C_DIM_STATUS}${colors.icons.COST} ---`;
       }
       chipSes = makeChip(bgSes, sesAnimated, chipStyle, colors);
     }
 
     const chipTheme = colorizeText(`${colors.icons.THEME} ${data.themeName}`, 0, colorOffset, animationMode, colorMode);
-    const line2 = `${chipSes}     ${chipTheme}`;
+
+    const line1Parts = [chipLoc, chipGit, ctxDisplay];
+    const line2Parts = [chipSes, chipTheme];
+    const { line1, line2 } = alignTwoLines(line1Parts, line2Parts);
 
     return `${line1}\n${line2}`;
   }
@@ -113,18 +121,26 @@ export function render(ctx) {
   }
 
   const ctxDisplay = formatContext(ctx);
-  const line1 = `${makeChip(bgLoc, locContent, chipStyle, colors)}    ${makeChip(bgGit, gitContent, chipStyle, colors)}    ${ctxDisplay}`;
 
   let sesContent = `${colors.C_I_MODEL}${colors.icons.MODEL} ${colors.C_MODEL}${data.model}`;
   if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     const rateColor = getRateColor(data.rateLimitPct, colorMode, colors);
     sesContent += `     ${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} \u00b7 ${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`;
+  } else {
+    sesContent += `     ${colors.C_DIM_STATUS}${colors.icons.TIME} ---`;
   }
   sesContent += `     ${colors.C_I_TIME}${colors.icons.SESSION} ${colors.C_TIME}${data.sessionDurationMin}m`;
-  if (data.burnRate) sesContent += `     ${colors.C_I_BURN}${colors.icons.COST} ${colors.C_BURN}${data.burnRate}`;
+  if (data.burnRate) {
+    sesContent += `     ${colors.C_I_BURN}${colors.icons.COST} ${colors.C_BURN}${data.burnRate}`;
+  } else {
+    sesContent += `     ${colors.C_DIM_STATUS}${colors.icons.COST} ---`;
+  }
 
   const themeDisplay = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${RST}`;
-  const line2 = `${makeChip(bgSes, sesContent, chipStyle, colors)}     ${themeDisplay}`;
+
+  const line1Parts = [makeChip(bgLoc, locContent, chipStyle, colors), makeChip(bgGit, gitContent, chipStyle, colors), ctxDisplay];
+  const line2Parts = [makeChip(bgSes, sesContent, chipStyle, colors), themeDisplay];
+  const { line1, line2 } = alignTwoLines(line1Parts, line2Parts);
 
   return `${line1}\n${line2}`;
 }

@@ -97,3 +97,90 @@ make_animated_content() {
         esac
     fi
 }
+
+# visible_width: ANSI 제거 후 가시 너비 계산
+visible_width() {
+    local plain
+    plain=$(printf '%s' "$1" | sed $'s/\x1b\\[[0-9;]*m//g')
+    printf '%s' "$plain" | wc -m | tr -d ' '
+}
+
+# align_two_lines: 두 라인의 parts를 동적 간격으로 join하여 우측 정렬
+# 사용법: align_two_lines line1_arr_name line2_arr_name [min_sep]
+# 결과: ALIGNED_LINE1, ALIGNED_LINE2 전역 변수에 저장
+# Note: bash 3.2 호환 (nameref 미사용)
+align_two_lines() {
+    local _arr1_name="$1" _arr2_name="$2"
+    local min_sep="${3:-2}"
+
+    # 배열 크기 가져오기 (bash 3.2 호환)
+    local l1_count l2_count
+    eval "l1_count=\${#${_arr1_name}[@]}"
+    eval "l2_count=\${#${_arr2_name}[@]}"
+
+    # 각 라인의 content width 합산
+    local l1_content=0 l2_content=0
+    local i w elem
+
+    i=0
+    while [[ $i -lt $l1_count ]]; do
+        eval "elem=\"\${${_arr1_name}[$i]}\""
+        w=$(visible_width "$elem")
+        l1_content=$((l1_content + w))
+        i=$((i + 1))
+    done
+
+    i=0
+    while [[ $i -lt $l2_count ]]; do
+        eval "elem=\"\${${_arr2_name}[$i]}\""
+        w=$(visible_width "$elem")
+        l2_content=$((l2_content + w))
+        i=$((i + 1))
+    done
+
+    # measure: content_width + (count-1) * min_sep
+    local l1_sep_count=0 l2_sep_count=0
+    [[ $l1_count -gt 1 ]] && l1_sep_count=$((l1_count - 1))
+    [[ $l2_count -gt 1 ]] && l2_sep_count=$((l2_count - 1))
+    local l1_measure=$((l1_content + l1_sep_count * min_sep))
+    local l2_measure=$((l2_content + l2_sep_count * min_sep))
+
+    local target=$l1_measure
+    [[ $l2_measure -gt $target ]] && target=$l2_measure
+
+    # join aligned helper
+    _join_aligned_impl() {
+        local _pname="$1" content_w="$2" count="$3"
+
+        if [[ $count -le 1 ]]; then
+            eval "printf '%s' \"\${${_pname}[0]}\""
+            return
+        fi
+
+        local sep_count=$((count - 1))
+        local total_sep=$((target - content_w))
+        local min_total=$((sep_count * min_sep))
+        [[ $total_sep -lt $min_total ]] && total_sep=$min_total
+
+        local base_sep=$((total_sep / sep_count))
+        local extra=$((total_sep % sep_count))
+
+        local result="" j pad
+        j=0
+        while [[ $j -lt $count ]]; do
+            eval "elem=\"\${${_pname}[$j]}\""
+            if [[ $j -eq $sep_count ]]; then
+                result="${result}${elem}"
+            else
+                pad=$base_sep
+                [[ $j -lt $extra ]] && pad=$((pad + 1))
+                result="${result}${elem}$(printf '%*s' "$pad" '')"
+            fi
+            j=$((j + 1))
+        done
+        printf '%s' "$result"
+    }
+
+    ALIGNED_LINE1=$(_join_aligned_impl "$_arr1_name" "$l1_content" "$l1_count")
+    ALIGNED_LINE2=$(_join_aligned_impl "$_arr2_name" "$l2_content" "$l2_count")
+}

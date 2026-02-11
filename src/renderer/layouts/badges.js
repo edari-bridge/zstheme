@@ -1,6 +1,6 @@
 // Badges layout (ported from badges.sh)
 import { colorizeText, getAnimatedBadgeBg } from '../animation.js';
-import { applyAnimation, formatContext, isAnimated, makeChip } from '../helpers.js';
+import { applyAnimation, formatContext, isAnimated, makeChip, alignTwoLines } from '../helpers.js';
 import { getRateColor } from '../colors.js';
 
 export function render(ctx) {
@@ -64,7 +64,6 @@ export function render(ctx) {
   }
 
   const chipCtx = formatContext(ctx);
-  const line1 = `${chipBranch}    ${chipTree}    ${chipDir}    ${chipStatus}    ${chipSync}    ${chipCtx}`;
 
   // === Line 2 chips ===
   let chipModel, chipRate, chipTime, chipBurn, chipTheme;
@@ -81,7 +80,7 @@ export function render(ctx) {
       chipRate = makeChip(bgRate, `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)`, chipStyle, colors);
     }
   } else {
-    chipRate = '';
+    chipRate = makeChip(bgRate, `${colors.C_DIM_STATUS}${colors.icons.TIME} ---`, chipStyle, colors);
   }
 
   // Session time
@@ -91,7 +90,7 @@ export function render(ctx) {
   if (data.burnRate) {
     chipBurn = applyAnimation(ctx, { type: 'bg_chip', text: data.burnRate, offset: 80, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: bgBurn, textColor: colors.C_BURN });
   } else {
-    chipBurn = '';
+    chipBurn = makeChip(bgBurn, `${colors.C_DIM_STATUS}${colors.icons.COST} ---`, chipStyle, colors);
   }
 
   // Theme
@@ -101,8 +100,9 @@ export function render(ctx) {
     chipTheme = `${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${RST}`;
   }
 
-  const line2Chips = [chipModel, chipRate, chipTime, chipBurn].filter(Boolean);
-  const line2 = `${line2Chips.join('     ')}     ${chipTheme}`;
+  const line1Parts = [chipBranch, chipTree, chipDir, chipStatus, chipSync, chipCtx];
+  const line2Parts = [chipModel, chipRate, chipTime, chipBurn, chipTheme];
+  const { line1, line2 } = alignTwoLines(line1Parts, line2Parts);
 
   return `${line1}\n${line2}`;
 }

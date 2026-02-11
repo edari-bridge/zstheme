@@ -1,5 +1,5 @@
 // 2line layout (ported from 2line.sh)
-import { renderText, formatGitStatus, formatGitSync, formatContext, isAnimated } from '../helpers.js';
+import { renderText, formatGitStatus, formatGitSync, formatContext, isAnimated, alignTwoLines } from '../helpers.js';
 import { colorizeText, colorizeFgSparkle } from '../animation.js';
 import { getRateColor } from '../colors.js';
 
@@ -44,12 +44,16 @@ export function render(ctx) {
       const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
       line2Parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}(${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
     }
+  } else {
+    line2Parts.push(`${colors.C_DIM_STATUS}${colors.icons.TIME} ---${colors.RST}`);
   }
 
   line2Parts.push(renderText(colors.C_I_TIME, colors.icons.SESSION, `${data.sessionDurationMin}m`, colors.C_TIME, 20, ctx));
 
   if (data.burnRate) {
     line2Parts.push(renderText(colors.C_I_BURN, colors.icons.COST, data.burnRate, colors.C_BURN, 30, ctx));
+  } else {
+    line2Parts.push(`${colors.C_DIM_STATUS}${colors.icons.COST} ---${colors.RST}`);
   }
 
   if (isAnimated(ctx.animationMode)) {
@@ -58,8 +62,7 @@ export function render(ctx) {
     line2Parts.push(`${colors.C_I_THEME}${colors.icons.THEME} ${colors.C_I_THEME}${data.themeName}${colors.RST}`);
   }
 
-  const line1 = line1Parts.join('    ');
-  const line2 = line2Parts.join('     ');
+  const { line1, line2 } = alignTwoLines(line1Parts, line2Parts);
 
   return `${line1}\n${line2}`;
 }

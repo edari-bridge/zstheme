@@ -58,6 +58,8 @@ render() {
              local rate_color=$(get_rate_color)
              line2_parts+=("${C_I_RATE}${ICON_TIME} ${C_RATE}(${rate_color}${RATE_LIMIT_PCT}%${C_RATE})${RST}")
         fi
+    else
+        line2_parts+=("${C_DIM_STATUS}${ICON_TIME} ---${RST}")
     fi
 
     # 세션 시간
@@ -66,20 +68,16 @@ render() {
     # 번레이트
     if [[ -n "$BURN_RATE" ]]; then
         line2_parts+=("$(render_text "$C_I_BURN" "$ICON_COST" "${BURN_RATE}" "$C_BURN" 30)")
+    else
+        line2_parts+=("${C_DIM_STATUS}${ICON_COST} ---${RST}")
     fi
 
     # 현재 테마
     line2_parts+=("$(render_text "$C_I_THEME" "$ICON_THEME" "${THEME_NAME}" "$C_I_THEME" 5)")
 
-    # 출력
-    local line1="" line2=""
-    for i in "${!line1_parts[@]}"; do
-        [[ $i -eq 0 ]] && line1="${line1_parts[$i]}" || line1="$line1    ${line1_parts[$i]}"
-    done
-    for i in "${!line2_parts[@]}"; do
-        [[ $i -eq 0 ]] && line2="${line2_parts[$i]}" || line2="$line2     ${line2_parts[$i]}"
-    done
+    # 동적 간격으로 우측 정렬
+    align_two_lines line1_parts line2_parts
 
-    echo -e "$line1"
-    echo -e "$line2"
+    echo -e "$ALIGNED_LINE1"
+    echo -e "$ALIGNED_LINE2"
 }

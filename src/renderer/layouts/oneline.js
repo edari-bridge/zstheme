@@ -23,6 +23,8 @@ export function render(ctx) {
   if (data.rateTimeLeft && data.rateResetTime && (data.rateLimitPct || data.rateLimitPct === 0)) {
     const rateColor = getRateColor(data.rateLimitPct, ctx.colorMode, colors);
     parts.push(`${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft} (${rateColor}${data.rateLimitPct}%${colors.C_RATE})${colors.RST}`);
+  } else {
+    parts.push(`${colors.C_DIM_STATUS}${colors.icons.TIME} ---${colors.RST}`);
   }
 
   parts.push(formatContext(ctx));

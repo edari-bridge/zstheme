@@ -1,15 +1,7 @@
 // Card layout (ported from card.sh)
 import { colorizeText, colorizeFgSparkle, getAnimatedBatteryColor, getTimestampDecis } from '../animation.js';
-import { applyAnimation, formatGitStatus, formatGitSync, isAnimated, stripAnsi } from '../helpers.js';
+import { applyAnimation, formatGitStatus, formatGitSync, isAnimated, visibleWidth } from '../helpers.js';
 import { getRateColor } from '../colors.js';
-
-const emojiRe = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{231A}\u{231B}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
-
-function visibleWidth(text) {
-  const plain = stripAnsi(text);
-  const emojiCount = (plain.match(emojiRe) || []).length;
-  return [...plain].length + emojiCount;
-}
 
 function padTo(text, targetWidth) {
   const actualWidth = visibleWidth(text);
@@ -68,10 +60,10 @@ export function render(ctx) {
       R2 = `${colors.C_I_RATE}${colors.icons.TIME} ${colors.C_RATE}${data.rateTimeLeft}\u00b7${data.rateResetTime} ${rateColor}(${data.rateLimitPct}%)${RST}`;
     }
   } else {
-    R2 = '';
+    R2 = `${colors.C_DIM_STATUS}${colors.icons.TIME} ---${RST}`;
   }
   const R3 = applyAnimation(ctx, { type: 'text', text: `${data.sessionDurationMin}m`, offset: 22, iconColor: colors.C_I_TIME, icon: colors.icons.SESSION, bgColor: '', textColor: colors.C_TIME });
-  const R4 = data.burnRate ? applyAnimation(ctx, { type: 'text', text: data.burnRate, offset: 32, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: '', textColor: colors.C_BURN }) : '';
+  const R4 = data.burnRate ? applyAnimation(ctx, { type: 'text', text: data.burnRate, offset: 32, iconColor: colors.C_I_BURN, icon: colors.icons.COST, bgColor: '', textColor: colors.C_BURN }) : `${colors.C_DIM_STATUS}${colors.icons.COST} ---${RST}`;
   const R5 = applyAnimation(ctx, { type: 'text', text: data.themeName, offset: 5, iconColor: colors.C_I_THEME, icon: colors.icons.THEME, bgColor: '', textColor: colors.C_I_THEME });
 
   // Right card width: dynamic based on longest content (theme name can be long)

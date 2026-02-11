@@ -141,13 +141,10 @@ run_with_timeout() {
 
     "$@" >"$tmp_out" 2>"$tmp_err" &
     local pid="$!"
-    local start_ts
-    start_ts="$(date +%s)"
+    SECONDS=0
 
     while kill -0 "$pid" 2>/dev/null; do
-        local now_ts
-        now_ts="$(date +%s)"
-        if (( now_ts - start_ts >= timeout_sec )); then
+        if (( SECONDS >= timeout_sec )); then
             kill -TERM "$pid" 2>/dev/null || true
             sleep 0.2
             kill -KILL "$pid" 2>/dev/null || true

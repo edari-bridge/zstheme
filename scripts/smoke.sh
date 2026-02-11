@@ -45,7 +45,7 @@ for theme in "${themes[@]}"; do
 CLAUDE_THEME="$theme"
 EOF
 
-    PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" >/tmp/zstheme-smoke-status.out 2>/tmp/zstheme-smoke-status.err
+    ZSTHEME_DISABLE_CCUSAGE=1 PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" >/tmp/zstheme-smoke-status.out 2>/tmp/zstheme-smoke-status.err
 
     if [[ -s /tmp/zstheme-smoke-status.err ]]; then
         echo "statusline emitted stderr for theme '$theme'."
@@ -86,7 +86,7 @@ CLAUDE_THEME="$theme"
 EOF
 
     # bash output
-    bash_raw=$(PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" 2>/dev/null)
+    bash_raw=$(ZSTHEME_DISABLE_CCUSAGE=1 PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" 2>/dev/null)
     bash_out=$(echo "$bash_raw" | strip_ansi)
 
     # Node.js output
@@ -123,7 +123,7 @@ if [[ "$compare_fail" -ne 0 ]]; then
 fi
 
 rm -f "$TMP_HOME/.claude/theme-config.sh"
-PATH="/usr/bin:/bin" env -u CLAUDE_THEME HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" >/tmp/zstheme-smoke-status.out 2>/tmp/zstheme-smoke-status.err
+ZSTHEME_DISABLE_CCUSAGE=1 PATH="/usr/bin:/bin" env -u CLAUDE_THEME HOME="$TMP_HOME" bash statusline.sh < "$TMP_HOME/sample.json" >/tmp/zstheme-smoke-status.out 2>/tmp/zstheme-smoke-status.err
 
 if [[ -s /tmp/zstheme-smoke-status.err ]]; then
     echo "statusline emitted stderr for default theme fallback."
