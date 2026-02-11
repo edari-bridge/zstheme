@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { getSkillsStatus, installSkill, uninstallSkill } from '../utils/skills.js';
-import { getUsageStats, getDashboardPreview } from '../utils/stats.js';
+import { getUsageStats, getDashboardPreview, loadRateLimitAsync } from '../utils/stats.js';
 import { formatCurrency, formatNumber, LSD_COLORS } from '../constants.js';
 import { useLsdBorderAnimation } from '../hooks/useLsdBorderAnimation.js';
 
@@ -22,7 +22,6 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [skillsStatus, setSkillsStatus] = useState([]);
-  const [message, setMessage] = useState(null);
   const [dashboardType, setDashboardType] = useState('simple'); // 'simple' or 'full'
   const [preview, setPreview] = useState('');
   const [focusArea, setFocusArea] = useState('menu'); // 'menu' or 'preview'
@@ -32,23 +31,30 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
 
   useEffect(() => {
     setSkillsStatus(getSkillsStatus());
-    setPreview(getDashboardPreview(dashboardType));
+    if (dashboardType === 'full') {
+      // 프리뷰 영역 가용 문자 폭 계산
+      const previewChars = Math.floor(width * 0.78) - 5;
+      // Phase 1: Rate Limit 제외하고 즉시 표시
+      setPreview(getDashboardPreview('full', { skipRateLimit: true, maxWidth: previewChars }));
+      // Phase 2: Rate Limit 비동기 로드 후 갱신
+      loadRateLimitAsync().then(() => {
+        setPreview(getDashboardPreview('full', { maxWidth: previewChars }));
+      });
+    } else {
+      setPreview(getDashboardPreview(dashboardType));
+    }
   }, [dashboardType]);
 
   const previewLines = preview.split('\n');
   const visibleLines = height - 12;
   const maxScroll = Math.max(0, previewLines.length - visibleLines);
 
+  const skillsEnabled = skillsStatus.length > 0 && skillsStatus.every(s => s.installed);
+
   const menuItems = [
     { id: 'view_header', label: 'VIEWS', type: 'header' },
     { id: 'simple', label: 'Simple Dashboard' },
     { id: 'full', label: 'Full Logs' },
-    { id: 'skills_header', label: 'SKILLS', type: 'header' },
-    ...skillsStatus.map(skill => ({
-      id: skill.name,
-      label: skill.name,
-      skill: skill,
-    })),
     { id: 'back', label: 'Exit Dashboard', type: 'action' },
   ];
 
@@ -69,7 +75,6 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
     if (key.upArrow) {
       if (focusArea === 'menu') {
         setSelectedIndex(prev => (prev > 0 ? prev - 1 : navigableItems.length - 1));
-        setMessage(null);
       } else {
         setScrollY(prev => Math.max(0, prev - 1));
       }
@@ -78,10 +83,19 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
     if (key.downArrow) {
       if (focusArea === 'menu') {
         setSelectedIndex(prev => (prev < navigableItems.length - 1 ? prev + 1 : 0));
-        setMessage(null);
       } else {
         setScrollY(prev => Math.min(maxScroll, prev + 1));
       }
+    }
+
+    if (input === 's') {
+      if (skillsEnabled) {
+        skillsStatus.forEach(s => uninstallSkill(s.name));
+      } else {
+        skillsStatus.forEach(s => installSkill(s.name));
+      }
+      setSkillsStatus(getSkillsStatus());
+      return;
     }
 
     if (key.return) {
@@ -96,26 +110,10 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
       }
 
       if (selected.id === 'simple' || selected.id === 'full') {
-        setDashboardType(selected.id);
+        setPreview('');
         setScrollY(0);
+        setDashboardType(selected.id);
         return;
-      }
-
-      if (selected.skill) {
-        const skill = selected.skill;
-        if (skill.installed) {
-          const result = uninstallSkill(skill.name);
-          setMessage(result.success ?
-            { type: 'success', text: `DISABLED: ${skill.name}` } :
-            { type: 'error', text: result.error });
-        } else {
-          const result = installSkill(skill.name);
-          setMessage(result.success ?
-            { type: 'success', text: `ENABLED: ${skill.name}` } :
-            { type: 'error', text: result.error });
-        }
-        setSkillsStatus(getSkillsStatus());
-        setTimeout(() => setMessage(null), 2500);
       }
     }
   });
@@ -212,7 +210,7 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
       // Sidebar (Menu)
       e(Box, {
         flexDirection: 'column',
-        width: '30%',
+        width: '22%',
         paddingRight: 2,
         borderStyle: 'single',
         borderTop: false,
@@ -240,21 +238,32 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
           }
           return e(Box, { key: item.id },
             e(Text, {
-              color: isSelected ? 'cyan' : (item.skill?.installed ? 'green' : 'white'),
+              color: isSelected ? 'cyan' : 'white',
               bold: isSelected
             },
               isSelected ? `● ${item.label}` : `○ ${item.label}`)
           );
         }),
-        message && e(Box, { marginTop: 2, borderStyle: 'single', borderColor: message.type === 'success' ? 'green' : 'red', paddingX: 1 },
-          e(Text, { color: message.type === 'success' ? 'green' : 'red' }, message.text)
-        )
+        // Skills card
+        e(Box, {
+          marginTop: 2,
+          borderStyle: 'round',
+          borderColor: skillsEnabled ? 'green' : 'gray',
+          paddingX: 1,
+          flexDirection: 'column'
+        },
+          e(Box, { justifyContent: 'space-between' },
+            e(Text, { color: skillsEnabled ? 'green' : 'gray', bold: true }, '/dashboard'),
+            e(Text, { color: skillsEnabled ? 'green' : 'gray' }, skillsEnabled ? ' ON' : 'OFF')
+          ),
+          e(Text, { dimColor: true }, 'S to toggle')
+        ),
       ),
 
       // Content Area
       e(Box, {
         flexDirection: 'column',
-        width: '70%',
+        width: '78%',
         paddingLeft: 2,
         borderColor: focusArea === 'preview' ? 'cyan' : 'gray'
       },
@@ -288,8 +297,10 @@ export function Dashboard({ onBack, isLsdUnlocked = false }) {
       width: '100%'
     },
       e(Box, {},
-        e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate '),
-        e(Text, { color: 'cyan' }, 'TAB'), e(Text, { dimColor: true }, ' Focus')
+        e(Text, { color: 'green' }, '↑↓'), e(Text, { dimColor: true }, ' Navigate'),
+        dashboardType === 'full'
+          ? e(Box, {}, e(Text, {}, ' '), e(Text, { color: 'cyan' }, 'TAB'), e(Text, { dimColor: true }, focusArea === 'menu' ? ' → Scroll' : ' → Menu'))
+          : null
       ),
       e(Box, {},
         e(Text, { color: 'magenta' }, 'ENTER'), e(Text, { dimColor: true }, ' Select '),

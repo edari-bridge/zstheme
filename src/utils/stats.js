@@ -2,10 +2,12 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
-import { cmdDashboard, cmdStats } from '../commands/usage.js';
+import { cmdDashboard, cmdStats, loadRateLimitAsync } from '../commands/usage.js';
+
+export { loadRateLimitAsync };
 
 // console.log 캡처로 대시보드 프리뷰 가져오기
-export function getDashboardPreview(type = 'simple') {
+export function getDashboardPreview(type = 'simple', options = {}) {
   const originalLog = console.log;
 
   try {
@@ -13,7 +15,7 @@ export function getDashboardPreview(type = 'simple') {
     console.log = (...args) => logs.push(args.join(' '));
 
     if (type === 'full') {
-      cmdStats();
+      cmdStats(options);
     } else {
       cmdDashboard();
     }
@@ -62,8 +64,8 @@ export function getUsageStats() {
 
     const efficiency = totalCost > 0 ? Math.round(totalTokens / totalCost) : 0;
     const oiRatio = inputTokens > 0 ? (outputTokens / inputTokens).toFixed(1) : '0';
-    const cacheHitRate = (inputTokens + cacheCreate) > 0
-      ? ((cacheRead / (inputTokens + cacheCreate)) * 100).toFixed(1)
+    const cacheHitRate = (cacheRead + inputTokens) > 0
+      ? ((cacheRead / (cacheRead + inputTokens)) * 100).toFixed(1)
       : '0';
 
     const totalSessions = stats.totalSessions || 0;

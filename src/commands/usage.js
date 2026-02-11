@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { execFileSync } from 'child_process';
+import { execSync, exec } from 'child_process';
 import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
 
 function formatDuration(ms) {
@@ -46,21 +46,14 @@ function padLeft(str, len) {
   return ' '.repeat(Math.max(0, len - displayWidth)) + str;
 }
 
-// ccusage에서 Rate Limit 정보 가져오기
-function getRateLimitInfo() {
+// Rate Limit 캐시
+let _rateLimitCache = { loaded: false, data: null };
+
+function parseRateLimitData(jsonStr) {
   try {
-    const result = execFileSync('npx', ['ccusage', 'blocks', '--json'], {
-      encoding: 'utf-8',
-      timeout: 10000,
-      stdio: ['pipe', 'pipe', 'ignore'],
-      shell: true,
-    });
-    const data = JSON.parse(result);
+    const data = JSON.parse(jsonStr);
     const blocks = data.blocks || [];
-
-    // 가장 최근 블록 (projection이 있는 것 우선)
     const activeBlock = blocks.find(b => b.projection) || blocks[0];
-
     if (!activeBlock) return null;
 
     const costUSD = activeBlock.costUSD || 0;
@@ -76,19 +69,13 @@ function getRateLimitInfo() {
     let timeLeft = null;
     if (projection?.remainingMinutes) {
       const mins = projection.remainingMinutes;
-      if (mins >= 60) {
-        timeLeft = `${Math.floor(mins / 60)}h ${mins % 60}m`;
-      } else {
-        timeLeft = `${mins}m`;
-      }
+      timeLeft = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
     }
 
     let resetTime = null;
     if (resetAt) {
       resetTime = new Date(resetAt).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
+        hour: '2-digit', minute: '2-digit', hour12: false,
       });
     }
 
@@ -98,9 +85,41 @@ function getRateLimitInfo() {
     }
 
     return { costUSD, ratePct, timeLeft, resetTime, burnRateStr };
-  } catch (e) {
+  } catch {
     return null;
   }
+}
+
+// 동기 호출 (CLI 전용, 캐시 활용)
+function getRateLimitInfo() {
+  if (_rateLimitCache.loaded) return _rateLimitCache.data;
+  try {
+    const result = execSync('npx ccusage blocks --json', {
+      encoding: 'utf-8',
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    _rateLimitCache = { loaded: true, data: parseRateLimitData(result) };
+  } catch {
+    _rateLimitCache = { loaded: true, data: null };
+  }
+  return _rateLimitCache.data;
+}
+
+// 비동기 호출 (Dashboard UI용)
+export function loadRateLimitAsync() {
+  return new Promise((resolve) => {
+    exec('npx ccusage blocks --json', {
+      encoding: 'utf-8',
+      timeout: 10000,
+    }, (err, stdout) => {
+      _rateLimitCache = {
+        loaded: true,
+        data: (!err && stdout) ? parseRateLimitData(stdout) : null,
+      };
+      resolve(_rateLimitCache.data);
+    });
+  });
 }
 
 // 현재 세션 정보 가져오기
@@ -237,8 +256,8 @@ export function cmdDashboard() {
   const oiRatio = inputTokens > 0 ? (outputTokens / inputTokens).toFixed(1) : '0';
 
   // 캐시 히트율
-  const cacheHitRate = (inputTokens + cacheCreate) > 0
-    ? ((cacheRead / (inputTokens + cacheCreate)) * 100).toFixed(1)
+  const cacheHitRate = (cacheRead + inputTokens) > 0
+    ? ((cacheRead / (cacheRead + inputTokens)) * 100).toFixed(1)
     : '0';
 
   // 박스 그리기
@@ -281,7 +300,7 @@ export function cmdDashboard() {
   console.log('');
 }
 
-export function cmdStats() {
+export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
   const statsPath = join(homedir(), '.claude', 'stats-cache.json');
 
   if (!existsSync(statsPath)) {
@@ -350,9 +369,9 @@ export function cmdStats() {
   // O/I 비율
   const oiRatio = inputTokens > 0 ? (outputTokens / inputTokens).toFixed(1) : '0';
 
-  // 캐시 히트율 (cache read / (input + cache create))
-  const cacheHitRate = (inputTokens + cacheCreate) > 0
-    ? Math.round((cacheRead / (inputTokens + cacheCreate)) * 100)
+  // 캐시 히트율 (cache read / (cache read + input))
+  const cacheHitRate = (cacheRead + inputTokens) > 0
+    ? Math.round((cacheRead / (cacheRead + inputTokens)) * 100)
     : 0;
 
   // Longest session
@@ -397,12 +416,6 @@ export function cmdStats() {
 
   const maxGroupCount = Math.max(...hourGroups.map(g => g.count), 1);
 
-  // 막대 그래프 생성 함수
-  const makeBar = (count, max, width = 10) => {
-    const filled = Math.round((count / max) * width);
-    return '█'.repeat(filled) + '░'.repeat(width - filled);
-  };
-
   // 일별 토큰 사용량 (최근 7일)
   const dailyModelTokens = stats.dailyModelTokens || [];
   const recentTokens = dailyModelTokens
@@ -425,8 +438,8 @@ export function cmdStats() {
     return barChars[index];
   };
 
-  // 박스 그리기
-  const W = 68; // 박스 내부 너비
+  // 박스 그리기 (maxWidth가 있으면 프리뷰 영역에 맞춤)
+  const W = maxWidth ? Math.max(50, maxWidth - 2) : 68; // 내부 너비 (-2 for ║ borders)
   const TOP = '╔' + '═'.repeat(W) + '╗';
   const MID = '╠' + '═'.repeat(W) + '╣';
   const BOT = '╚' + '═'.repeat(W) + '╝';
@@ -441,10 +454,20 @@ export function cmdStats() {
     return '║' + ' '.repeat(left) + content + ' '.repeat(right) + '║';
   };
 
+  const valueW = W - 4; // ║ + 2 spaces each side
+  const labelW = Math.min(22, Math.floor(valueW * 0.35));
+  const dataW = valueW - labelW;
   const valueLine = (label, value) => {
-    const labelPart = padRight(label, 22);
-    const valuePart = padLeft(value, 40);
+    const labelPart = padRight(label, labelW);
+    const valuePart = padLeft(value, dataW);
     return '║  ' + labelPart + valuePart + '  ║';
+  };
+
+  // 막대 그래프 생성 함수 (W에 맞춰 동적 너비)
+  const barWidth = Math.max(5, Math.floor((W - 30) / 2));
+  const makeBar = (count, max, bw = barWidth) => {
+    const filled = Math.round((count / max) * bw);
+    return '█'.repeat(filled) + '░'.repeat(bw - filled);
   };
 
   console.log('');
@@ -528,8 +551,8 @@ export function cmdStats() {
     console.log(chalk.cyan(valueLine('📉 Min:', formatNumber(minT))));
   }
 
-  // Rate Limit 정보 (ccusage)
-  const rateInfo = getRateLimitInfo();
+  // Rate Limit 정보 (ccusage) - skipRateLimit 시 캐시만 확인
+  const rateInfo = skipRateLimit ? (_rateLimitCache.loaded ? _rateLimitCache.data : null) : getRateLimitInfo();
   if (rateInfo) {
     console.log(chalk.cyan(MID));
     console.log(chalk.cyan(center('⏳ RATE LIMIT (ccusage)')));
