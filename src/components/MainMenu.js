@@ -20,8 +20,8 @@ const e = React.createElement;
 // Check if original statusline backup exists
 const hasBackup = getOriginalStatusline() !== undefined;
 
-// Check if skills are installed (dashboard + dashboard-full are always paired)
-const skillsInstalled = isSkillInstalled('dashboard');
+// hasBackup는 앱 시작 시 1회 평가 (변경 안 됨)
+// skillsInstalled는 컴포넌트 내부 상태로 이동 (Dashboard 동기화)
 
 export function MainMenu() {
     const { exit } = useApp();
@@ -33,6 +33,7 @@ export function MainMenu() {
     const [activeTab, setActiveTab] = useState('menu');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [zsthemeActive, setZsthemeActive] = useState(() => isZsthemeActive());
+    const [skillsInstalled, setSkillsInstalled] = useState(() => isSkillInstalled('dashboard'));
 
     // Dynamic Data
     const currentTheme = getCurrentTheme();
@@ -108,7 +109,7 @@ export function MainMenu() {
     // Sub-components rendering
     if (activeTab === 'themes') return e(ThemeSelector, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
     if (activeTab === 'editor') return e(ColorEditor, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
-    if (activeTab === 'dashboard') return e(Dashboard, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
+    if (activeTab === 'dashboard') return e(Dashboard, { onBack: () => { setSkillsInstalled(isSkillInstalled('dashboard')); setActiveTab('menu'); }, isLsdUnlocked });
     if (activeTab === 'reset') return e(ResetSettings, { onBack: () => setActiveTab('menu'), isLsdUnlocked });
 
     // --- Main Menu Render (Home Dashboard Style) ---

@@ -3,7 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { execSync, exec } from 'child_process';
-import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
+import { aggregateModelUsage, getLatestModelName, formatNumber, formatCurrency } from '../constants.js';
 
 function formatDuration(ms) {
   const hours = Math.floor(ms / (1000 * 60 * 60));
@@ -219,14 +219,15 @@ export function cmdDashboard() {
     return;
   }
 
-  // 데이터 추출
-  const modelUsage = stats.modelUsage?.[MODEL_ID] || {};
-  const inputTokens = modelUsage.inputTokens || 0;
-  const outputTokens = modelUsage.outputTokens || 0;
-  const cacheRead = modelUsage.cacheReadInputTokens || 0;
-  const cacheCreate = modelUsage.cacheCreationInputTokens || 0;
+  // 전체 모델 합산
+  const agg = aggregateModelUsage(stats.modelUsage);
+  const inputTokens = agg.inputTokens;
+  const outputTokens = agg.outputTokens;
+  const cacheRead = agg.cacheRead;
+  const cacheCreate = agg.cacheCreate;
   const cacheTotal = cacheRead + cacheCreate;
   const totalTokens = inputTokens + outputTokens + cacheTotal;
+  const totalCost = agg.cost;
 
   const totalSessions = stats.totalSessions || 0;
 
@@ -234,13 +235,6 @@ export function cmdDashboard() {
   const dailyActivity = stats.dailyActivity || [];
   const dates = dailyActivity.map(d => d.date).sort();
   const days = dates.length || 1;
-
-  // 비용 계산
-  const inputCost = (inputTokens / 1_000_000) * PRICING.input;
-  const outputCost = (outputTokens / 1_000_000) * PRICING.output;
-  const cacheReadCost = (cacheRead / 1_000_000) * PRICING.cacheRead;
-  const cacheCreateCost = (cacheCreate / 1_000_000) * PRICING.cacheCreate;
-  const totalCost = inputCost + outputCost + cacheReadCost + cacheCreateCost;
 
   // 일일 평균
   const dailyAvgCost = totalCost / days;
@@ -321,13 +315,19 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
     return;
   }
 
-  // 데이터 추출
-  const modelUsage = stats.modelUsage?.[MODEL_ID] || {};
-  const inputTokens = modelUsage.inputTokens || 0;
-  const outputTokens = modelUsage.outputTokens || 0;
-  const cacheRead = modelUsage.cacheReadInputTokens || 0;
-  const cacheCreate = modelUsage.cacheCreationInputTokens || 0;
+  // 전체 모델 합산
+  const agg = aggregateModelUsage(stats.modelUsage);
+  const modelName = getLatestModelName(stats.modelUsage);
+  const inputTokens = agg.inputTokens;
+  const outputTokens = agg.outputTokens;
+  const cacheRead = agg.cacheRead;
+  const cacheCreate = agg.cacheCreate;
   const totalTokens = inputTokens + outputTokens + cacheRead + cacheCreate;
+  const totalCost = agg.cost;
+  const inputCost = agg.inputCost;
+  const outputCost = agg.outputCost;
+  const cacheReadCost = agg.cacheReadCost;
+  const cacheCreateCost = agg.cacheCreateCost;
 
   const totalSessions = stats.totalSessions || 0;
   const totalMessages = stats.totalMessages || 0;
@@ -347,13 +347,6 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
         hour: '2-digit', minute: '2-digit', hour12: false
       }).replace(',', '')
     : 'N/A';
-
-  // 비용 계산
-  const inputCost = (inputTokens / 1_000_000) * PRICING.input;
-  const outputCost = (outputTokens / 1_000_000) * PRICING.output;
-  const cacheReadCost = (cacheRead / 1_000_000) * PRICING.cacheRead;
-  const cacheCreateCost = (cacheCreate / 1_000_000) * PRICING.cacheCreate;
-  const totalCost = inputCost + outputCost + cacheReadCost + cacheCreateCost;
 
   // 일일 평균
   const dailyAvgCost = totalCost / days;
@@ -489,7 +482,7 @@ export function cmdStats({ skipRateLimit = false, maxWidth } = {}) {
   console.log(chalk.cyan(DIV));
   console.log(chalk.cyan(valueLine('📊 Total Tokens:', formatNumber(totalTokens))));
   console.log(chalk.cyan(MID));
-  console.log(chalk.cyan(center('💰 ESTIMATED COST (Opus 4.5)')));
+  console.log(chalk.cyan(center(`💰 ESTIMATED COST (${modelName})`)));
   console.log(chalk.cyan(MID));
   console.log(chalk.cyan(valueLine('📥 Input:', formatCurrency(inputCost))));
   console.log(chalk.cyan(valueLine('📤 Output:', formatCurrency(outputCost))));

@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { PRICING, MODEL_ID, formatNumber, formatCurrency } from '../constants.js';
+import { aggregateModelUsage, formatNumber, formatCurrency } from '../constants.js';
 import { cmdDashboard, cmdStats, loadRateLimitAsync } from '../commands/usage.js';
 
 export { loadRateLimitAsync };
@@ -38,25 +38,20 @@ export function getUsageStats() {
   try {
     const stats = JSON.parse(readFileSync(statsPath, 'utf-8'));
 
-    const modelUsage = stats.modelUsage?.[MODEL_ID] || {};
-    const inputTokens = modelUsage.inputTokens || 0;
-    const outputTokens = modelUsage.outputTokens || 0;
-    const cacheRead = modelUsage.cacheReadInputTokens || 0;
-    const cacheCreate = modelUsage.cacheCreationInputTokens || 0;
+    const agg = aggregateModelUsage(stats.modelUsage);
+    const inputTokens = agg.inputTokens;
+    const outputTokens = agg.outputTokens;
+    const cacheRead = agg.cacheRead;
+    const cacheCreate = agg.cacheCreate;
     const cacheTotal = cacheRead + cacheCreate;
     const totalTokens = inputTokens + outputTokens + cacheTotal;
+    const totalCost = agg.cost;
 
     const dailyActivity = stats.dailyActivity || [];
     const dates = dailyActivity.map(d => d.date).sort();
     const days = dates.length || 1;
     const startDate = dates[0] || 'N/A';
     const endDate = dates[dates.length - 1] || 'N/A';
-
-    const inputCost = (inputTokens / 1_000_000) * PRICING.input;
-    const outputCost = (outputTokens / 1_000_000) * PRICING.output;
-    const cacheReadCost = (cacheRead / 1_000_000) * PRICING.cacheRead;
-    const cacheCreateCost = (cacheCreate / 1_000_000) * PRICING.cacheCreate;
-    const totalCost = inputCost + outputCost + cacheReadCost + cacheCreateCost;
 
     const dailyAvgCost = totalCost / days;
     const dailyAvgTokens = totalTokens / days;
@@ -82,10 +77,6 @@ export function getUsageStats() {
       cacheRead,
       cacheCreate,
       cacheTotal,
-      inputCost,
-      outputCost,
-      cacheReadCost,
-      cacheCreateCost,
       efficiency,
       oiRatio,
       cacheHitRate,
