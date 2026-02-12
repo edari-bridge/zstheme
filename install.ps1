@@ -75,6 +75,14 @@ npm install --omit=dev 2>$null
 if ($LASTEXITCODE -ne 0) { npm install }
 Pop-Location
 
+Write-Host "Installing ccusage (rate limit display)..." -ForegroundColor Green
+npm install -g ccusage 2>$null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "  ccusage installed" -ForegroundColor Green
+} else {
+    Write-Host "  ccusage install failed (optional, rate limit will show ---)" -ForegroundColor Yellow
+}
+
 # ============================================================
 # 3. Create ~/.claude directory if needed
 # ============================================================

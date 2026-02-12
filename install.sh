@@ -102,6 +102,13 @@ echo "${GREEN}Installing npm dependencies...${RST}"
 cd "$INSTALL_DIR"
 npm install --omit=dev 2>/dev/null || npm install
 
+echo "${GREEN}Installing ccusage (rate limit display)...${RST}"
+if npm install -g ccusage 2>/dev/null; then
+    echo "  ${GREEN}ccusage installed${RST}"
+else
+    echo "  ${YELLOW}ccusage install failed (optional, rate limit will show ---)${RST}"
+fi
+
 # ============================================================
 # 3. Create ~/.claude directory if needed
 # ============================================================
