@@ -8,7 +8,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
 - **50 Theme Combinations** - Mix layouts, colors, animations, and icons
 - **Interactive Selector** - Preview themes in real-time with arrow keys
-- **Color Editor** - Customize colors with tweakcc-style interface
+- **Color Editor** - Customize colors with interactive TUI
 - **Git Integration** - Branch, worktree, file changes, push/pull status
 - **Rate Limit Display** - Track API usage with [ccusage](https://github.com/ryoppippi/ccusage)
 - **Context Awareness** - Colors change based on context window usage
@@ -76,9 +76,10 @@ zstheme --edit                 # Launch interactive color editor
 | Key | Action |
 |-----|--------|
 | `↑↓` / `j/k` | Navigate elements |
-| `←→` | Adjust color (±1) |
-| `+/-` | Adjust color (±10) |
-| `Tab` | Switch foreground/background |
+| `←→` / `h/l` | Adjust value (±1) or change layout/icon |
+| `+/-` | Adjust value (±10) |
+| `Tab` | Switch between Style and Colors panel |
+| `f` / `b` | Switch foreground / background colors |
 | `s` | Save |
 | `r` | Reset to defaults |
 | `q` | Quit |
