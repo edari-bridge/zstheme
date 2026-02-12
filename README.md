@@ -16,7 +16,7 @@ Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 ## Quick Start
 
 ```bash
-# 1. Install (requires Node.js 18+)
+# 1. Install
 curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
 
 # 2. Pick a theme
@@ -159,11 +159,10 @@ Your original statusline config is restored from the backup created during insta
 
 ### Requirements
 
-- **Node.js 18+** - Required for the CLI
-- **Claude Code** - The CLI this themes
+- **Claude Code** - The CLI that zstheme customizes
+- **Node.js 18+** - Included if you have Claude Code
 - **jq** (optional) - For automatic settings.json update
 - **ccusage** (optional) - For rate limit display
-- **ripgrep** (optional) - Faster file search in development scripts
 
 ### Install Steps (macOS / Linux)
 
@@ -198,9 +197,8 @@ git clone https://github.com/edari-bridge/zstheme.git $env:USERPROFILE\.zstheme
 
 The Windows installer uses the **Node.js renderer** (`statusline-node.js`) which works natively on Windows without requiring bash or WSL. Your original statusline config is backed up automatically, same as the macOS/Linux installer.
 
-### Manual Setup (macOS / Linux)
-
-If you prefer manual installation:
+<details>
+<summary>Manual Setup (macOS / Linux)</summary>
 
 1. Clone and install dependencies:
    ```bash
@@ -229,7 +227,10 @@ If you prefer manual installation:
    export CLAUDE_THEME="2line"
    ```
 
-### Manual Setup (Windows)
+</details>
+
+<details>
+<summary>Manual Setup (Windows)</summary>
 
 1. Clone and install dependencies:
    ```powershell
@@ -256,6 +257,26 @@ If you prefer manual installation:
    ```powershell
    $env:CLAUDE_THEME = "2line"
    ```
+
+</details>
+
+## Update
+
+Re-run the install command — the installer detects the existing installation and updates in place.
+
+### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.sh | bash
+```
+
+### Windows
+
+```powershell
+irm https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.ps1 | iex
+```
+
+Your themes, custom colors, and statusline backup are preserved during updates.
 
 ## Rate Limit Integration
 
@@ -285,6 +306,8 @@ Themes have access to these environment variables:
 | `$SESSION_DURATION_MIN` | Session duration in minutes |
 
 ## Uninstall
+
+Uninstalling automatically restores your original statusline config.
 
 ### macOS / Linux
 
