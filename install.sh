@@ -143,50 +143,7 @@ echo "  ${CYAN}~/.claude/themes/${RST} -> $INSTALL_DIR/themes/"
 # 6. Backup original statusline & Configure settings.json
 # ============================================================
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
-CONFIG_DIR="$HOME/.config/zstheme"
-BACKUP_FILE="$CONFIG_DIR/original-statusline.json"
-PARTIAL_BACKUP_SENTINEL='{"__zstheme_partial_backup__":true}'
-
-backup_original_statusline() {
-    # Skip if backup already exists (first install only)
-    if [[ -f "$BACKUP_FILE" ]]; then
-        echo "${BLUE}Statusline backup already exists, skipping${RST}"
-        return
-    fi
-
-    mkdir -p "$CONFIG_DIR"
-
-    if [[ ! -f "$SETTINGS_FILE" ]]; then
-        # No settings.json = no previous statusline
-        echo "null" > "$BACKUP_FILE"
-        echo "${BLUE}No previous statusline (saved to backup)${RST}"
-        return
-    fi
-
-    if command -v jq &>/dev/null; then
-        # Extract statusLine with jq
-        local sl
-        sl=$(jq '.statusLine // null' "$SETTINGS_FILE" 2>/dev/null)
-        echo "$sl" > "$BACKUP_FILE"
-        if [[ "$sl" == "null" ]]; then
-            echo "${BLUE}No previous statusline (saved to backup)${RST}"
-        else
-            echo "${GREEN}Backed up original statusline config${RST}"
-        fi
-    else
-        # No jq: check if statusLine key exists
-        if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
-            echo "$PARTIAL_BACKUP_SENTINEL" > "$BACKUP_FILE"
-            echo "${YELLOW}Detected existing statusLine but jq is missing.${RST}"
-            echo "${YELLOW}Saved partial-backup marker (original statusLine left untouched).${RST}"
-        else
-            echo "null" > "$BACKUP_FILE"
-            echo "${BLUE}No previous statusline (saved to backup)${RST}"
-        fi
-    fi
-}
-
-backup_original_statusline
+BACKUP_FILE="$HOME/.config/zstheme/original-statusline.json"
 
 configure_settings() {
     # Select statusline command based on platform
@@ -198,32 +155,26 @@ configure_settings() {
         STATUSLINE_CMD="~/.claude/statusline.sh"
     fi
 
-    if [[ -f "$SETTINGS_FILE" ]]; then
-        # Check if statusLine is already configured
-        if grep -q '"statusLine"' "$SETTINGS_FILE" 2>/dev/null; then
-            echo "${BLUE}settings.json already has statusLine configured${RST}"
-        else
-            echo "${YELLOW}Adding statusLine to settings.json...${RST}"
-            # Use jq if available, otherwise warn
-            if command -v jq &>/dev/null; then
-                local tmp=$(mktemp)
-                jq --arg cmd "$STATUSLINE_CMD" '. + {"statusLine": {"command": $cmd}}' "$SETTINGS_FILE" > "$tmp"
-                mv "$tmp" "$SETTINGS_FILE"
-                echo "${GREEN}Updated settings.json${RST}"
-            else
-                echo "${YELLOW}Please add manually to $SETTINGS_FILE:${RST}"
-                echo "  \"statusLine\": { \"command\": \"$STATUSLINE_CMD\" }"
-            fi
-        fi
+    # Use Node.js for safe JSON manipulation (works with or without jq)
+    local result
+    result=$(node "$INSTALL_DIR/bin/setup-settings.js" "$SETTINGS_FILE" "$BACKUP_FILE" "$STATUSLINE_CMD" 2>&1)
+    local exit_code=$?
+
+    if [[ $exit_code -eq 0 ]]; then
+        while IFS= read -r line; do
+            case "$line" in
+                BACKUP_SAVED)     echo "${GREEN}Backed up original statusline config${RST}" ;;
+                BACKUP_NONE)      echo "${BLUE}No previous statusline (saved to backup)${RST}" ;;
+                BACKUP_EXISTS)    echo "${BLUE}Statusline backup already exists, skipping${RST}" ;;
+                SETTINGS_OK)      echo "${GREEN}Configured settings.json with zstheme statusLine${RST}" ;;
+                SETTINGS_CREATED) echo "${GREEN}Created settings.json${RST}" ;;
+            esac
+        done <<< "$result"
     else
-        echo "${GREEN}Creating settings.json...${RST}"
-        cat > "$SETTINGS_FILE" << EOF
-{
-  "statusLine": {
-    "command": "$STATUSLINE_CMD"
-  }
-}
-EOF
+        echo "${YELLOW}Warning: Could not update settings.json automatically${RST}"
+        echo "${RED}$result${RST}"
+        echo "${YELLOW}Please add manually to $SETTINGS_FILE:${RST}"
+        echo "  \"statusLine\": { \"command\": \"$STATUSLINE_CMD\" }"
     fi
 }
 

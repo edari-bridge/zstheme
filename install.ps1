@@ -88,53 +88,25 @@ if (-not (Test-Path $ClaudeDir)) {
 # ============================================================
 $SettingsFile = "$ClaudeDir\settings.json"
 $StatuslineCmd = "node `"$InstallDir\bin\statusline-node.js`""
-$ConfigDir = "$env:USERPROFILE\.config\zstheme"
-$BackupFile = "$ConfigDir\original-statusline.json"
+$BackupFile = "$env:USERPROFILE\.config\zstheme\original-statusline.json"
 
-# Backup existing statusLine before overwriting
-if (-not (Test-Path $BackupFile)) {
-    if (-not (Test-Path $ConfigDir)) {
-        New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
-    }
-    if (Test-Path $SettingsFile) {
-        try {
-            $ExistingSettings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
-            if ($ExistingSettings.statusLine) {
-                $ExistingSettings.statusLine | ConvertTo-Json -Depth 10 | Set-Content $BackupFile -Encoding UTF8
-                Write-Host "Backed up original statusline config" -ForegroundColor Green
-            } else {
-                "null" | Set-Content $BackupFile -Encoding UTF8
-                Write-Host "No previous statusline (saved to backup)" -ForegroundColor Blue
-            }
-        } catch {
-            "null" | Set-Content $BackupFile -Encoding UTF8
+# Use Node.js for safe JSON manipulation (avoids PowerShell ConvertTo-Json corruption)
+$SetupResult = node "$InstallDir\bin\setup-settings.js" "$SettingsFile" "$BackupFile" "$StatuslineCmd" 2>&1
+if ($LASTEXITCODE -eq 0) {
+    foreach ($line in $SetupResult -split "`n") {
+        switch ($line.Trim()) {
+            "BACKUP_SAVED"     { Write-Host "Backed up original statusline config" -ForegroundColor Green }
+            "BACKUP_NONE"      { Write-Host "No previous statusline (saved to backup)" -ForegroundColor Blue }
+            "BACKUP_EXISTS"    { Write-Host "Statusline backup already exists, skipping" -ForegroundColor Blue }
+            "SETTINGS_OK"      { Write-Host "Configured settings.json with zstheme statusLine" -ForegroundColor Green }
+            "SETTINGS_CREATED" { Write-Host "Created settings.json" -ForegroundColor Green }
         }
-    } else {
-        "null" | Set-Content $BackupFile -Encoding UTF8
-        Write-Host "No previous statusline (saved to backup)" -ForegroundColor Blue
     }
 } else {
-    Write-Host "Statusline backup already exists, skipping" -ForegroundColor Blue
-}
-
-if (Test-Path $SettingsFile) {
-    $Settings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
-    if (-not $Settings.statusLine) {
-        $Settings | Add-Member -NotePropertyName "statusLine" -NotePropertyValue @{ command = $StatuslineCmd }
-        $Settings | ConvertTo-Json -Depth 10 | Set-Content $SettingsFile -Encoding UTF8
-        Write-Host "Updated settings.json with statusLine" -ForegroundColor Green
-    } else {
-        Write-Host "settings.json already has statusLine configured" -ForegroundColor Blue
-        Write-Host "  Current: $($Settings.statusLine.command)" -ForegroundColor Cyan
-        Write-Host "  To use Node.js renderer, set to: $StatuslineCmd" -ForegroundColor Cyan
-    }
-} else {
-    @{
-        statusLine = @{
-            command = $StatuslineCmd
-        }
-    } | ConvertTo-Json -Depth 10 | Set-Content $SettingsFile -Encoding UTF8
-    Write-Host "Created settings.json" -ForegroundColor Green
+    Write-Host "Warning: Could not update settings.json automatically" -ForegroundColor Yellow
+    Write-Host $SetupResult -ForegroundColor Red
+    Write-Host "Please add manually to settings.json:" -ForegroundColor Yellow
+    Write-Host "  `"statusLine`": { `"command`": `"$StatuslineCmd`" }" -ForegroundColor Cyan
 }
 
 # ============================================================
