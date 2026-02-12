@@ -1,4 +1,4 @@
-# zstheme installer for Windows (PowerShell)
+﻿# zstheme installer for Windows (PowerShell)
 # Usage: irm https://raw.githubusercontent.com/edari-bridge/zstheme/main/install.ps1 | iex
 #   or:  git clone ... && cd zstheme && .\install.ps1
 
@@ -9,9 +9,9 @@ $InstallDir = "$env:USERPROFILE\.zstheme"
 $ClaudeDir = "$env:USERPROFILE\.claude"
 
 Write-Host ""
-Write-Host "  ╭──────────────────────────────────────╮" -ForegroundColor Magenta
-Write-Host "  │  zstheme - Windows Installation      │" -ForegroundColor Magenta
-Write-Host "  ╰──────────────────────────────────────╯" -ForegroundColor Magenta
+Write-Host "  +--------------------------------------+" -ForegroundColor Magenta
+Write-Host "  |  zstheme - Windows Installation      |" -ForegroundColor Magenta
+Write-Host "  +--------------------------------------+" -ForegroundColor Magenta
 Write-Host ""
 
 # ============================================================
@@ -153,13 +153,20 @@ Write-Host "  ~/.claude/themes -> $InstallDir\themes" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Installing zstheme CLI..." -ForegroundColor White
 
-$UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 $BinDir = "$InstallDir\bin"
+$UserPath = [Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
 
-if ($UserPath -notlike "*$BinDir*") {
-    [Environment]::SetEnvironmentVariable("Path", "$UserPath;$BinDir", "User")
-    Write-Host "  Added $BinDir to user PATH" -ForegroundColor Green
-    Write-Host "  Restart your terminal for PATH changes to take effect" -ForegroundColor Yellow
+if (-not $UserPath -or $UserPath -notlike "*$BinDir*") {
+    try {
+        $NewPath = if ($UserPath) { "$UserPath;$BinDir" } else { $BinDir }
+        [Environment]::SetEnvironmentVariable("Path", $NewPath, [System.EnvironmentVariableTarget]::User)
+        Write-Host "  Added $BinDir to user PATH" -ForegroundColor Green
+        Write-Host "  Restart your terminal for PATH changes to take effect" -ForegroundColor Yellow
+    } catch {
+        Write-Host "  Could not modify PATH automatically." -ForegroundColor Yellow
+        Write-Host "  Please add this to your PATH manually:" -ForegroundColor Yellow
+        Write-Host "    $BinDir" -ForegroundColor Cyan
+    }
 } else {
     Write-Host "  $BinDir already in PATH" -ForegroundColor Blue
 }
