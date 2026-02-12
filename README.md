@@ -113,9 +113,11 @@ curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/skills/da
 ### Enable / Disable
 
 ```bash
-zstheme --disable              # Disable zstheme (restore original statusline)
+zstheme --disable              # Restore your original statusline
 zstheme --enable               # Re-enable zstheme
 ```
+
+Your original statusline config is restored from the backup created during installation. Switching between `--disable` and `--enable` is non-destructive and repeatable.
 
 ## Layouts
 
@@ -176,9 +178,11 @@ git clone https://github.com/edari-bridge/zstheme.git ~/.zstheme
 The installer will:
 1. Install npm dependencies
 2. Create symlinks in `~/.claude/`
-3. Back up your original statusline config
-4. Configure `settings.json` with the Node.js renderer
+3. **Back up your original statusline** to `~/.config/zstheme/original-statusline.json`
+4. Configure `settings.json` with the zstheme renderer
 5. Add `zstheme` to your PATH
+
+> Already using a custom statusline? No worries — your original config is automatically backed up on first install. Use `zstheme --disable` to restore it anytime, or uninstall to revert completely.
 
 ### Install Steps (Windows)
 
@@ -191,7 +195,7 @@ git clone https://github.com/edari-bridge/zstheme.git $env:USERPROFILE\.zstheme
 & "$env:USERPROFILE\.zstheme\install.ps1"
 ```
 
-The Windows installer uses the **Node.js renderer** (`statusline-node.js`) which works natively on Windows without requiring bash or WSL.
+The Windows installer uses the **Node.js renderer** (`statusline-node.js`) which works natively on Windows without requiring bash or WSL. Your original statusline config is backed up automatically, same as the macOS/Linux installer.
 
 ### Manual Setup (macOS / Linux)
 
