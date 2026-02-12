@@ -2,7 +2,9 @@
 
 Beautiful statusline themes for [Claude Code](https://claude.ai/claude-code).
 
-![Preview](screen/default-1.png)
+![Statusline](screen/default-1.png)
+
+![Main Menu](screen/menu.png)
 
 ## Features
 
@@ -33,6 +35,8 @@ zstheme
 zstheme                       # Interactive selector (arrow keys + live preview)
 zstheme rainbow-bars-nerd     # Apply directly by name
 ```
+
+![Theme Explorer](screen/theme-explorer.png)
 
 Theme names follow this pattern:
 
@@ -73,6 +77,8 @@ Filters: `--1line` `--2line` `--card` `--bars` `--badges` `--mono` `--custom` `-
 zstheme --edit                 # Launch interactive color editor
 ```
 
+![Color Editor](screen/color-editor.png)
+
 | Key | Action |
 |-----|--------|
 | `↑↓` / `j/k` | Navigate elements |
@@ -92,6 +98,15 @@ Colors are saved to `~/.config/zstheme/custom-color.sh`. Use with any layout: `z
 zstheme --status               # Full usage statistics
 zstheme --dashboard            # Compact dashboard
 ```
+
+![Dashboard](screen/dashboard.png)
+
+<details>
+<summary>Full Logs view</summary>
+
+![Dashboard Full](screen/dashboard-full.png)
+
+</details>
 
 Claude Code skills (type inside Claude Code):
 
@@ -119,6 +134,10 @@ zstheme --enable               # Re-enable zstheme
 ```
 
 Your original statusline config is restored from the backup created during installation. Switching between `--disable` and `--enable` is non-destructive and repeatable.
+
+Theme reset and uninstall are also available from the interactive menu:
+
+![Reset Settings](screen/reset.png)
 
 ## Layouts
 
