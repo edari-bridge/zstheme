@@ -12,6 +12,9 @@ set -e
 
 INSTALL_DIR="$HOME/.zstheme"
 CLAUDE_DIR="$HOME/.claude"
+CONFIG_DIR="$HOME/.config/zstheme"
+BACKUP_FILE="$CONFIG_DIR/original-statusline.json"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 PURGE=false
 
 # Parse arguments
@@ -27,7 +30,6 @@ BOLD=$'\033[1m'
 GREEN=$'\033[32m'
 YELLOW=$'\033[33m'
 BLUE=$'\033[34m'
-RED=$'\033[31m'
 CYAN=$'\033[36m'
 MAGENTA=$'\033[35m'
 
@@ -38,8 +40,36 @@ echo "${MAGENTA}${BOLD}  ╰─────────────────�
 echo ""
 
 # ============================================================
-# 1. Remove symlinks from ~/.claude
+# 1. Restore settings.json (must run before removing install dir)
 # ============================================================
+echo "${BOLD}Restoring settings.json...${RST}"
+if [[ -f "$INSTALL_DIR/bin/restore-settings.js" ]]; then
+    result=$(node "$INSTALL_DIR/bin/restore-settings.js" "$SETTINGS_FILE" "$BACKUP_FILE" 2>&1)
+    exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        while IFS= read -r line; do
+            case "$line" in
+                RESTORED)    echo "  ${GREEN}Restored original statusLine from backup${RST}" ;;
+                REMOVED)     echo "  ${GREEN}Removed zstheme statusLine${RST}" ;;
+                NO_SETTINGS) echo "  ${BLUE}No settings.json found, skipping${RST}" ;;
+                NO_BACKUP)   echo "  ${BLUE}No backup found, skipping${RST}" ;;
+            esac
+        done <<< "$result"
+    else
+        echo "  ${YELLOW}Could not restore automatically${RST}"
+        echo "  ${YELLOW}Please remove the statusLine entry from $SETTINGS_FILE manually${RST}"
+    fi
+else
+    echo "  ${YELLOW}restore-settings.js not found, skipping${RST}"
+    echo "  ${YELLOW}Please remove the statusLine entry from $SETTINGS_FILE manually${RST}"
+fi
+
+# ============================================================
+# 2. Remove symlinks from ~/.claude
+# ============================================================
+echo ""
+echo "${BOLD}Removing symlinks...${RST}"
+
 remove_symlink() {
     local file="$1"
     if [[ -L "$file" ]]; then
@@ -50,12 +80,11 @@ remove_symlink() {
     fi
 }
 
-echo "${BOLD}Removing symlinks...${RST}"
 remove_symlink "$CLAUDE_DIR/statusline.sh"
 remove_symlink "$CLAUDE_DIR/themes"
 
 # ============================================================
-# 2. Remove CLI from PATH
+# 3. Remove CLI from PATH
 # ============================================================
 echo ""
 echo "${BOLD}Removing CLI...${RST}"
@@ -71,109 +100,54 @@ for bin_path in "$LOCAL_BIN" "$GLOBAL_BIN"; do
 done
 
 # ============================================================
-# 3. Restore original statusline
+# 4. Uninstall ccusage (optional)
 # ============================================================
-BACKUP_FILE="$HOME/.config/zstheme/original-statusline.json"
-SETTINGS_FILE="$CLAUDE_DIR/settings.json"
-PARTIAL_BACKUP_MARKER="__zstheme_partial_backup__"
-
-restore_statusline() {
-    if [[ ! -f "$BACKUP_FILE" ]]; then
-        echo ""
-        echo "${YELLOW}Note:${RST} statusLine config in ~/.claude/settings.json was not removed."
-        echo "Remove manually if no longer needed:"
-        echo "  ${CYAN}\"statusLine\": { \"command\": \"~/.claude/statusline.sh\" }${RST}"
-        return
-    fi
-
-    if [[ ! -f "$SETTINGS_FILE" ]]; then
-        echo ""
-        echo "${BLUE}No settings.json found, nothing to restore${RST}"
-        return
-    fi
-
-    local backup_content
-    backup_content=$(cat "$BACKUP_FILE")
-
-    if echo "$backup_content" | grep -q "\"$PARTIAL_BACKUP_MARKER\"[[:space:]]*:[[:space:]]*true"; then
-        echo ""
-        echo "${YELLOW}Note:${RST} original statusLine was not fully backed up (install was run without jq)."
-        echo "Leaving current settings.json statusLine unchanged to avoid restoring invalid data."
-        return
-    fi
-
-    if ! command -v jq &>/dev/null; then
-        echo ""
-        echo "${YELLOW}Note:${RST} jq not found. Please restore statusLine manually in settings.json."
-        echo "Original backup saved at: ${CYAN}$BACKUP_FILE${RST}"
-        return
-    fi
-
-    if [[ "$backup_content" == "null" ]]; then
-        # No previous statusline — remove the key
-        echo ""
-        echo "${GREEN}Removing zstheme statusLine from settings.json (no previous config)...${RST}"
-        local tmp
-        tmp=$(mktemp)
-        jq 'del(.statusLine)' "$SETTINGS_FILE" > "$tmp"
-        mv "$tmp" "$SETTINGS_FILE"
-        echo "  ${GREEN}statusLine config removed${RST}"
+if command -v ccusage &>/dev/null; then
+    echo ""
+    read -rp "Uninstall ccusage as well? (y/N) " answer
+    if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+        npm uninstall -g ccusage 2>/dev/null
+        echo "  ${GREEN}ccusage uninstalled${RST}"
     else
-        # Restore original statusline
-        echo ""
-        echo "${GREEN}Restoring original statusLine config...${RST}"
-        local tmp
-        tmp=$(mktemp)
-        jq --argjson sl "$backup_content" '.statusLine = $sl' "$SETTINGS_FILE" > "$tmp"
-        mv "$tmp" "$SETTINGS_FILE"
-        echo "  ${GREEN}Original statusLine restored${RST}"
+        echo "  ${BLUE}Keeping ccusage${RST}"
     fi
-}
-
-restore_statusline
+fi
 
 # ============================================================
-# 4. Handle --purge (complete removal)
+# 5. Purge or preserve
 # ============================================================
-CUSTOM_DIR="$HOME/.config/zstheme"
-
 if [[ "$PURGE" == true ]]; then
     echo ""
-    echo "${BOLD}Purging all zstheme files...${RST}"
+    echo "${BOLD}Purging all zstheme data...${RST}"
 
-    # Remove custom colors and statusline backup
-    if [[ -d "$CUSTOM_DIR" ]]; then
-        rm -rf "$CUSTOM_DIR"
-        echo "  ${GREEN}Removed: $CUSTOM_DIR (includes statusline backup)${RST}"
+    if [[ -d "$CONFIG_DIR" ]]; then
+        rm -rf "$CONFIG_DIR"
+        echo "  ${GREEN}Removed: $CONFIG_DIR${RST}"
     fi
 
-    # Remove installation directory
+    THEME_CONFIG="$CLAUDE_DIR/theme-config.sh"
+    if [[ -f "$THEME_CONFIG" ]]; then
+        rm "$THEME_CONFIG"
+        echo "  ${GREEN}Removed: theme-config.sh${RST}"
+    fi
+
     if [[ -d "$INSTALL_DIR" ]]; then
         rm -rf "$INSTALL_DIR"
         echo "  ${GREEN}Removed: $INSTALL_DIR${RST}"
     fi
-
-    echo ""
-    echo "${GREEN}${BOLD}Complete removal finished!${RST}"
 else
-    # ============================================================
-    # 5. Notes (without --purge)
-    # ============================================================
     echo ""
     echo "${YELLOW}Preserved:${RST}"
-
-    if [[ -d "$CUSTOM_DIR" ]]; then
-        echo "  - Custom colors: ${CYAN}$CUSTOM_DIR${RST}"
-    fi
-
-    if [[ -d "$INSTALL_DIR" ]]; then
-        echo "  - Installation: ${CYAN}$INSTALL_DIR${RST}"
-    fi
-
+    [[ -d "$CONFIG_DIR" ]] && echo "  - Config: ${CYAN}$CONFIG_DIR${RST}"
+    [[ -d "$INSTALL_DIR" ]] && echo "  - Installation: ${CYAN}$INSTALL_DIR${RST}"
     echo ""
-    echo "${GREEN}${BOLD}Uninstallation complete!${RST}"
-    echo ""
-    echo "To fully remove everything:"
-    echo "  ${CYAN}curl -fsSL https://raw.githubusercontent.com/edari-bridge/zstheme/main/uninstall.sh | bash -s -- --purge${RST}"
+    echo "To remove everything: ${CYAN}~/.zstheme/uninstall.sh --purge${RST}"
 fi
+
+# ============================================================
+# Done
+# ============================================================
+echo ""
+echo "${GREEN}${BOLD}Uninstall complete!${RST}"
+echo "${YELLOW}Restart your terminal for changes to take effect.${RST}"
 echo ""
