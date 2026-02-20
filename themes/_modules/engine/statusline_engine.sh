@@ -183,7 +183,7 @@ format_reset_time() {
 get_ccusage_data() {
     local cache_file="${ZSTHEME_CCUSAGE_CACHE_FILE:-/tmp/ccusage_cache.json}"
     local cache_ttl="${ZSTHEME_CCUSAGE_CACHE_TTL_SEC:-300}"
-    local timeout_sec="${ZSTHEME_CCUSAGE_TIMEOUT_SEC:-4}"
+    local timeout_sec="${ZSTHEME_CCUSAGE_TIMEOUT_SEC:-10}"
     local now_ts cache_ts age
 
     now_ts="$(date +%s)"
@@ -198,13 +198,18 @@ get_ccusage_data() {
         fi
     fi
 
-    if ! command -v npx >/dev/null 2>&1; then
+    local ccusage_cmd=""
+    if command -v ccusage >/dev/null 2>&1; then
+        ccusage_cmd="ccusage"
+    elif command -v npx >/dev/null 2>&1; then
+        ccusage_cmd="npx ccusage@latest"
+    else
         echo "{}"
         return 0
     fi
 
     local data
-    if data="$(run_with_timeout "$timeout_sec" npx ccusage@latest blocks --json)"; then
+    if data="$(run_with_timeout "$timeout_sec" $ccusage_cmd blocks --json)"; then
         echo "$data" > "$cache_file"
         echo "$data"
         return 0

@@ -305,7 +305,7 @@ zstheme integrates with [ccusage](https://github.com/ryoppippi/ccusage) for rate
 npm install -g ccusage
 ```
 
-Rate limit info is cached for 5 minutes to avoid slowdowns.
+Rate limit info is cached for 5 minutes to avoid slowdowns. The default timeout for ccusage is 10 seconds (configurable via `ZSTHEME_CCUSAGE_TIMEOUT_SEC`).
 
 ## Available Variables in Themes
 
